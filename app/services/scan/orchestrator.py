@@ -5,6 +5,7 @@ import uuid
 from collections import Counter
 from pathlib import Path
 
+from app.ai import run_ai_analysis
 from app.languages.registry import LanguageRegistry, build_registry
 from app.models.finding import Finding, Severity
 from app.models.project import ProjectStatus, ScanInfo, ScanStatus
@@ -25,7 +26,12 @@ class ScanOrchestrator:
         self.store = store or ProjectStore()
         self.registry = registry or build_registry()
 
-    def start_scan(self, project_id: str) -> ScanInfo:
+    def start_scan(
+        self,
+        project_id: str,
+        *,
+        enable_ai: bool | None = None,
+    ) -> ScanInfo:
         project = self.store.get_project(project_id)
         if project is None:
             raise KeyError(f"Project not found: {project_id}")
@@ -46,7 +52,13 @@ class ScanOrchestrator:
         self.store.update_status(project_id, ProjectStatus.scanning)
 
         try:
-            result = self._run(project_id, scan.id, Path(project.workspace_path), project.name)
+            result = self._run(
+                project_id,
+                scan.id,
+                Path(project.workspace_path),
+                project.name,
+                enable_ai=enable_ai,
+            )
             reports_dir = self.store.reports_dir(project_id, scan.id)
             write_security_json(result, reports_dir / "security_report.json")
             render_security_markdown(result, reports_dir / "security_report.md")
@@ -66,7 +78,15 @@ class ScanOrchestrator:
             self.store.update_status(project_id, ProjectStatus.failed, error=str(exc))
             raise
 
-    def _run(self, project_id: str, scan_id: str, root: Path, project_name: str) -> ScanResult:
+    def _run(
+        self,
+        project_id: str,
+        scan_id: str,
+        root: Path,
+        project_name: str,
+        *,
+        enable_ai: bool | None = None,
+    ) -> ScanResult:
         findings: list[Finding] = []
         inventories = []
         language_meta = {}
@@ -81,6 +101,14 @@ class ScanOrchestrator:
                 inventories.append(analysis.inventory)
             language_meta[handler.id] = analysis.meta
 
+        ai_findings, ai_meta = run_ai_analysis(
+            root,
+            findings,
+            inventories,
+            enable_override=enable_ai,
+        )
+        findings.extend(ai_findings)
+
         severity_counts = Counter(f.severity.value for f in findings)
         summary = {
             "total_findings": len(findings),
@@ -91,6 +119,7 @@ class ScanOrchestrator:
                 for f in findings
                 if f.severity in {Severity.critical, Severity.high}
             ),
+            "ai_findings": sum(1 for f in findings if f.source == "ai"),
         }
         return ScanResult(
             scan_id=scan_id,
@@ -100,5 +129,5 @@ class ScanOrchestrator:
             findings=findings,
             inventories=inventories,
             summary=summary,
-            meta={"languages": language_meta},
+            meta={"languages": language_meta, "ai": ai_meta},
         )

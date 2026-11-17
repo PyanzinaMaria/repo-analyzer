@@ -71,6 +71,12 @@ class ScanInfo(BaseModel):
     result_path: str | None = None
 
 
+class ScanCreate(BaseModel):
+    """Optional per-scan overrides. Empty body keeps yaml/env defaults."""
+
+    enable_ai: bool | None = None
+
+
 class ReportFormat(str, Enum):
     json = "json"
     markdown = "markdown"

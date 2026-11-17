@@ -13,6 +13,7 @@
 |---|---|
 | Всего находок | {{ result.summary.get('total_findings', result.findings|length) }} |
 | Critical/High | {{ result.summary.get('high_or_above', 0) }} |
+| ИИ-находки | {{ result.summary.get('ai_findings', 0) }} |
 
 ### По severity
 
@@ -21,6 +22,23 @@
 {% else %}
 - Находок нет
 {% endfor %}
+
+{% set ai_meta = (result.meta or {}).get('ai') or {} %}
+## ИИ-анализ
+
+{% if ai_meta %}
+- **Статус модуля:** {{ ai_meta.get('status', '—') }}
+- **Включён:** {{ ai_meta.get('enabled', false) }}
+- **Модель:** {{ ai_meta.get('model') or '—' }}
+- **Файлов отправлено:** {{ ai_meta.get('files_sent', 0) }}
+- **Находок от ИИ:** {{ ai_meta.get('findings_count', 0) }}
+{% if ai_meta.get('error') %}- **Примечание:** {{ ai_meta.get('error') }}
+{% endif %}
+{% else %}
+Модуль ИИ-анализа не запускался.
+{% endif %}
+
+> Находки с источником `ai` — эвристики LLM по отобранным файлам. Это не замена ручному аудиту и не сертификационный вывод.
 
 ## Находки
 

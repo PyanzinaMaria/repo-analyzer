@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from app.api.deps import get_scan_orchestrator, get_store
-from app.models.project import ScanInfo
+from app.models.project import ScanCreate, ScanInfo
 from app.models.report import ScanResult
 
 router = APIRouter(prefix="/api/v1/projects/{project_id}/scans", tags=["scans"])
@@ -17,11 +17,15 @@ def list_scans(project_id: str) -> list[ScanInfo]:
 
 
 @router.post("", response_model=ScanInfo, status_code=201)
-def start_scan(project_id: str) -> ScanInfo:
+def start_scan(project_id: str, body: ScanCreate | None = None) -> ScanInfo:
     if get_store().get_project(project_id) is None:
         raise HTTPException(status_code=404, detail="Project not found")
+    payload = body or ScanCreate()
     try:
-        return get_scan_orchestrator().start_scan(project_id)
+        return get_scan_orchestrator().start_scan(
+            project_id,
+            enable_ai=payload.enable_ai,
+        )
     except RuntimeError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001

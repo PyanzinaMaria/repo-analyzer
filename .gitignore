@@ -15,6 +15,11 @@ venv/
 htmlcov/
 data/workspaces/*
 !data/workspaces/.gitkeep
+# Local scan reports / manual test dumps (keep only .gitkeep under workspaces)
+data/test*
+data/_tmp*
+data/*.md
+data/*.json
 *.log
 .DS_Store
 Thumbs.db

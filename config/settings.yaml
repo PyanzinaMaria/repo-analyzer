@@ -26,3 +26,15 @@ reports:
     Черновик для личного пользования / подготовки материалов.
     Не является полным сертифицированным комплектом документации
     по требованиям ФСТЭК России (приказ №76 и смежные документы).
+
+# Optional LLM code review (post-scan). Requires AI_API_KEY in .env.
+# Soft-fail: errors do not fail the deterministic scan.
+ai:
+  enabled: false
+  provider: openai_compatible
+  base_url: https://api.openai.com/v1
+  model: gpt-4o-mini
+  timeout_seconds: 120
+  max_files: 25
+  max_file_bytes: 40000
+  max_findings: 50

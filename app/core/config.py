@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     templates_dir: Path = Field(default=ROOT_DIR / "templates")
     git_timeout_seconds: int = 120
 
+    # Optional AI module (OpenAI-compatible). Secrets only via env.
+    ai_api_key: str | None = Field(default=None, validation_alias="AI_API_KEY")
+    ai_enabled: bool | None = Field(default=None, validation_alias="AI_ENABLED")
+    ai_base_url: str | None = Field(default=None, validation_alias="AI_BASE_URL")
+    ai_model: str | None = Field(default=None, validation_alias="AI_MODEL")
+
     def resolve_paths(self) -> None:
         if not self.data_dir.is_absolute():
             self.data_dir = (ROOT_DIR / self.data_dir).resolve()
@@ -47,6 +53,16 @@ def load_yaml_settings(path: Path) -> dict[str, Any]:
                     "Не является полным сертифицированным комплектом документации "
                     "по требованиям ФСТЭК России."
                 )
+            },
+            "ai": {
+                "enabled": False,
+                "provider": "openai_compatible",
+                "base_url": "https://api.openai.com/v1",
+                "model": "gpt-4o-mini",
+                "timeout_seconds": 120,
+                "max_files": 25,
+                "max_file_bytes": 40000,
+                "max_findings": 50,
             },
         }
     with path.open("r", encoding="utf-8") as fh:

@@ -6,6 +6,7 @@ from app.models.project import (
     ProjectStatus,
     ReportFormat,
     ReportKind,
+    ScanCreate,
     ScanInfo,
     ScanStatus,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "ProjectStatus",
     "ReportFormat",
     "ReportKind",
+    "ScanCreate",
     "ScanInfo",
     "ScanStatus",
     "ReportBundle",
