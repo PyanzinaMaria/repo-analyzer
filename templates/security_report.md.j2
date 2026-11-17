@@ -1,0 +1,57 @@
+# Отчёт по уязвимостям и недостаткам безопасности
+
+**Проект:** {{ result.project_name }}  
+**Scan ID:** {{ result.scan_id }}  
+**Сформирован:** {{ result.generated_at }}  
+**Языки:** {{ result.enabled_languages | join(', ') }}
+
+> {{ disclaimer }}
+
+## Сводка
+
+| Показатель | Значение |
+|---|---|
+| Всего находок | {{ result.summary.get('total_findings', result.findings|length) }} |
+| Critical/High | {{ result.summary.get('high_or_above', 0) }} |
+
+### По severity
+
+{% for severity, count in (result.summary.get('by_severity') or {}).items() %}
+- **{{ severity }}**: {{ count }}
+{% else %}
+- Находок нет
+{% endfor %}
+
+## Находки
+
+{% if result.findings %}
+{% for f in result.findings %}
+### {{ loop.index }}. {{ f.title }}
+
+- **Severity:** {{ f.severity.value }}
+- **CWE:** {{ f.cwe or '—' }}
+- **Источник:** {{ f.source }} / {{ f.language }}
+- **Правило:** {{ f.rule_id or '—' }}
+- **Где:** {{ f.file or '—' }}{% if f.line %}:{{ f.line }}{% endif %}
+- **Описание:** {{ f.description }}
+- **Рекомендация:** {{ f.remediation or 'Требуется ручная оценка и устранение.' }}
+
+{% endfor %}
+{% else %}
+Автоматизированные сканеры не выявили находок. Это не гарантирует отсутствие уязвимостей.
+{% endif %}
+
+## Инвентаризация кода
+
+{% for inv in result.inventories %}
+### {{ inv.language }}
+
+- Файлов: {{ inv.files_count }}
+- Модулей: {{ inv.modules|length }}
+- Классов: {{ inv.classes|length }}
+- Функций: {{ inv.functions|length }}
+- Импортов (top-level): {{ inv.imports|length }}
+- Файлы зависимостей: {{ inv.dependency_files|join(', ') if inv.dependency_files else '—' }}
+{% else %}
+Инвентаризация пуста.
+{% endfor %}

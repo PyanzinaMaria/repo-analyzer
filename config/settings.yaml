@@ -1,0 +1,28 @@
+# Language plugins: only listed ids with a registered handler will run.
+# Add/remove ids here to enable/disable languages without code changes.
+enabled_languages:
+  - python
+
+# Example for later:
+# enabled_languages:
+#   - python
+#   - javascript
+
+scan:
+  exclude_dirs:
+    - .git
+    - .venv
+    - venv
+    - node_modules
+    - __pycache__
+    - .pytest_cache
+    - dist
+    - build
+    - .mypy_cache
+    - .ruff_cache
+
+reports:
+  disclaimer: >
+    Черновик для личного пользования / подготовки материалов.
+    Не является полным сертифицированным комплектом документации
+    по требованиям ФСТЭК России (приказ №76 и смежные документы).
