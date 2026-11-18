@@ -171,7 +171,7 @@ def audit_data(root: Path, name: str, runs: list[LanguageRun], ranking: ScanRank
         for tool, st in run.tools.items():
             cur = data.sast.setdefault(tool, {"ok": False, "seconds": 0, "findings": 0})
             cur["ok"] = cur["ok"] or st.get("ok", False)
-            cur["seconds"] += st.get("seconds", 0)
+            cur["seconds"] = round(cur["seconds"] + (st.get("seconds") or 0), 1)
             cur["findings"] += st.get("findings", 0)
         if data.idx is None and (cdir / "index.json").exists():
             from app.context.index import load_index
