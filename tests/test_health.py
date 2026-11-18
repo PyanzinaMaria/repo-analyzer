@@ -8,4 +8,4 @@ def test_health(client):
     assert payload["status"] == "ok"
     assert "python" in payload["enabled_languages"]
     assert "javascript" in payload["registered_languages"]
-    assert "javascript" not in payload["enabled_languages"]
+    assert "javascript" in payload["enabled_languages"]   # JS/TS handler is implemented (ESLint, Semgrep, CodeQL)

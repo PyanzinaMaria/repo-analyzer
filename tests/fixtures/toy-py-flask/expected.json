@@ -1,0 +1,10 @@
+{
+  "language": "python",
+  "planted": [
+    {"file": "app.py", "line": 18, "cwe": "CWE-78", "what": "subprocess shell=True with request arg", "function": "ping"},
+    {"file": "app.py", "line": 26, "cwe": "CWE-22", "what": "open() on joined user path", "function": "download"},
+    {"file": "app.py", "line": 35, "cwe": "CWE-89", "what": "SQL built with % formatting", "function": "user"},
+    {"file": "app.py", "line": 41, "cwe": "CWE-502", "what": "yaml.load with unsafe Loader", "function": "config"},
+    {"file": "app.py", "line": 47, "cwe": "CWE-502", "what": "pickle.loads on request body", "function": "session"}
+  ]
+}

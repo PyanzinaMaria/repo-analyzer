@@ -1,0 +1,10 @@
+{
+  "language": "javascript",
+  "planted": [
+    {"file": "server.js", "line": 12, "cwe": "CWE-78", "what": "child_process.exec with query param", "function": null},
+    {"file": "server.js", "line": 16, "cwe": "CWE-94", "what": "eval of query param", "function": null},
+    {"file": "server.js", "line": 26, "cwe": "CWE-1321", "what": "recursive merge without __proto__ guard", "function": "merge"},
+    {"file": "server.js", "line": 38, "cwe": "CWE-601", "what": "redirect to query param", "function": null},
+    {"file": "server.js", "line": 43, "cwe": "CWE-22", "what": "readFileSync on joined user path", "function": null}
+  ]
+}

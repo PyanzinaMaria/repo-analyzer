@@ -1,0 +1,7 @@
+{
+  "name": "toy-js-express",
+  "private": true,
+  "version": "0.0.0",
+  "main": "server.js",
+  "dependencies": { "express": "^4.19.2" }
+}
