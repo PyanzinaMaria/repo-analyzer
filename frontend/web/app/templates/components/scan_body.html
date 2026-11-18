@@ -24,7 +24,10 @@
         {% if status.artifacts or donut_option %}
         <div class="results-grid">
             {% if donut_option %}
-            <div id="donut" class="donut" data-option="{{ donut_option | tojson }}"></div>
+            {# tojson escapes single quotes but not double quotes, so this
+               attribute must be single-quoted or the JSON truncates at the
+               first " and the chart gets invalid data #}
+            <div id="donut" class="donut" data-option='{{ donut_option | tojson }}'></div>
             {% endif %}
             <div class="artifact-actions">
                 {% for name in status.artifacts %}
