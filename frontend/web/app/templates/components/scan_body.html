@@ -1,4 +1,6 @@
 {# HTMX self-replacing fragment: polls until every stage reaches a final state. #}
+{% set scan_kind = (status.summary.meta.scan_kind if status.summary and status.summary.meta else none) %}
+{% set kind_key = 'sast_dast' if scan_kind == 'sast+dast' else scan_kind %}
 <div {% if not complete %}hx-get="/scan/{{ status.id }}/body" hx-trigger="load delay:1500ms" hx-swap="outerHTML"{% endif %}>
     <section class="card">
         <h2>{{ t("scan.status_title") }}</h2>
@@ -6,6 +8,9 @@
         <p>{{ status.source.url }}</p>
         {% else %}
         <p>{{ status.source.file_count }} {{ status.source.kind }}</p>
+        {% endif %}
+        {% if kind_key %}
+        <p>{{ t("results.scan_kind") }}: {{ t("results.kinds." + kind_key) }}</p>
         {% endif %}
         <ul class="stage-list">
             {% for stage in status.stages %}

@@ -17,6 +17,16 @@ artifacts:
     media_type: text/html
     viewer: framed
     download: false
+  - name: dast_report.md
+    label_key: artifacts.dast_report_md
+    media_type: text/markdown
+    viewer: none
+    download: true
+  - name: dast_report.json
+    label_key: artifacts.dast_report_json
+    media_type: application/json
+    viewer: none
+    download: true
   - name: report.pdf
     label_key: artifacts.report_pdf
     media_type: application/pdf

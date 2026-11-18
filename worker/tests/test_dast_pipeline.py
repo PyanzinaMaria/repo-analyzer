@@ -53,7 +53,10 @@ def test_dast_job_writes_artifacts(tmp_path, monkeypatch) -> None:
     assert (out / "summary.json").is_file()
     assert (out / "report.html").is_file()
     assert (out / "dast_report.json").is_file()
+    assert (out / "dast_report.md").is_file()
     manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["stages"] == {"analysis": "ok", "report": "ok"}
+    assert "dast_report.md" in manifest["artifacts"]
+    assert "dast_report.json" in manifest["artifacts"]
     summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
     assert summary["meta"]["scan_kind"] == "dast"

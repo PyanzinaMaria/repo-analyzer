@@ -99,7 +99,9 @@ class Pipeline:
             raise ValueError(f"Unsupported source kind: {kind!r}")
 
         logger.info("Scan %s: project %s (%s), starting analysis", scan_id, project.id, kind)
-        scan = orchestrator.start_scan(project.id, enable_ai=True if self.cfg.enable_ai else None)
+        # Pass explicit False when worker disables AI — None would fall back to
+        # analyzer settings.yaml and run OpenRouter anyway (hung the UI scan).
+        scan = orchestrator.start_scan(project.id, enable_ai=self.cfg.enable_ai)
         result = store.get_result(project.id, scan.id)
         if result is None:
             raise RuntimeError(f"Analyzer produced no result for scan {scan_id}")

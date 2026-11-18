@@ -17,8 +17,9 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 CONFIG_PATH = Path(__file__).resolve().parent / "config" / "worker.yaml"
 
 # Artifact names this worker produces; must stay inside the frontend contract
-# (frontend/config/reports.yaml). PDFs are not produced yet.
-ARTIFACTS = ("report.html", "doc.html")
+# (frontend/config/reports.yaml). PDFs are not produced yet. DAST bundle files
+# appear only when the scan actually ran dynamic analysis.
+ARTIFACTS = ("report.html", "doc.html", "dast_report.md", "dast_report.json")
 
 
 @dataclass

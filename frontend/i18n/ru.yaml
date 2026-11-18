@@ -47,14 +47,21 @@ results:
   title: Результаты
   pending: Отчёт готовится. Обновите страницу позже.
   no_summary: Сводные данные пока недоступны.
+  scan_kind: Тип проверки
+  kinds:
+    sast: SAST
+    dast: DAST
+    sast_dast: SAST + DAST
 
 docs:
   title: Документация
-  description: После завершения аудита здесь будут доступны документация по ФСТЭК и отчёт аудита.
+  description: После завершения аудита здесь будут доступны документация по ФСТЭК, отчёт аудита и при успешном подъёме приложения — отчёт DAST.
 
 artifacts:
   report_html: Отчёт аудита (смотреть)
   doc_html: Документация ФСТЭК (смотреть)
+  dast_report_md: Отчёт DAST (Markdown)
+  dast_report_json: Отчёт DAST (JSON)
   report_pdf: Отчёт аудита (PDF)
   doc_pdf: Документация ФСТЭК (PDF)
   view: Смотреть
