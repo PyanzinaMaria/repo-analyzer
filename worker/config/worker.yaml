@@ -1,0 +1,39 @@
+# Producer worker bridging the frontend queue contract to the analyzer.
+# Consumes {data_dir}/queue/{scan_id}.json jobs and produces
+# {data_dir}/{reports_dir}/{scan_id}/ artifacts the frontend serves.
+
+data_dir: data
+poll_interval_seconds: 2.0
+
+# Passed to ScanOrchestrator.start_scan(enable_ai=...) per job.
+# When false the analyzer's own settings.yaml ai.enabled governs (default off).
+enable_ai: false
+
+# Mirror of frontend/config/theme.yaml tokens. Kept local so the worker
+# renders artifacts without reading another service's config tree; if you
+# retheme the frontend, update the colors here too.
+theme:
+  colors:
+    bg: "#FFE3F1"
+    surface: "#FFD6EC"
+    surface-raised: "#FFF0F8"
+    accent: "#FF8FC7"
+    accent-strong: "#E754A8"
+    ink: "#4A1F36"
+    ink-soft: "#8A5A73"
+    ok: "#7BC47F"
+    warn: "#F2B75C"
+    fail: "#E86A6A"
+    border: "#F5B8D8"
+  # severity -> resolved hex (frontend maps severity -> token -> hex).
+  severity_colors:
+    critical: "#E86A6A"
+    high: "#F2B75C"
+    medium: "#FF8FC7"
+    low: "#FFC2E0"
+    info: "#8A5A73"
+
+doc:
+  disclaimer: >-
+    Черновик для личного пользования / подготовки материалов. Не является
+    полным сертифицированным комплектом документации по требованиям ФСТЭК России.
