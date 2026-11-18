@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Документация ФСТЭК (проект) — {{ project_name }}</title>
+<style>
+  :root {
+    --bg: {{ colors['bg'] }}; --surface: {{ colors['surface'] }};
+    --raised: {{ colors['surface-raised'] }};
+    --accent: {{ colors['accent'] }}; --accent-strong: {{ colors['accent-strong'] }};
+    --ink: {{ colors['ink'] }}; --ink-soft: {{ colors['ink-soft'] }};
+    --border: {{ colors['border'] }};
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  .card {
+    background: var(--surface); border-radius: 16px; padding: 24px;
+    margin-bottom: 20px; box-shadow: 0 6px 24px rgba(231, 84, 168, 0.18);
+  }
+  h1 { margin: 0 0 6px; font-size: 24px; }
+  h2 { margin: 0 0 14px; font-size: 20px; }
+  .sub { color: var(--ink-soft); font-size: 14px; margin: 0; }
+  table { width: 100%; border-collapse: collapse; background: var(--raised); border-radius: 10px; overflow: hidden; }
+  th, td { padding: 10px 12px; text-align: left; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--accent-soft, var(--surface)); font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em; }
+  tr:last-child td { border-bottom: none; }
+  code, .mono { font-family: Consolas, monospace; font-size: 13px; }
+  .badge {
+    color: #fff; border-radius: 999px; padding: 2px 10px;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+  }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    background: var(--raised); border: 1px solid var(--border);
+    border-radius: 999px; padding: 4px 14px; font-size: 14px;
+  }
+  .preview { color: var(--ink-soft); font-size: 13px; }
+  .disclaimer {
+    background: var(--raised); border: 1px dashed var(--accent-strong);
+    border-radius: 12px; padding: 14px 18px; font-size: 14px;
+  }
+  .empty { color: var(--ink-soft); font-style: italic; }
+  .foot { color: var(--ink-soft); font-size: 13px; text-align: center; margin-top: 8px; }
+  section { margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card">
+    <h1>Проект документации по требованиям ФСТЭК России</h1>
+    <p class="sub">Исследуемый проект: <b>{{ project_name }}</b> · дата формирования {{ generated_at }} · скан {{ scan_id[:8] }}</p>
+  </div>
+
+  <div class="card">
+    <h2>1. Паспорт исследования</h2>
+    <table>
+      <tr><th>Параметр</th><th>Значение</th></tr>
+      <tr><td>Объект анализа</td><td>{{ project_name }}</td></tr>
+      <tr><td>Идентификатор сканирования</td><td class="mono">{{ scan_id }}</td></tr>
+      <tr><td>Дата и время</td><td>{{ generated_at }}</td></tr>
+      <tr><td>Подключённые анализаторы</td><td>
+        {% if enabled_languages %}{% for lang in enabled_languages %}{{ lang }}{% if not loop.last %}, {% endif %}{% endfor %}
+        {% else %}<span class="empty">не определены</span>{% endif %}</td></tr>
+      <tr><td>Выявлено уязвимостей</td><td><b>{{ total }}</b></td></tr>
+    </table>
+    <div class="chips" style="margin-top: 12px;">
+      {% for severity, count in counts.items() %}
+      <span class="chip">{{ { 'critical': 'Критический', 'high': 'Высокий', 'medium': 'Средний',
+           'low': 'Низкий', 'info': 'Информация' }.get(severity, severity) }}: <b>{{ count }}</b></span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. Кодовая инвентаризация</h2>
+    {% if inventories %}
+      {% for inv in inventories %}
+      <section>
+        <h2 style="font-size: 17px;">Язык: {{ inv.language }}</h2>
+        <table>
+          <tr><th>Показатель</th><th>Значение</th></tr>
+          <tr><td>Файлов обработано</td><td>{{ inv.files_count }}</td></tr>
+          <tr><td>Модулей</td><td>{{ inv.modules | length }}</td></tr>
+          <tr><td>Классов</td><td>{{ inv.classes | length }}</td></tr>
+          <tr><td>Функций</td><td>{{ inv.functions | length }}</td></tr>
+          <tr><td>Файлы зависимостей</td><td>
+            {% if inv.dependency_files %}{% for d in inv.dependency_files %}<span class="mono">{{ d }}</span>{% if not loop.last %}, {% endif %}{% endfor %}
+            {% else %}<span class="empty">не обнаружены</span>{% endif %}</td></tr>
+        </table>
+        {% if inv.modules_preview %}
+        <p class="preview">Модули (первые {{ inv.modules_preview | length }}): {{ inv.modules_preview | join(', ') }}{% if inv.hidden_modules %} … и ещё {{ inv.hidden_modules }}{% endif %}</p>
+        {% endif %}
+        {% if inv.classes_preview %}
+        <p class="preview">Классы (первые {{ inv.classes_preview | length }}): {{ inv.classes_preview | join(', ') }}{% if inv.hidden_classes %} … и ещё {{ inv.hidden_classes }}{% endif %}</p>
+        {% endif %}
+      </section>
+      {% endfor %}
+    {% else %}
+      <p class="empty">Инвентаризация недоступна: языки проекта не распознаны.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>3. Протокол выявленных уязвимостей</h2>
+    {% if findings %}
+    <table>
+      <tr><th>№</th><th>Уровень</th><th>Уязвимость</th><th>Расположение</th><th>Идентификатор</th></tr>
+      {% for f in findings %}
+      <tr>
+        <td>{{ f.position }}</td>
+        <td><span class="badge" style="background: {{ severity_colors.get(f.severity, severity_colors['info']) }};">
+          {{ { 'critical': 'Критич.', 'high': 'Высокий', 'medium': 'Средний',
+               'low': 'Низкий', 'info': 'Инфо' }.get(f.severity, f.severity) }}</span></td>
+        <td>{{ f.title }}</td>
+        <td class="mono">{{ f.file or '—' }}{% if f.line %}:{{ f.line }}{% endif %}</td>
+        <td class="mono">{{ f.cwe or f.rule_id or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <p class="preview">Полные описания, сценарии воспроизведения и рекомендации — в отчёте аудита (report.html).</p>
+    {% else %}
+    <p class="empty">Уязвимостей не выявлено; протокол не формируется.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>4. Выводы</h2>
+    {% if total %}
+    <p>По результатам автоматического анализа выявлено <b>{{ total }}</b> уязвимостей
+      ({{ counts.get('critical', 0) }} критического, {{ counts.get('high', 0) }} высокого уровня).
+      Рекомендуется устранить находки критического и высокого уровня до передачи системы
+      в эксплуатацию, после чего выполнить повторное сканирование.</p>
+    {% else %}
+    <p>По результатам автоматического анализа уязвимостей не выявлено. Рекомендуется
+      периодически повторять сканирование при обновлении зависимостей и кодовой базы.</p>
+    {% endif %}
+    <div class="disclaimer">{{ disclaimer }}</div>
+  </div>
+
+  <p class="foot">Документ сформирован автоматически и является приложением к отчёту аудита.</p>
+</div>
+</body>
+</html>

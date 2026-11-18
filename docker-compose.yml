@@ -1,0 +1,33 @@
+services:
+  web:
+    # Frontend (frontend/web). Its Dockerfile expects the frontend/ tree
+    # as build context: web/, config/, i18n/ are siblings inside it.
+    build:
+      context: ./frontend
+      dockerfile: web/Dockerfile
+    ports:
+      - "${SIRIUS_PORT:-8000}:8000"
+    environment:
+      SIRIUS_HOST: 0.0.0.0
+      SIRIUS_DATA_DIR: /srv/data
+      SIRIUS_APP_TITLE: ${SIRIUS_APP_TITLE:-}
+      SIRIUS_MAX_BODY_BYTES: ${SIRIUS_MAX_BODY_BYTES:-}
+    volumes:
+      # The worker consumes data/queue and drops reports into data/reports
+      # without a rebuild; both services see the same tree.
+      - ./data:/srv/data
+    restart: unless-stopped
+
+  worker:
+    # Producer bridge: polls data/queue, runs the analyzer, writes
+    # data/reports. Coupling to web is the shared ./data volume only.
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    environment:
+      WORKER_DATA_DIR: /srv/data
+      WORKER_ENABLE_AI: ${WORKER_ENABLE_AI:-false}
+      AI_API_KEY: ${AI_API_KEY:-}
+    volumes:
+      - ./data:/srv/data
+    restart: unless-stopped

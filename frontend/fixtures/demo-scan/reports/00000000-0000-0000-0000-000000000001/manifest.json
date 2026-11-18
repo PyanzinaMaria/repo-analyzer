@@ -1,0 +1,13 @@
+{
+  "stages": {
+    "intake": "ok",
+    "analysis": "ok",
+    "report": "ok"
+  },
+  "artifacts": [
+    "report.html",
+    "doc.html",
+    "report.pdf",
+    "doc.pdf"
+  ]
+}

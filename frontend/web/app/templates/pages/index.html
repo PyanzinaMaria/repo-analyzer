@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% import "components/form.html" as form_components %}
+
+{% block content %}
+<h1>{{ app_title }}</h1>
+<p class="subtitle">{{ t("app.subtitle") }}</p>
+
+<section class="card">
+    <h2>{{ t(form_spec.title_key) }}</h2>
+    {% if errors.get("_intake") %}
+    <div class="error-box">{{ t(errors["_intake"].key, **errors["_intake"].kwargs) }}</div>
+    {% endif %}
+    {{ form_components.render_form(form_spec, values, errors, t, "/api/scans") }}
+</section>
+
+<section class="card card--raised">
+    <h2>{{ t("rules.title") }}</h2>
+    <ul>
+        <li>{{ t("rules.max_size", max_upload=rules.max_upload) }}</li>
+        <li>{{ t("rules.max_unpacked", max_unpacked=rules.max_unpacked) }}</li>
+        <li>{{ t("rules.max_file", max_file=rules.max_file) }}</li>
+        <li>{{ t("rules.max_files", count=rules.max_files) }}</li>
+    </ul>
+    <p>{{ t("rules.allowed") }}</p>
+</section>
+
+<section class="card">
+    <h2>{{ t("docs.title") }}</h2>
+    <p>{{ t("docs.description") }}</p>
+</section>
+{% endblock %}

@@ -1,0 +1,19 @@
+:root {
+    --color-bg: #FFE3F1;
+    --color-surface: #FFD6EC;
+    --color-surface-raised: #FFF0F8;
+    --color-accent: #FF8FC7;
+    --color-accent-strong: #E754A8;
+    --color-accent-soft: #FFC2E0;
+    --color-ink: #4A1F36;
+    --color-ink-soft: #8A5A73;
+    --color-ok: #7BC47F;
+    --color-warn: #F2B75C;
+    --color-fail: #E86A6A;
+    --color-border: #F5B8D8;
+    --font-family: 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+    --font-size: 16px;
+    --shape-radius: 16px;
+    --shape-radius-small: 10px;
+    --shape-shadow: 0 6px 24px rgba(231, 84, 168, 0.18);
+}

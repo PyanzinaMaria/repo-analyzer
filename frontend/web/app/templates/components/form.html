@@ -1,0 +1,55 @@
+{% macro render_field(field, values, errors, t) %}
+{% set is_visible = field.visible_when is none
+   or values.get(field.visible_when.field) == field.visible_when.equals %}
+<div class="field" {% if field.group %}data-group="{{ field.group }}"{% endif %}>
+    {% if field.type != 'checkbox-single' %}
+    <label for="field-{{ field.name }}">{{ t(field.label_key) }}</label>
+    {% endif %}
+
+    {% if field.type == 'text' or field.type == 'url' %}
+    <input id="field-{{ field.name }}" type="{{ field.type }}" name="{{ field.name }}"
+           value="{{ values.get(field.name, '') }}"
+           {% if field.placeholder_key %}placeholder="{{ t(field.placeholder_key) }}"{% endif %}
+           {% if field.required and is_visible %}required{% endif %}>
+    {% elif field.type == 'textarea' %}
+    <textarea id="field-{{ field.name }}" name="{{ field.name }}" rows="4">{{ values.get(field.name, '') }}</textarea>
+    {% elif field.type == 'radio' %}
+    <div class="choices">
+        {% for choice in field.choices %}
+        <label>
+            <input type="radio" name="{{ field.name }}" value="{{ choice.value }}"
+                   data-group-toggle="{{ field.name }}" {{ 'checked' if values.get(field.name, field.default) == choice.value }}>
+            <span>{{ t(choice.label_key) }}</span>
+        </label>
+        {% endfor %}
+    </div>
+    {% elif field.type == 'select' %}
+    <select id="field-{{ field.name }}" name="{{ field.name }}">
+        {% for choice in field.choices %}
+        <option value="{{ choice.value }}" {{ 'selected' if values.get(field.name) == choice.value }}>{{ t(choice.label_key) }}</option>
+        {% endfor %}
+    </select>
+    {% elif field.type == 'file-multi' %}
+    <input id="field-{{ field.name }}" type="file" name="{{ field.name }}" multiple
+           {% if field.accept %}accept="{{ field.accept }}"{% endif %}>
+    {% elif field.type == 'folder' %}
+    <input id="field-{{ field.name }}" type="file" name="{{ field.name }}" multiple webkitdirectory>
+    {% endif %}
+
+    {% if field.help_key %}
+    <div class="help">{{ t(field.help_key) }}</div>
+    {% endif %}
+    {% if errors and field.name in errors %}
+    <div class="error-box">{{ t(errors[field.name].key, **errors[field.name].kwargs) }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_form(spec, values, errors, t, action_url) %}
+<form action="{{ action_url }}" method="post" enctype="multipart/form-data" data-form-groups="true">
+    {% for field in spec.fields %}
+    {{ render_field(field, values, errors, t) }}
+    {% endfor %}
+    <button class="button" type="submit">{{ t(spec.submit_label_key) }}</button>
+</form>
+{% endmacro %}

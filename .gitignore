@@ -25,3 +25,10 @@ data/*.json
 Thumbs.db
 .idea/
 .vscode/
+
+# --- merged monorepo (branch frontend) ---
+# frontend contract runtime data + analyzer workspaces
+data/queue/
+data/uploads/
+data/reports/
+frontend/data/

@@ -1,0 +1,36 @@
+# Contract with producer tasks. The frontend never writes here; it reads
+# data/reports/{scan_id}/ and serves what the manifest declares.
+
+manifest_filename: manifest.json
+summary_filename: summary.json
+
+# Artifacts the frontend knows how to serve. `viewer: framed` renders the
+# file inside a sandboxed iframe page; `download: true` forces attachment.
+artifacts:
+  - name: report.html
+    label_key: artifacts.report_html
+    media_type: text/html
+    viewer: framed
+    download: false
+  - name: doc.html
+    label_key: artifacts.doc_html
+    media_type: text/html
+    viewer: framed
+    download: false
+  - name: report.pdf
+    label_key: artifacts.report_pdf
+    media_type: application/pdf
+    viewer: none
+    download: true
+  - name: doc.pdf
+    label_key: artifacts.doc_pdf
+    media_type: application/pdf
+    viewer: none
+    download: true
+
+# Pipeline stages producers report through manifest.json. Order is display
+# order; a stage may be absent from the manifest until producers know it.
+stages:
+  - intake
+  - analysis
+  - report

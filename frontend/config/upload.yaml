@@ -1,0 +1,76 @@
+# Intake limits and rules. Enforced by services/zipguard.py and services/intake.py.
+# Sizes in bytes.
+
+max_upload_bytes: 52428800      # compressed payload cap (50 MiB)
+max_unpacked_bytes: 209715200   # total unpacked cap (200 MiB)
+max_file_bytes: 10485760        # per-file unpacked cap (10 MiB)
+max_files: 20000                # entry count cap
+max_depth: 24                   # directory nesting cap
+compression_ratio_max: 200      # reject entries above this ratio (zip bombs)
+timeout_seconds: 60             # wall-clock extraction cap
+
+deny_hidden: true               # reject dotfiles and dot-directories
+forbidden_segments:             # reject any path containing these segments
+  - .git
+  - .venv
+  - venv
+  - node_modules
+  - __pycache__
+  - vendor
+  - dist
+
+# Files are accepted when their extension is listed here, or when their
+# name matches one of the manifest patterns (fnmatch).
+allowed_extensions:
+  - .py
+  - .js
+  - .mjs
+  - .ts
+  - .tsx
+  - .jsx
+  - .java
+  - .cs
+  - .go
+  - .rb
+  - .php
+  - .c
+  - .h
+  - .cpp
+  - .hpp
+  - .rs
+  - .kt
+  - .swift
+  - .sql
+  - .sh
+  - .bash
+  - .ps1
+  - .bat
+  - .html
+  - .css
+  - .scss
+  - .yml
+  - .yaml
+  - .json
+  - .toml
+  - .xml
+  - .ini
+  - .cfg
+  - .md
+  - .rst
+  - .txt
+
+manifest_patterns:
+  - requirements*.txt
+  - package.json
+  - package-lock.json
+  - pom.xml
+  - build.gradle*
+  - settings.gradle*
+  - "*.csproj"
+  - "*.sln"
+  - Dockerfile*
+  - Makefile
+  - setup.py
+  - setup.cfg
+  - pyproject.toml
+  - "*.dockerfile"
