@@ -49,11 +49,11 @@ data/reports/{id}/  ◀──пишет WORKER──  manifest.json · summary.j
 # Windows; venv один на всё
 py -3.12 -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\pip install -r frontend\backend\requirements.lock
+.venv\Scripts\pip install -r frontend\web\requirements.lock
 
 # 1) веб-фронтенд
 set SIRIUS_DATA_DIR=%cd%\data
-.venv\Scripts\python -m uvicorn app.main:app --app-dir frontend\backend --port 8000
+.venv\Scripts\python -m uvicorn app.main:app --app-dir frontend\web --port 8000
 
 # 2) воркер (второй терминал, из корня репозитория)
 .venv\Scripts\python -m worker
@@ -63,7 +63,7 @@ set SIRIUS_DATA_DIR=%cd%\data
 отчёт и документация появятся автоматически после завершения анализа.
 
 Linux/macOS: те же команды с `python3 -m venv .venv`, `export SIRIUS_DATA_DIR=$PWD/data`,
-пути `frontend/backend` через `/`.
+пути `frontend/web` через `/`.
 
 ## Docker
 
@@ -144,6 +144,6 @@ data/             # runtime: queue/ uploads/ reports/ workspaces/ (gitignored)
 
 ```bash
 .venv/Scripts/python -m pytest worker/tests -q                  # воркер (офлайн)
-cd frontend/backend && ../../.venv/Scripts/python -m pytest     # фронтенд, 36 тестов
+cd frontend/web && ../../.venv/Scripts/python -m pytest     # фронтенд, 37 тестов
 pytest -q                                                       # анализатор (pip-audit требует сеть)
 ```

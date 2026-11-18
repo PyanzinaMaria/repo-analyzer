@@ -1,10 +1,10 @@
 services:
   web:
-    # Frontend (frontend/backend). Its Dockerfile expects the frontend/ tree
-    # as build context: backend/, config/, i18n/ are siblings inside it.
+    # Frontend (frontend/web). Its Dockerfile expects the frontend/ tree
+    # as build context: web/, config/, i18n/ are siblings inside it.
     build:
       context: ./frontend
-      dockerfile: backend/Dockerfile
+      dockerfile: web/Dockerfile
     ports:
       - "${SIRIUS_PORT:-8000}:8000"
     environment:

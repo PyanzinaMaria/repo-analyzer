@@ -1,14 +1,14 @@
 FROM python:3.12-slim
 
 WORKDIR /srv
-ENV PYTHONPATH=/srv/backend \
+ENV PYTHONPATH=/srv/web \
     SIRIUS_APP_ROOT=/srv \
     PIP_NO_CACHE_DIR=1
 
-COPY backend/requirements.lock /srv/backend/requirements.lock
-RUN python -m pip install --quiet -r /srv/backend/requirements.lock
+COPY web/requirements.lock /srv/web/requirements.lock
+RUN python -m pip install --quiet -r /srv/web/requirements.lock
 
-COPY backend/app /srv/backend/app
+COPY web/app /srv/web/app
 COPY config /srv/config
 COPY i18n /srv/i18n
 

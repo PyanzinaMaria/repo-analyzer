@@ -4,26 +4,29 @@ Web frontend for the code security audit service. It accepts repository
 submissions (zip archive, individual files, folder, public GitHub/GitLab
 link), tracks scan status, and serves ready report files produced by other
 tasks. It does **not** implement the AI agent, agent communication, or
-report/documentation generation — see PLAN.md for scope boundaries.
+report/documentation generation.
 
 ## Run locally
 
 ```bash
 py -3.14 -m venv .venv                 # or python 3.12+
-.venv/Scripts/pip install -r backend/requirements.lock   # Windows
-.venv/Scripts/python -m uvicorn app.main:app --app-dir backend --port 8000
+.venv/Scripts/pip install -r web/requirements.lock   # Windows
+.venv/Scripts/python -m uvicorn app.main:app --app-dir web --port 8000
 ```
 
 Open http://127.0.0.1:8000/
 
 ## Run in Docker
 
+From the repository root (the combined compose file lives there and starts
+both the web service and the producer worker):
+
 ```bash
 docker compose up --build
 ```
 
-The compose file mounts `./data` into the container, so producer tasks can
-drop ready reports without rebuilding.
+The compose file mounts `./data` into both services, so the worker drops
+ready reports into `data/reports` without a rebuild.
 
 ## Demo data
 
@@ -42,11 +45,11 @@ Then open http://127.0.0.1:8000/scan/00000000-0000-0000-0000-000000000001
 ## Tests
 
 ```bash
-cd backend && ../.venv/Scripts/python -m pytest
-../.venv/Scripts/python -m ruff check app tests   # from backend/
+cd web && ../.venv/Scripts/python -m pytest
+../.venv/Scripts/python -m ruff check app tests   # from web/
 ```
 
-36 tests cover the zip guard (bombs, traversal, symlinks, limits), intake
+37 tests cover the zip guard (bombs, traversal, symlinks, limits), intake
 validation, form engine, API contract, and artifact serving.
 
 ## Configuration (nothing hardcoded)
@@ -123,7 +126,7 @@ control, subclass `app.ui.engine.Form` and override `form_id` or validation.
 
 ## Known limitations
 
-- No authentication (MVP decision; see PLAN.md open questions).
+- No authentication (MVP decision).
 - The body limit checks the declared Content-Length; chunked uploads without
   it are bounded only by intake quotas.
 - Retention cleanup runs at startup only (`retention_days` in app.yaml).
