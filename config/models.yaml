@@ -1,0 +1,39 @@
+# Stage D — LLM backends and models. Budget is $0.
+# OpenRouter IDs verified against GET https://openrouter.ai/api/v1/models on 2026-11-18
+# (`python -m bench llm models` re-checks them). Free variants have per-minute and per-day request caps;
+# check the account's limits with GET https://openrouter.ai/api/v1/key and set requests_per_day.
+budget_usd: 0.0
+
+backends:
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+    max_concurrency: 1
+    requests_per_minute: 16
+    requests_per_day: 50          # free tier without purchased credits; 1000 with >= $10 credits
+  selfhosted:
+    # vLLM / Ollama OpenAI-compatible server, or offline batch via `--mode export` +
+    # scripts/kaggle_vllm_batch.py + `python -m bench llm import`.
+    base_url: http://localhost:8000/v1
+    api_key_env: null
+    max_concurrency: 8
+
+models:
+  - id: nvidia/nemotron-3-ultra-550b-a55b:free     # large open MoE (strongest free option); reasoning model
+    backend: openrouter
+    role: open-large
+    params: {reasoning: {effort: low}}
+    reasoning_headroom: 3000
+  - id: google/gemma-4-31b-it:free                 # mid-size open model; upstream free pool often saturated
+    backend: openrouter
+    role: open-mid
+  - id: cohere/north-mini-code:free                # code-specialised
+    backend: openrouter
+    role: open-code
+  - id: liquid/lfm-3-1.7b:free                     # small model = lower bound
+    backend: openrouter
+    role: small
+  # Self-hosted on Kaggle/Colab (offline batch). The id is the HF model name passed to vLLM.
+  - id: Qwen/Qwen2.5-Coder-14B-Instruct-AWQ
+    backend: selfhosted
+    role: open-code
