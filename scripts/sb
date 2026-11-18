@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Run the analyzer / research CLI with the toolchain installed by scripts/setup.sh.
+#   scripts/sb app scan tests/fixtures/toy-py-flask     # product CLI   (python -m app ...)
+#   scripts/sb bench stats                               # research CLI  (python -m bench ...)
+#   scripts/sb --pytest -q                               # tests
+# Benchmark data goes to $SECBENCH_DATA (default ~/secbench-data).
+set -euo pipefail
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+VENV="${VENV:-$HOME/.venvs/repo-analyzer}"
+export SECBENCH_DATA="${SECBENCH_DATA:-$HOME/secbench-data}"
+export PATH="$HOME/.local/bin:$HOME/.local/node/bin:$HOME/tools/codeql:$HOME/.venvs/sast/bin:$PATH"
+export PYTHONDONTWRITEBYTECODE=1
+cd "$REPO"
+case "${1:-}" in
+  --pytest) shift; exec "$VENV/bin/pytest" -p no:cacheprovider "$@" ;;
+  app)      shift; exec "$VENV/bin/python" -m app "$@" ;;
+  *)        exec "$VENV/bin/python" -m bench "$@" ;;
+esac

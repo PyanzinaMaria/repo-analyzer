@@ -1,0 +1,8 @@
+# Research extras for `python -m bench` (benchmark build, evaluation, report figures).
+-r requirements.txt
+numpy>=1.26
+scipy>=1.12
+matplotlib>=3.8
+# docs assets (scripts/record_demo.py, scripts/cast2gif.py)
+pyte>=0.8
+Pillow>=10
