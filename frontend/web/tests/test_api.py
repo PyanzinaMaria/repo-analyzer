@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import zipfile
 
 
@@ -56,6 +57,28 @@ def test_empty_submission_rejected(client):
     r = c.post("/api/scans", data={"source_kind": "link", "repo_url": ""})
     assert r.status_code == 200
     assert "Обязательное поле" in r.text
+
+
+def test_files_mode_does_not_require_url_field(client):
+    """Regression: the hidden URL field must not carry `required` when files
+    mode is active — browsers block submission on hidden required inputs,
+    which made file/zip uploads impossible without filling the URL."""
+    c, _, _ = client
+    r = c.post("/api/scans", data={"source_kind": "files"})
+    assert r.status_code == 200
+    assert "Не выбрано ни одного файла" in r.text
+
+    m = re.search(r'<input id="field-repo_url"[^>]*>', r.text)
+    assert m is not None, "repo_url input must stay in the form (hidden by JS)"
+    assert "required" not in m.group(0)
+
+
+def test_link_mode_keeps_required_url_field(client):
+    c, _, _ = client
+    r = c.post("/api/scans", data={"source_kind": "link", "repo_url": ""})
+    m = re.search(r'<input id="field-repo_url"[^>]*>', r.text)
+    assert m is not None
+    assert "required" in m.group(0)
 
 
 def test_zip_submission_with_traversal_shows_error(client):

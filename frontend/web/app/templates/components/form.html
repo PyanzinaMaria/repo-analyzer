@@ -1,4 +1,6 @@
 {% macro render_field(field, values, errors, t) %}
+{% set is_visible = field.visible_when is none
+   or values.get(field.visible_when.field) == field.visible_when.equals %}
 <div class="field" {% if field.group %}data-group="{{ field.group }}"{% endif %}>
     {% if field.type != 'checkbox-single' %}
     <label for="field-{{ field.name }}">{{ t(field.label_key) }}</label>
@@ -8,7 +10,7 @@
     <input id="field-{{ field.name }}" type="{{ field.type }}" name="{{ field.name }}"
            value="{{ values.get(field.name, '') }}"
            {% if field.placeholder_key %}placeholder="{{ t(field.placeholder_key) }}"{% endif %}
-           {% if field.required %}required{% endif %}>
+           {% if field.required and is_visible %}required{% endif %}>
     {% elif field.type == 'textarea' %}
     <textarea id="field-{{ field.name }}" name="{{ field.name }}" rows="4">{{ values.get(field.name, '') }}</textarea>
     {% elif field.type == 'radio' %}
