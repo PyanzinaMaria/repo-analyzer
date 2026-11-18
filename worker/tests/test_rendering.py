@@ -63,3 +63,32 @@ def render(result, cfg, kind: str) -> str:
     from worker.rendering import render_doc, render_report
 
     return render_report(result, cfg) if kind == "report" else render_doc(result, cfg)
+
+
+def test_render_report_with_secaudit_analysis(cfg, scan_result):
+    """Ranked findings show the LLM verdict, data flow and code; dismissed ones get their own table."""
+    sqli, weak = scan_result.findings
+    sqli.extra.update(rank=1, tools=["bandit", "semgrep"], verdict="true_positive",
+                      triage={"verdict": "true_positive", "confidence": 0.9, "source": "request.args['id']",
+                              "sink": "cursor.execute", "sanitizers": [], "preconditions": "network access",
+                              "explanation": "Идентификатор подставляется в SQL без параметров."},
+                      snippet={"start": 40, "lines": ["def get(id):", "    q = 'SELECT ' + id", "    run(q)"],
+                               "highlight": [41, 41]})
+    weak.extra.update(dismissed=True, tools=["bandit"],
+                      triage={"verdict": "false_positive", "confidence": 0.8, "explanation": "MD5 для кеш-ключа."})
+    scan_result.meta.update(ranking="S+T", llm={"enabled": True, "model": "m", "modes": ["triage"]},
+                            attack_surface={"context": {"files": 3, "functions": 9, "entrypoints": 2, "sinks": 4},
+                                            "entry_points": {"route": 2}, "sinks_by_cwe": {"CWE-89": 1},
+                                            "tools": {"bandit": {"ok": True, "findings": 2, "seconds": 1.2},
+                                                      "codeql": {"ok": False}}})
+    html = render(scan_result, cfg, kind="report")
+    assert "Поверхность атаки и методика" in html and "CodeQL" in html and "не выполнен" in html
+    assert "подтверждено ИИ · 0.90" in html
+    assert "request.args[&#39;id&#39;] → cursor.execute" in html
+    assert 'class="hl"' in html and "SELECT" in html
+    assert "Отклонено ИИ-триажем (1)" in html and "MD5 для кеш-ключа." in html
+    assert "SAST + ИИ-триаж" in html
+    assert "https://" not in html and "<script" not in html
+    doc = render(scan_result, cfg, kind="doc")
+    assert "Методика и средства анализа" in doc and "Поверхность атаки" in doc
+    assert "(1 шт.)" in doc

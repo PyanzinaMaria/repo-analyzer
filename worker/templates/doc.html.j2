@@ -78,7 +78,29 @@
   </div>
 
   <div class="card">
-    <h2>2. Кодовая инвентаризация</h2>
+    <h2>2. Методика и средства анализа</h2>
+    <p>Исходный код проанализирован статическими анализаторами; их предупреждения нормализованы (SARIF),
+      дубликаты между инструментами объединены (±3 строки, совместимые CWE). Построены индекс функций,
+      приблизительный граф вызовов, перечень точек входа и каталог опасных вызовов с привязкой к CWE.
+      {% if surface.llm_model %}Языковая модель проверила эксплуатируемость предупреждений (триаж) и выполнила
+      поиск уязвимостей от точек входа к опасным вызовам; ложные срабатывания исключены из протокола
+      {%- if dismissed_count %} ({{ dismissed_count }} шт.){% endif %}.{% endif %}</p>
+    {% if surface.tools %}
+    <table>
+      <tr><th>Средство</th><th>Статус</th><th>Предупреждений</th><th>Время, с</th></tr>
+      {% for t in surface.tools %}
+      <tr><td>{{ t.name }}</td><td>{{ 'выполнено' if t.ok else 'не выполнено' }}</td>
+          <td>{{ t.findings if t.ok else '—' }}</td><td>{{ t.seconds if t.ok else '—' }}</td></tr>
+      {% endfor %}
+      {% if surface.llm_model %}<tr><td>LLM: {{ surface.llm_model }}</td><td>{{ surface.llm_status }}</td>
+          <td colspan="2">режимы: {{ surface.llm_modes | join(', ') }}</td></tr>{% endif %}
+    </table>
+    {% endif %}
+    {% if surface.ranking %}<p class="preview">Порядок находок: {{ surface.ranking }} — {{ surface.ranking_label }}.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>3. Кодовая инвентаризация</h2>
     {% if inventories %}
       {% for inv in inventories %}
       <section>
@@ -107,7 +129,23 @@
   </div>
 
   <div class="card">
-    <h2>3. Протокол выявленных уязвимостей</h2>
+    <h2>4. Поверхность атаки</h2>
+    {% if surface.context %}
+    <table>
+      <tr><th>Показатель</th><th>Значение</th></tr>
+      <tr><td>Функций в индексе</td><td>{{ surface.context.get('functions', '—') }}</td></tr>
+      <tr><td>Точек входа (маршруты, обработчики, экспортируемые API, CLI)</td><td>{{ surface.context.get('entrypoints', '—') }}</td></tr>
+      <tr><td>Опасных вызовов</td><td>{{ surface.context.get('sinks', '—') }}</td></tr>
+    </table>
+    {% if surface.entry_points %}<p class="preview">Точки входа по типу: {% for k, n in surface.entry_points.items() %}{{ k }} — {{ n }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+    {% if surface.sinks %}<p class="preview">Опасные вызовы по CWE: {% for k, n in surface.sinks.items() %}{{ k }} — {{ n }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+    {% else %}
+    <p class="empty">Индекс кода не построен.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>5. Протокол выявленных уязвимостей</h2>
     {% if findings %}
     <table>
       <tr><th>№</th><th>Уровень</th><th>Уязвимость</th><th>Расположение</th><th>Идентификатор</th></tr>
@@ -130,7 +168,7 @@
   </div>
 
   <div class="card">
-    <h2>4. Выводы</h2>
+    <h2>6. Выводы</h2>
     {% if total %}
     <p>По результатам автоматического анализа выявлено <b>{{ total }}</b> уязвимостей
       ({{ counts.get('critical', 0) }} критического, {{ counts.get('high', 0) }} высокого уровня).

@@ -58,6 +58,30 @@
   }
   .fix b { color: var(--accent-strong); }
   .empty { color: var(--ink-soft); font-style: italic; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .kv { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .kv td { padding: 4px 6px; border-bottom: 1px solid var(--border); }
+  .kv td:last-child { text-align: right; font-weight: 600; }
+  h4 { margin: 0 0 8px; font-size: 15px; }
+  .tool-ok { color: #2f7d3a; } .tool-fail { color: #b23b3b; }
+  .verdict {
+    border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface); white-space: nowrap;
+  }
+  .verdict.true_positive { background: #E86A6A; color: #fff; border-color: #E86A6A; }
+  .verdict.llm { background: var(--accent-strong); color: #fff; border-color: var(--accent-strong); }
+  .verdict.false_positive { text-decoration: line-through; }
+  .analysis { background: var(--surface); border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 14px; }
+  .analysis p { margin: 4px 0; }
+  .flow { font-style: italic; }
+  pre.code {
+    background: #2b1d25; color: #f8e9f1; border-radius: 8px; padding: 10px 0; margin: 10px 0 0;
+    font: 12.5px/1.45 Consolas, 'Courier New', monospace; overflow-x: auto;
+  }
+  pre.code span { display: block; padding: 0 12px; white-space: pre; }
+  pre.code span.hl { background: rgba(255, 143, 199, 0.28); }
+  pre.code i { color: #b99aa9; font-style: normal; display: inline-block; width: 3.5em; user-select: none; }
+  .dismissed td { font-size: 13px; vertical-align: top; }
   .foot { color: var(--ink-soft); font-size: 13px; text-align: center; margin-top: 8px; }
 </style>
 </head>
@@ -83,6 +107,8 @@
       <span class="stat">Всего находок: <b>{{ total }}</b></span>
       {% if summary.high_or_above %}<span class="stat">Критичных и высоких: <b>{{ summary.high_or_above }}</b></span>{% endif %}
       {% if summary.ai_findings %}<span class="stat">От ИИ-анализа: <b>{{ summary.ai_findings }}</b></span>{% endif %}
+      {% if summary.ai_confirmed %}<span class="stat">Подтверждено ИИ: <b>{{ summary.ai_confirmed }}</b></span>{% endif %}
+      {% if summary.dismissed_by_ai %}<span class="stat">Отклонено ИИ: <b>{{ summary.dismissed_by_ai }}</b></span>{% endif %}
       {% for lang in summary.languages_run | default([]) %}<span class="stat">Язык: <b>{{ lang }}</b></span>{% endfor %}
     </div>
     {% if meta_lines %}
@@ -91,6 +117,47 @@
     </ul>
     {% endif %}
   </div>
+
+  {% if surface.tools or surface.context %}
+  <div class="card">
+    <h2>Поверхность атаки и методика</h2>
+    <div class="grid2">
+      <div>
+        <h4>Код</h4>
+        <table class="kv">
+          <tr><td>Файлов в индексе</td><td>{{ surface.context.get('files', '—') }}</td></tr>
+          <tr><td>Функций</td><td>{{ surface.context.get('functions', '—') }}</td></tr>
+          <tr><td>Рёбер графа вызовов</td><td>{{ surface.context.get('edges', '—') }}</td></tr>
+          <tr><td>Точек входа</td><td>{{ surface.context.get('entrypoints', '—') }}</td></tr>
+          <tr><td>Опасных вызовов (sinks)</td><td>{{ surface.context.get('sinks', '—') }}</td></tr>
+        </table>
+      </div>
+      <div>
+        <h4>Точки входа по типу</h4>
+        {% if surface.entry_points %}
+        <table class="kv">{% for kind, n in surface.entry_points.items() %}<tr><td>{{ kind }}</td><td>{{ n }}</td></tr>{% endfor %}</table>
+        {% else %}<p class="empty">не обнаружены</p>{% endif %}
+      </div>
+      <div>
+        <h4>Опасные вызовы по CWE</h4>
+        {% if surface.sinks %}
+        <table class="kv">{% for cwe, n in surface.sinks.items() %}<tr><td>{{ cwe }}</td><td>{{ n }}</td></tr>{% endfor %}</table>
+        {% else %}<p class="empty">не обнаружены</p>{% endif %}
+      </div>
+      <div>
+        <h4>Анализаторы</h4>
+        <table class="kv">
+          {% for t in surface.tools %}
+          <tr><td><span class="{{ 'tool-ok' if t.ok else 'tool-fail' }}">{{ '✔' if t.ok else '✘' }}</span> {{ t.name }}</td>
+              <td>{% if t.ok %}{{ t.findings }} · {{ t.seconds }} с{% else %}не выполнен{% endif %}</td></tr>
+          {% endfor %}
+          {% if surface.llm_model %}<tr><td>LLM ({{ surface.llm_modes | join(', ') }})</td><td>{{ surface.llm_model }}</td></tr>{% endif %}
+        </table>
+      </div>
+    </div>
+    {% if surface.ranking %}<p class="meta">Ранжирование: <b>{{ surface.ranking }}</b> — {{ surface.ranking_label }}.</p>{% endif %}
+  </div>
+  {% endif %}
 
   <div class="card">
     <h2>Находки и рекомендации</h2>
@@ -103,14 +170,28 @@
                  'low': 'Низкий', 'info': 'Информация' }.get(f.severity, f.severity) }}
           </span>
           <h3>{{ f.position }}. {{ f.title }}</h3>
+          {% if f.analysis.verdict %}<span class="verdict {{ f.analysis.verdict_key }}">{{ f.analysis.verdict }}
+            {%- if f.analysis.confidence is not none %} · {{ '%.2f' | format(f.analysis.confidence) }}{% endif %}</span>{% endif %}
         </header>
         {% if f.file %}
         <p class="where">{{ f.file }}{% if f.line %}:{{ f.line }}{% endif %}
           {%- if f.cwe %} · {{ f.cwe }}{% endif %}
           {%- if f.rule_id %} · {{ f.rule_id }}{% endif %}
-          {%- if f.source %} · источник: {{ f.source }}{% endif %}</p>
+          {%- if f.tools %} · анализаторы: {{ f.tools | join(', ') }}{% elif f.source %} · источник: {{ f.source }}{% endif %}</p>
         {% endif %}
+        {% if f.analysis.explanation %}
+        <div class="analysis">
+          <p>{{ f.analysis.explanation }}</p>
+          {% if f.analysis.flow %}<p><b>Поток данных:</b> <span class="flow">{{ f.analysis.flow | join(' → ') }}</span></p>{% endif %}
+          {% if f.analysis.checks %}<p><b>Проверки на пути:</b> {{ f.analysis.checks | join('; ') }}</p>{% endif %}
+          {% if f.analysis.attacker %}<p><b>Что нужно атакующему:</b> {{ f.analysis.attacker }}</p>{% endif %}
+        </div>
+        {% else %}
         <p>{{ f.description }}</p>
+        {% endif %}
+        {% if f.snippet %}
+        <pre class="code">{% for l in f.snippet %}<span{% if l.hl %} class="hl"{% endif %}><i>{{ l.n }}</i>{{ l.text }}</span>{% endfor %}</pre>
+        {% endif %}
         {% if f.remediation %}<div class="fix"><b>Как исправить:</b> {{ f.remediation }}</div>{% endif %}
       </div>
       {% endfor %}
@@ -118,6 +199,19 @@
       <p class="empty">Уязвимостей не обнаружено.</p>
     {% endif %}
   </div>
+
+  {% if dismissed %}
+  <div class="card">
+    <h2>Отклонено ИИ-триажем ({{ dismissed | length }})</h2>
+    <p class="sub">Предупреждения анализаторов, которые ИИ счёл неэксплуатируемыми, с обоснованием — для проверки аудитором.</p>
+    <table class="kv dismissed">
+      {% for f in dismissed %}
+      <tr><td style="text-align:left; font-family: Consolas, monospace;">{{ f.file }}:{{ f.line }}<br><small>{{ f.tools | join(', ') }} · {{ f.cwe or '' }}</small></td>
+          <td style="text-align:left; font-weight: normal;">{{ f.analysis.explanation or f.description }}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
 
   <p class="foot">Отчёт сформирован автоматически сервисом анализа репозиториев и не заменяет ручной аудит безопасности.</p>
 </div>
