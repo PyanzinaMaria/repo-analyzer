@@ -1,0 +1,44 @@
+# Declarative definition of the audit submission form (goal 9).
+# Rendered by ui/engine.py through the generic form macro; reusable in other
+# applications by adding another YAML here or subclassing Form in Python.
+
+id: audit
+title_key: form.title
+submit_label_key: form.send
+
+fields:
+  - name: source_kind
+    type: radio
+    label_key: form.fields.source_kind.label
+    required: true
+    default: link
+    choices:
+      - value: link
+        label_key: form.fields.source_kind.link
+      - value: files
+        label_key: form.fields.source_kind.files
+
+  - name: repo_url
+    type: url
+    label_key: form.fields.repo_url.label
+    placeholder_key: form.fields.repo_url.placeholder
+    required: true
+    group: link
+    visible_when:
+      field: source_kind
+      equals: link
+    validators:
+      max_length: 2048
+      allowed_hosts: [github.com, gitlab.com, www.github.com, www.gitlab.com]
+
+  - name: files
+    type: file-multi
+    label_key: form.fields.files.label
+    help_key: form.fields.files.help
+    required: true
+    group: files
+    visible_when:
+      field: source_kind
+      equals: files
+    validators:
+      max_files: 20000

@@ -1,0 +1,23 @@
+# Application-level settings. Every value can be overridden by env vars
+# (see .env.example); nothing here is read from code defaults twice.
+
+title: Аудитор кода
+base_url: http://127.0.0.1:8000
+
+# Storage layout: all runtime paths are resolved under data_dir unless
+# overridden by absolute env paths.
+data_dir: data
+uploads_dir_name: uploads
+reports_dir_name: reports
+queue_dir_name: queue
+
+# Producer handoff: registry writes one job file per scan into queue dir.
+queue_driver: filesystem
+
+retention_days: 14
+
+server:
+  host: 127.0.0.1
+  port: 8000
+  # Requests with Content-Length above this are rejected with HTTP 413.
+  max_body_bytes: 52428800   # 50 MiB, keep in sync with upload.max_upload_bytes

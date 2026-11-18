@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{{ back_url }}">{{ t(back_label_key) }}</a></p>
+<iframe class="viewer-frame" src="{{ artifact_url }}" sandbox="allow-scripts" referrerpolicy="no-referrer" title="{{ page_title }}"></iframe>
+{% endblock %}

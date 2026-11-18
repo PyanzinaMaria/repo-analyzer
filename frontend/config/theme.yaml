@@ -1,0 +1,33 @@
+# Bimbo theme. Every token is emitted as a CSS custom property into
+# static/css/theme.css. Components reference var(--<token>) only.
+
+colors:
+  bg: "#FFE3F1"            # page background
+  surface: "#FFD6EC"       # cards, panels
+  surface-raised: "#FFF0F8"
+  accent: "#FF8FC7"        # primary buttons, highlights
+  accent-strong: "#E754A8" # hover, focus, links
+  accent-soft: "#FFC2E0"
+  ink: "#4A1F36"           # main text
+  ink-soft: "#8A5A73"      # secondary text
+  ok: "#7BC47F"            # success statuses
+  warn: "#F2B75C"
+  fail: "#E86A6A"
+  border: "#F5B8D8"
+
+font:
+  family: "'Segoe UI', 'Trebuchet MS', system-ui, sans-serif"
+  size-base: 16px
+
+shape:
+  radius: 16px
+  radius-small: 10px
+  shadow: "0 6px 24px rgba(231, 84, 168, 0.18)"
+
+# Donut chart colors: severity name -> color token above.
+severity_colors:
+  critical: fail
+  high: warn
+  medium: accent
+  low: accent-soft
+  info: ink-soft
