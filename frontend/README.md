@@ -83,7 +83,8 @@ This is the only integration point. The frontend never writes into
 ```
 
 `kind` is `link` (payload absent — cloning is the producer's job), `zip` or
-`files` (payload extracted under `data/uploads/{scan_id}/repo/`).
+`files` (payload extracted under `data/uploads/{scan_id}/repo/`; both upload
+kinds share this layout).
 
 Failed intake scans are withdrawn: the queue job is deleted and
 `data/uploads/{scan_id}/scan.json` records `"error": "<zip-guard code>"`.
@@ -93,10 +94,14 @@ Failed intake scans are withdrawn: the queue job is deleted and
 | File | Required | Purpose |
 |---|---|---|
 | `manifest.json` | yes | living status document (below) |
-| `summary.json` | for the donut widget | `{"severities": {"critical": 1, "high": 3, ...}}` |
-| `report.html` | optional | audit report, served sandboxed |
-| `doc.html` | optional | ФСТЭК documentation, served sandboxed |
-| `report.pdf`, `doc.pdf` | optional | downloadable versions |
+| `summary.json` | for the donut widget | `{"severities": {...}, "timing": {"analysis_seconds", "report_seconds", "total_seconds"}}` |
+| `{document}.{format}` | optional | serveable artifacts from `config/reports.yaml` documents × formats |
+
+Serveable artifact names follow `{document}.{format}` — `report` (audit
+report, always html) and `doc` (ФСТЭК documentation; the client picks
+md/pdf/docx in the form). The serveable set is derived from
+`config/reports.yaml`; the frontend serves exactly the artifacts the
+manifest declares and that exist on disk.
 
 `manifest.json` schema (stages come from `config/reports.yaml`; only report
 progress is meaningful to producers — `intake` is owned by the frontend):
@@ -104,7 +109,7 @@ progress is meaningful to producers — `intake` is owned by the frontend):
 ```json
 {
   "stages": {"analysis": "running", "report": "pending"},
-  "artifacts": ["report.html", "report.pdf"]
+  "artifacts": ["report.html", "report.md", "report.pdf"]
 }
 ```
 
@@ -116,13 +121,34 @@ Serving safety: artifact HTML is delivered with
 `Content-Security-Policy: sandbox allow-scripts` and displayed inside a
 sandboxed iframe; scan ids are validated as UUIDs on every route.
 
+## Scan options (methods, formats)
+
+The submission form carries two config-driven choice fields:
+
+- `methods` — analysis methods from `config/analysis.yaml` (multi checkboxes;
+  `available: false` methods render disabled with a «запланировано» badge and
+  are rejected server-side);
+- `formats` — output formats for the ФСТЭК documentation, from
+  `config/reports.yaml` (multi checkboxes; the audit report is always html).
+
+The LLM model is **not** client-selectable: the analyzer serves the model
+configured in its own settings (`ai.model` / `AI_MODEL`).
+
+Choice options live in the referenced config sections (`choices_from` /
+`defaults_from` are resolved at load time — the form YAML never duplicates
+them). Absent or empty choices inherit the config defaults, so every accepted
+scan carries an explicit options set, which travels to the producer in the
+queue job under `"options"`.
+
 ## Form reuse (goal 9)
 
 To adapt the frontend to another application, add
 `config/forms/<new_id>.yaml` (field types: text, url, radio, select,
-file-multi, folder; i18n label keys; visibility conditions; validators) —
-the generic macro renders it without any HTML or Python changes. For program
-control, subclass `app.ui.engine.Form` and override `form_id` or validation.
+checkboxes, file-multi, folder; i18n label keys; visibility conditions
+(`equals` / `includes`); validators; `choices_from` / `defaults_from`
+config references) — the generic macro renders it without any HTML or
+Python changes. For program control, subclass `app.ui.engine.Form` and
+override `form_id` or validation.
 
 ## Known limitations
 

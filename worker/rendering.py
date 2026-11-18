@@ -65,7 +65,7 @@ def svg_donut(counts: dict[str, int], colors: dict[str, str], size: int = 220) -
     for severity, count in counts.items():
         fraction = count / total
         dash = fraction * circumference
-        color = colors.get(severity, colors.get(UNKNOWN_SEVERITY_TARGET, "#8A5A73"))
+        color = colors.get(severity, colors.get(UNKNOWN_SEVERITY_TARGET, "#A49FD1"))
         segments.append(
             f'<circle cx="{size / 2}" cy="{size / 2}" r="{radius}" fill="none" '
             f'stroke="{html.escape(color)}" stroke-width="26" '

@@ -1,0 +1,37 @@
+# Analysis methods and LLM models the client can pick. This file is the
+# single source for the form choices: form fields reference sections here
+# via `choices_from` / `defaults_from`, nothing is duplicated in the form
+# YAML. `available: false` methods stay visible in the UI but are disabled
+# («запланировано») and rejected on direct API posts.
+
+defaults:
+  # Scans inherit these when the client does not override in the form.
+  methods: [sast]
+  # Base parameters every method inherits; a method's own `params` merge
+  # over them (base -> method).
+  params:
+    timeout_seconds: 600
+
+methods:
+  - id: sast
+    runner: static
+    available: true
+    label_key: methods.sast.label
+    description_key: methods.sast.description
+  - id: llm_agentic
+    runner: ai
+    available: true
+    label_key: methods.llm_agentic.label
+    description_key: methods.llm_agentic.description
+    params:
+      timeout_seconds: 1200
+  - id: dast
+    runner: dynamic
+    available: false
+    label_key: methods.dast.label
+    description_key: methods.dast.description
+  - id: pentest
+    runner: manual
+    available: false
+    label_key: methods.pentest.label
+    description_key: methods.pentest.description

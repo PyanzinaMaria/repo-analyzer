@@ -42,3 +42,21 @@ fields:
       equals: files
     validators:
       max_files: 20000
+
+  - name: methods
+    type: checkboxes
+    label_key: form.fields.methods.label
+    help_key: form.fields.methods.help
+    required: true
+    multi: true
+    choices_from: analysis.methods
+    defaults_from: analysis.defaults.methods
+
+  - name: formats
+    type: checkboxes
+    label_key: form.fields.formats.label
+    help_key: form.fields.formats.help
+    required: true
+    multi: true
+    choices_from: reports.formats
+    defaults_from: reports.defaults.formats

@@ -29,11 +29,36 @@ document.addEventListener("change", function (event) {
     }
 });
 
+// Config-defined membership visibility: a field with data-visible-when is
+// shown while any checkbox of that name carries data-visible-value. Hidden
+// fields are disabled for the same reason as hidden groups above.
+function applyIncludes(form) {
+    for (const el of form.querySelectorAll("[data-visible-when]")) {
+        const name = el.dataset.visibleWhen;
+        const wanted = el.dataset.visibleValue;
+        const on = [...form.querySelectorAll(`input[type="checkbox"][name="${name}"]`)]
+            .some((input) => input.checked && input.value === wanted);
+        el.style.display = on ? "" : "none";
+        for (const input of el.querySelectorAll("input, select, textarea")) {
+            input.disabled = !on;
+        }
+    }
+}
+
+document.addEventListener("change", function (event) {
+    const input = event.target;
+    if (!input.matches('input[type="checkbox"]')) return;
+    const form = input.closest("form");
+    if (form && form.querySelector("[data-visible-when]")) applyIncludes(form);
+});
+
 document.addEventListener("DOMContentLoaded", function () {
     for (const form of document.querySelectorAll("form[data-form-groups]")) {
         const checked = form.querySelector("[data-group-toggle]:checked");
-        if (!checked) continue;
-        applyGroups(form, checked.value);
-        checked.closest(".field").style.display = "";
+        if (checked) {
+            applyGroups(form, checked.value);
+            checked.closest(".field").style.display = "";
+        }
+        if (form.querySelector("[data-visible-when]")) applyIncludes(form);
     }
 });

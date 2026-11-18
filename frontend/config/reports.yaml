@@ -4,29 +4,31 @@
 manifest_filename: manifest.json
 summary_filename: summary.json
 
-# Artifacts the frontend knows how to serve. `viewer: framed` renders the
-# file inside a sandboxed iframe page; `download: true` forces attachment.
-artifacts:
-  - name: report.html
-    label_key: artifacts.report_html
-    media_type: text/html
-    viewer: framed
-    download: false
-  - name: doc.html
-    label_key: artifacts.doc_html
-    media_type: text/html
-    viewer: framed
-    download: false
-  - name: report.pdf
-    label_key: artifacts.report_pdf
-    media_type: application/pdf
-    viewer: none
-    download: true
-  - name: doc.pdf
-    label_key: artifacts.doc_pdf
-    media_type: application/pdf
-    viewer: none
-    download: true
+# Output formats the frontend knows how to serve. `viewer: framed` renders
+# the file inside a sandboxed iframe page; `download: true` forces attachment.
+formats:
+  - { id: md,   media_type: text/markdown, viewer: none,   download: true }
+  - { id: html, media_type: text/html,     viewer: framed, download: false }
+  - { id: pdf,  media_type: application/pdf, viewer: none, download: true }
+  - { id: docx, media_type: application/vnd.openxmlformats-officedocument.wordprocessingml.document, viewer: none, download: true }
+
+# Formats the FSTEC documentation inherits when the client does not choose
+# any in the form. html is always produced by the worker regardless of this
+# list: it feeds the viewer and is the conversion source for pdf/docx.
+defaults:
+  formats: [md]
+
+# Serveable documents. The serveable artifact list (ReportConfig.artifacts)
+# is derived as documents x formats with names following {document}.{format}.
+# Format options in the submission form apply only to the FSTEC document
+# (`doc`); the audit report (`report`) is always delivered as html.
+documents:
+  - id: report
+    label_key: artifacts.docs.report
+    formats: [html]
+  - id: doc
+    label_key: artifacts.docs.doc
+    formats: [html, md, pdf, docx]
 
 # Pipeline stages producers report through manifest.json. Order is display
 # order; a stage may be absent from the manifest until producers know it.

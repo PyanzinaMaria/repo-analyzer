@@ -5,5 +5,10 @@
     "medium": 5,
     "low": 2,
     "info": 4
+  },
+  "timing": {
+    "analysis_seconds": 41.7,
+    "report_seconds": 0.3,
+    "total_seconds": 42.0
   }
 }

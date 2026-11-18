@@ -6,6 +6,7 @@ from collections import Counter
 from pathlib import Path
 
 from app.ai import run_ai_analysis
+from app.analysis.registry import check_runners
 from app.languages.registry import LanguageRegistry, build_registry
 from app.models.finding import Finding, Severity
 from app.models.project import ProjectStatus, ScanInfo, ScanStatus
@@ -31,6 +32,7 @@ class ScanOrchestrator:
         project_id: str,
         *,
         enable_ai: bool | None = None,
+        methods: list[str] | None = None,
     ) -> ScanInfo:
         project = self.store.get_project(project_id)
         if project is None:
@@ -41,6 +43,9 @@ class ScanOrchestrator:
             ProjectStatus.failed,
         }:
             raise RuntimeError(f"Project is not ready for scan: {project.status}")
+
+        # Fail fast on runner keys this deployment does not know or offer.
+        check_runners(methods)
 
         scan = ScanInfo(
             id=uuid.uuid4().hex,
@@ -58,6 +63,7 @@ class ScanOrchestrator:
                 Path(project.workspace_path),
                 project.name,
                 enable_ai=enable_ai,
+                methods=methods,
             )
             reports_dir = self.store.reports_dir(project_id, scan.id)
             write_security_json(result, reports_dir / "security_report.json")
@@ -86,6 +92,7 @@ class ScanOrchestrator:
         project_name: str,
         *,
         enable_ai: bool | None = None,
+        methods: list[str] | None = None,
     ) -> ScanResult:
         findings: list[Finding] = []
         inventories = []
@@ -101,11 +108,14 @@ class ScanOrchestrator:
                 inventories.append(analysis.inventory)
             language_meta[handler.id] = analysis.meta
 
+        # Explicit runner selection overrides the enable_ai flag; otherwise
+        # the legacy flag/config semantics apply unchanged.
+        ai_override = enable_ai if methods is None else ("ai" in methods)
         ai_findings, ai_meta = run_ai_analysis(
             root,
             findings,
             inventories,
-            enable_override=enable_ai,
+            enable_override=ai_override,
         )
         findings.extend(ai_findings)
 
@@ -121,6 +131,9 @@ class ScanOrchestrator:
             ),
             "ai_findings": sum(1 for f in findings if f.source == "ai"),
         }
+        meta: dict = {"languages": language_meta, "ai": ai_meta}
+        if methods is not None:
+            meta["runners"] = list(methods)
         return ScanResult(
             scan_id=scan_id,
             project_id=project_id,
@@ -129,5 +142,5 @@ class ScanOrchestrator:
             findings=findings,
             inventories=inventories,
             summary=summary,
-            meta={"languages": language_meta, "ai": ai_meta},
+            meta=meta,
         )

@@ -37,7 +37,7 @@ def test_claim_missing_file_returns_none(cfg):
 
 
 def test_parse_job_valid_and_invalid(cfg, make_job):
-    job = make_job("11111111-1111-1111-1111-111111111111", {"kind": "link", "url": "https://github.com/o/r"})
+    make_job("11111111-1111-1111-1111-111111111111", {"kind": "link", "url": "https://github.com/o/r"})
     parsed = queue.parse_job(queue.pending_jobs(cfg.queue_dir)[0])
     assert parsed is not None and parsed["scan_id"] == "11111111-1111-1111-1111-111111111111"
 

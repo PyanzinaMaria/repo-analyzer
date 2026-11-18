@@ -25,6 +25,19 @@ def test_index_renders_form_and_rules(client):
     assert "Правила загрузки" in r.text
 
 
+def test_disclaimer_banner_rendered(client, demo_scan):
+    """Advisory banner: results are recommendations with a possible
+    false-negative rate; shown on the submission page and above artifacts."""
+    c, _, _ = client
+    index = c.get("/")
+    assert "рекомендательный характер" in index.text
+    assert "false negatives" in index.text
+
+    scan = c.get(f"/scan/{demo_scan}")
+    assert scan.status_code == 200
+    assert "рекомендательный характер" in scan.text
+
+
 def test_link_submission_creates_scan_and_queue_job(client):
     c, settings, data_dir = client
     r = c.post(
@@ -43,6 +56,78 @@ def test_link_submission_creates_scan_and_queue_job(client):
     status = c.get(f"/api/scans/{scan_id}/status").json()
     assert status["stages"][0] == {"name": "intake", "state": "ok"}
     assert status["source"]["url"] == "https://github.com/owner/repo"
+
+
+def test_submission_carries_options_to_queue_job(client):
+    """Chosen methods/formats ride the queue job for the producer."""
+    import json
+
+    c, _, data_dir = client
+    r = c.post(
+        "/api/scans",
+        data={
+            "source_kind": "link",
+            "repo_url": "https://github.com/owner/repo",
+            "methods": ["sast", "llm_agentic"],
+            "formats": ["md", "pdf", "docx"],
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    scan_id = r.headers["location"].rsplit("/", 1)[-1]
+
+    job = json.loads((data_dir / "queue" / f"{scan_id}.json").read_text(encoding="utf-8"))
+    assert job["options"] == {
+        "methods": ["sast", "llm_agentic"],
+        "formats": ["md", "pdf", "docx"],
+    }
+    status = c.get(f"/api/scans/{scan_id}/status").json()
+    assert status["options"]["methods"] == ["sast", "llm_agentic"]
+
+
+def test_submission_without_choices_inherits_config_defaults(client):
+    """Defaults chain: absent/empty choices fall back to the YAML defaults."""
+    import json
+
+    c, _, data_dir = client
+    r = c.post(
+        "/api/scans",
+        data={"source_kind": "link", "repo_url": "https://github.com/owner/repo"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    scan_id = r.headers["location"].rsplit("/", 1)[-1]
+
+    job = json.loads((data_dir / "queue" / f"{scan_id}.json").read_text(encoding="utf-8"))
+    # model is absent: the select stays hidden while methods=[sast], so the
+    # producer inherits the analyzer-side default model.
+    assert job["options"] == {"methods": ["sast"], "formats": ["md"]}
+
+
+def test_submission_rejects_unavailable_method(client):
+    """Planned methods are rejected even on direct API posts."""
+    c, _, _ = client
+    r = c.post(
+        "/api/scans",
+        data={
+            "source_kind": "link",
+            "repo_url": "https://github.com/owner/repo",
+            "methods": ["sast", "pentest"],
+            "formats": ["md"],
+        },
+    )
+    assert r.status_code == 200
+    assert "недоступен" in r.text
+
+
+def test_index_renders_analysis_and_format_choices(client):
+    c, _, _ = client
+    r = c.get("/")
+    assert r.status_code == 200
+    assert 'name="methods"' in r.text
+    assert 'value="dast"' in r.text and "запланировано" in r.text
+    assert 'name="formats"' in r.text
+    assert 'name="model"' not in r.text  # model choice removed: analyzer serves its own ai.model
 
 
 def test_link_submission_rejects_foreign_host(client):
@@ -107,6 +192,41 @@ def test_zip_submission_ok(client):
     assert (data_dir / "uploads" / scan_id / "repo" / "src" / "app.py").is_file()
 
 
+def test_files_submission_lands_in_repo_dir(client):
+    """Regression: plain multi-file uploads must land in uploads/{id}/repo/
+    like zip uploads — the worker reads uploads/{id}/repo for both kinds and
+    used to crash with FileNotFoundError on this layout."""
+    c, _, data_dir = client
+    r = c.post(
+        "/api/scans",
+        data={"source_kind": "files", "repo_url": ""},
+        files=[
+            ("files", ("src/app.py", b"print(1)", "text/x-python")),
+            ("files", ("README.md", b"# demo", "text/markdown")),
+        ],
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    scan_id = r.headers["location"].rsplit("/", 1)[-1]
+    assert (data_dir / "uploads" / scan_id / "repo" / "src" / "app.py").is_file()
+    assert (data_dir / "uploads" / scan_id / "repo" / "README.md").is_file()
+    assert (data_dir / "uploads" / scan_id / "scan.json").is_file()
+
+
+def test_scan_page_shows_live_elapsed_while_running(client):
+    """Fresh submission: stages pending, the page shows a live elapsed line."""
+    c, _, _ = client
+    r = c.post(
+        "/api/scans",
+        data={"source_kind": "link", "repo_url": "https://github.com/owner/repo"},
+        follow_redirects=False,
+    )
+    scan_id = r.headers["location"].rsplit("/", 1)[-1]
+    page = c.get(f"/scan/{scan_id}")
+    assert page.status_code == 200
+    assert "Прошло:" in page.text
+
+
 def test_status_unknown_scan(client):
     c, _, _ = client
     assert c.get("/api/scans/not-a-uuid/status").json() == {"error": "not_found"}
@@ -122,10 +242,10 @@ def test_scan_page_not_found(client):
 def test_artifacts_served_with_contract_headers(client, demo_scan):
     c, _, _ = client
     listing = c.get(f"/api/scans/{demo_scan}/artifacts").json()
-    assert set(listing["artifacts"]) == {"report.html", "doc.html", "report.pdf", "doc.pdf"}
+    assert set(listing["artifacts"]) == {"report.html", "doc.html", "doc.md", "doc.pdf"}
     assert listing["summary"]["severities"]["critical"] == 1
 
-    pdf = c.get(f"/api/scans/{demo_scan}/artifacts/report.pdf")
+    pdf = c.get(f"/api/scans/{demo_scan}/artifacts/doc.pdf")
     assert pdf.status_code == 200
     assert pdf.headers["content-type"].startswith("application/pdf")
     assert "attachment" in pdf.headers["content-disposition"]
@@ -145,9 +265,14 @@ def test_scan_page_shows_results_when_ready(client, demo_scan):
     c, _, _ = client
     r = c.get(f"/scan/{demo_scan}")
     assert r.status_code == 200
-    assert "Документация ФСТЭК (смотреть)" in r.text
-    assert "Отчёт аудита (PDF)" in r.text
+    assert "Документация ФСТЭК" in r.text
+    assert "Документация ФСТЭК · PDF" in r.text
+    assert "Документация ФСТЭК · MD" in r.text
+    assert "Отчёт аудита · MD" not in r.text  # audit report: html only, no format options
     assert 'data-option' in r.text  # donut option embedded
+    assert "Анализ: 41.7 с" in r.text  # timing block from summary.json
+    assert "Всего: 42.0 с" in r.text
+    assert "Прошло" not in r.text  # live elapsed only while stages run
 
     viewer = c.get(f"/scan/{demo_scan}/view/report.html")
     assert viewer.status_code == 200

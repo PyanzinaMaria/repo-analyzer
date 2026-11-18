@@ -1,7 +1,7 @@
 # Application-level settings. Every value can be overridden by env vars
 # (see .env.example); nothing here is read from code defaults twice.
 
-title: Аудитор кода
+title: ПИН-тест
 base_url: http://127.0.0.1:8000
 
 # Storage layout: all runtime paths are resolved under data_dir unless
