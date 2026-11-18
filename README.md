@@ -1,9 +1,10 @@
 # Аудитор кода — монорепозиторий
 
 Полный конвейер анализа репозиториев: веб-фронтенд приёма заявок, продюсер-воркер
-и анализатор (Bandit + pip-audit + AST, опционально ИИ). Ветка `frontend`
-объединяет фронтенд и бэкенд; связь между сервисами — **только файловый контракт**
-через общее дерево `data/`, никакого прямого HTTP между ними нет.
+и анализатор (Bandit + pip-audit + AST, опционально ИИ). Слияние фронтенда и бэкенда
+принято в `master` (PR #1); ветка `feature/scan-options` добавляет выбор методов
+анализа, форматов отчётов и модели ИИ. Связь между сервисами — **только файловый
+контракт** через общее дерево `data/`, никакого прямого HTTP между ними нет.
 
 ```
 Браузер ──HTTP──▶ WEB :8000 ──пишет──▶ data/uploads/{id}/  +  data/queue/{id}.json
@@ -12,17 +13,19 @@ WORKER ──поллинг queue/──▶ CLAIM (rename .claimed)
    │  вызывает библиотеку ANALYZATOR (IngestService → ScanOrchestrator)
    │  bandit / pip-audit / AST — субпроцессы; GitHub-ссылки клонируются (git --depth 1)
    ▼
-data/reports/{id}/  ◀──пишет WORKER──  manifest.json · summary.json · report.html · doc.html
+data/reports/{id}/  ◀──пишет WORKER──  manifest.json · summary.json · {report,doc}.{html,md,pdf,docx}
                                              │
 Браузер ◀──HTMX-поллинг /scan/{id}/body── WEB читает manifest/summary и раздаёт артефакты
 ```
 
 - **Веб-фронтенд** (`frontend/`) — приём репозитория (zip / файлы / ссылка GitHub-GitLab),
-  защита от zip-бомб на входе, страница статуса, просмотр и скачивание готовых артефактов.
+  выбор методов анализа, форматов результатов и модели ИИ, защита от zip-бомб на входе,
+  страница статуса с таймингами, просмотр и скачивание готовых артефактов.
   Подробнее: [`frontend/README.md`](frontend/README.md).
-- **Воркер** (`worker/`) — продюсер: забирает задачи из `data/queue/`, запускает анализ,
-  рендерит `report.html` (отчёт аудита) и `doc.html` (черновик ФСТЭК), пишет
-  `summary.json` (donut-виджет) и `manifest.json` (этапы статуса).
+- **Воркер** (`worker/`) — продюсер: забирает задачи из `data/queue/`, сверяет выбранное
+  с контрактными конфигами (`frontend/config/analysis.yaml`, `reports.yaml`), запускает
+  анализ, рендерит документы в выбранных форматах, пишет `summary.json` (donut + тайминги)
+  и `manifest.json` (этапы статуса).
 - **Анализатор** (`app/`) — библиотека для воркера и самостоятельный HTTP-сервис
   (`/api/v1/...`) для отладки; оригинальные README-разделы ниже.
 
@@ -30,11 +33,11 @@ data/reports/{id}/  ◀──пишет WORKER──  manifest.json · summary.j
 
 | Дерево | Кто пишет | Кто читает |
 |---|---|---|
-| `data/queue/{scan_id}.json` | web (при подаче заявки) | worker (забирает rename'ом в `.claimed`) |
-| `data/uploads/{scan_id}/repo/` | web (распакованный payload) | worker (для zip/файлов; клонирование — на воркере) |
-| `data/reports/{scan_id}/manifest.json` | worker: `stages: {analysis, report}` | web: слияние со статусом + HTMX-поллинг |
-| `data/reports/{scan_id}/summary.json` | worker: `{"severities": {...}}` | web: donut-виджет |
-| `data/reports/{scan_id}/report.html`, `doc.html` | worker | web: sandboxed iframe + скачивание |
+| `data/queue/{scan_id}.json` | web (при подаче заявки): `{scan_id, created_at, source, options}` | worker (забирает rename'ом в `.claimed`) |
+| `data/uploads/{scan_id}/repo/` | web (распакованный payload; **одинаковый layout для zip и отдельных файлов**) | worker (для zip/файлов; клонирование — на воркере) |
+| `data/reports/{scan_id}/manifest.json` | worker: `stages: {analysis, report}` + список артефактов | web: слияние со статусом + HTMX-поллинг |
+| `data/reports/{scan_id}/summary.json` | worker: `{"severities": {...}, "timing": {...}}` | web: donut-виджет + тайминги этапов |
+| `data/reports/{scan_id}/{document}.{format}` | worker: `report.html/md/pdf/docx`, `doc.html/pdf/docx` | web: sandboxed iframe + скачивание |
 | `data/workspaces/{project_id}/` | анализатор (своё хранилище) | — |
 
 Этап `intake` принадлежит веб-фронтенду и в манифестах воркера не участвует.
@@ -98,31 +101,12 @@ docker compose up --build
 | GitHub | `POST /api/v1/projects` → `{"source_type":"github","github_url":"https://github.com/org/repo"}` |
 | ZIP | `POST /api/v1/projects/upload` — multipart |
 
-Скан: `POST /api/v1/projects/{id}/scans` (тело необязательно; `{"enable_ai": true}` — ИИ на этот скан).
+Скан: `POST /api/v1/projects/{id}/scans` (тело необязательно). Тело — переопределения
+на один скан: `{"enable_ai": true}`, `{"methods": ["static", "ai"]}` (ключи раннеров,
+см. `app/analysis/registry.py` и `methods:` в `config/settings.yaml`).
+Модель ИИ клиенту не выбирается — всегда `ai.model` из settings.yaml (или `AI_MODEL`).
 Отчёты: `GET …/reports/security?format=markdown|json`, `GET …/reports/fstec?format=markdown`.
 Результат целиком: `GET /api/v1/projects/{id}/scans/{scan_id}/result`.
-
-### SAST + DAST на одном intake
-
-Скан репозитория/папки (`POST /api/v1/projects/.../scans` или worker `link|zip|files`) теперь:
-1. SAST по коду;
-2. автоподъём веб-приложения в Docker-песочнице (`Dockerfile`/`compose` или Python-эвристика);
-3. DAST (preflight + ZAP) по поднятому URL;
-4. контейнер гасится; findings сливаются в один `ScanResult` (`summary.scan_kind=sast+dast`).
-
-Если поднять приложение нельзя — SAST-отчёт всё равно готов, DAST в `meta.dast.status=skipped`.
-На машине worker нужен Docker. Настройки: `sandbox:` и `dast:` в [`config/settings.yaml`](config/settings.yaml).
-
-### DAST только по URL (без UI)
-
-| Действие | Запрос |
-|---|---|
-| Старт | `POST /api/v1/dast/scans` → `{"target_url":"http://127.0.0.1:8001/"}` |
-| Статус | `GET /api/v1/dast/scans/{id}` |
-| Результат | `GET /api/v1/dast/scans/{id}/result` |
-| Отчёт | `GET /api/v1/dast/scans/{id}/reports/dast?format=json\|markdown` |
-
-Учебные мишени: [`sandbox/dast/`](sandbox/dast/).
 
 > Черновик ФСТЭК **не является** полным сертифицированным комплектом по приказу №76.
 
@@ -136,8 +120,8 @@ enabled_languages:
   # - javascript   # stub, пока не реализован
 ```
 
-- Контракт: [`app/languages/base.py`](app/languages/base.py) — `detect` / `analyze` / `detect_runtime` / `analyze_dast` / `detect_runnable`.
-- **Python:** Bandit + pip-audit + инвентаризация; sandbox-эвристика Flask/FastAPI/Django.
+- Контракт: [`app/languages/base.py`](app/languages/base.py) — `detect` / `analyze`.
+- **Python:** Bandit + pip-audit + инвентаризация модулей/классов/функций/импортов.
 
 ## ИИ-анализ
 
@@ -147,25 +131,56 @@ Post-scan review отобранных файлов через OpenAI-compatible 
 1. `ai.enabled: true` в [`config/settings.yaml`](config/settings.yaml) (или `WORKER_ENABLE_AI=true` у воркера)
 2. `AI_API_KEY=…` (обязательно), опционально `AI_BASE_URL`, `AI_MODEL`
 
-Без ключа модуль тихо пропускается (`meta.ai.status=skipped`).
+Без ключа модуль тихо пропускается (`meta.ai.status=skipped`). Модель ИИ клиенту
+не выбирается — используется `ai.model` из settings.yaml (или `AI_MODEL` из env);
+использованная модель видна в `meta.ai.model`.
+
+## Методы анализа и форматы результатов
+
+Выбор клиента живёт в двух контрактных конфигах — их читают и форма, и воркер:
+
+- [`frontend/config/analysis.yaml`](frontend/config/analysis.yaml) — методы анализа
+  (`sast`, `llm_agentic`, `dast`, `pentest`) с признаком `available` (невыполненные
+  видны в форме отключёнными с плашкой «запланировано» и отклоняются API).
+  `defaults.methods` — наследуемые значения: скан, не переопределивший выбор,
+  получает их. Параметры метода мержатся поверх общих `defaults.params`
+  (base → method). Воркер мапит id метода на ключ раннера (`static`, `ai`, …)
+  и передаёт всё в `ScanOrchestrator`. Модель ИИ в выборе клиента не участвует.
+- [`frontend/config/reports.yaml`](frontend/config/reports.yaml) — форматы (`md`,
+  `html`, `pdf`, `docx`) и документы (`report` — отчёт аудита, `doc` — черновик
+  ФСТЭК). Список раздаваемых артефактов выводится как документы × форматы
+  (`{document}.{format}`); выбор форматов в форме относится **только к
+  документации ФСТЭК** — отчёт аудита всегда отдаётся в HTML; `defaults.formats` —
+  форматы документации, доставшиеся скану без явного выбора; `html` воркер
+  производит всегда (он кормит просмотрщик и служит источником конвертации).
+
+Движки форматов включаются в `worker/config/worker.yaml` (`formats:`). PDF —
+WeasyPrint, DOCX — python-docx + htmldocx; зависимости импортируются лениво,
+поэтому сканы без «тяжёлых» форматов работают без установленных пакетов.
+WeasyPrint требует runtime GTK/Pango (в Linux-образах есть; на Windows без него
+PDF-этап завершится ошибкой отчёта).
 
 ## Структура
 
 ```text
 app/              # анализатор (библиотека + HTTP-сервис)
+  analysis/       # реестр раннеров анализа (methods → static/ai/…)
 config/           # settings.yaml анализатора
 templates/        # Jinja2 markdown-шаблоны анализатора
 worker/           # продюсер: queue → analyzer → отчёты фронтенду
   config/worker.yaml
+  formats.py      # обработчики форматов (md/pdf/docx)
   templates/      # report.html.j2, doc.html.j2
 frontend/         # веб-фронтенд (см. frontend/README.md)
+  config/analysis.yaml   # методы анализа + модели ИИ (контракт)
+  config/reports.yaml    # форматы × документы (контракт)
 data/             # runtime: queue/ uploads/ reports/ workspaces/ (gitignored)
 ```
 
 ## Тесты
 
 ```bash
-.venv/Scripts/python -m pytest worker/tests -q                  # воркер (офлайн)
-cd frontend/web && ../../.venv/Scripts/python -m pytest     # фронтенд, 37 тестов
+.venv/Scripts/python -m pytest worker/tests -q                  # воркер (офлайн; pdf-тест требует weasyprint)
+cd frontend/web && ../../.venv/Scripts/python -m pytest     # фронтенд
 pytest -q                                                       # анализатор (pip-audit требует сеть)
 ```

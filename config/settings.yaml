@@ -3,6 +3,14 @@
 enabled_languages:
   - python
 
+# Analysis runners this deployment offers (see app/analysis/registry.py).
+# The frontend picks methods in the form; the worker maps them to these
+# runner keys via frontend/config/analysis.yaml. dynamic/manual are not
+# implemented yet — requesting them fails the scan fast.
+methods:
+  - static
+  - ai
+
 # Example for later:
 # enabled_languages:
 #   - python

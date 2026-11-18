@@ -1,7 +1,11 @@
 {% macro render_field(field, values, errors, t) %}
-{% set is_visible = field.visible_when is none
-   or values.get(field.visible_when.field) == field.visible_when.equals %}
-<div class="field" {% if field.group %}data-group="{{ field.group }}"{% endif %}>
+{% set vw = field.visible_when %}
+{% set is_visible = vw is none
+   or (vw.equals is not none and values.get(vw.field) == vw.equals)
+   or (vw.includes is not none and vw.includes in (values.get(vw.field) or [])) %}
+<div class="field" {% if field.group %}data-group="{{ field.group }}"{% endif %}
+     {% if vw and vw.includes is not none %}data-visible-when="{{ vw.field }}" data-visible-value="{{ vw.includes }}"{% endif %}
+     {% if not is_visible %}style="display: none"{% endif %}>
     {% if field.type != 'checkbox-single' %}
     <label for="field-{{ field.name }}">{{ t(field.label_key) }}</label>
     {% endif %}
@@ -23,10 +27,22 @@
         </label>
         {% endfor %}
     </div>
+    {% elif field.type == 'checkboxes' %}
+    <div class="choices choices--wrap">
+        {% for choice in field.choices %}
+        <label class="{{ 'choice--disabled' if choice.get('disabled') }}">
+            <input type="checkbox" name="{{ field.name }}" value="{{ choice.value }}"
+                   {{ 'checked' if choice.value in (values.get(field.name) or []) }}
+                   {{ 'disabled' if choice.get('disabled') }}>
+            <span>{{ t(choice.label_key) }}</span>
+            {% if choice.get('disabled') %}<span class="badge badge--planned">{{ t("form.planned") }}</span>{% endif %}
+        </label>
+        {% endfor %}
+    </div>
     {% elif field.type == 'select' %}
     <select id="field-{{ field.name }}" name="{{ field.name }}">
         {% for choice in field.choices %}
-        <option value="{{ choice.value }}" {{ 'selected' if values.get(field.name) == choice.value }}>{{ t(choice.label_key) }}</option>
+        <option value="{{ choice.value }}" {{ 'selected' if values.get(field.name, field.default) == choice.value }}>{{ t(choice.label_key) }}</option>
         {% endfor %}
     </select>
     {% elif field.type == 'file-multi' %}

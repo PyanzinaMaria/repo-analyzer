@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
@@ -100,18 +101,32 @@ def _require_scan(request: Request, scan_id: str) -> dict:
     return status
 
 
+def _elapsed_seconds(status: dict) -> int | None:
+    """Whole seconds since submission, for the live 'elapsed' line while
+    stages are still running. None when the timestamp is unparseable."""
+    try:
+        created = datetime.fromisoformat(status["created_at"])
+    except (KeyError, ValueError):
+        return None
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=UTC)
+    return max(0, int((datetime.now(UTC) - created).total_seconds()))
+
+
 def _scan_context(request: Request, scan_id: str) -> dict:
     settings = get_settings()
     status = _require_scan(request, scan_id)
     ctx = _base_context(request, settings)
     stage_labels = {s: settings.translate(f"scan.stages.{s}") for s in settings.reports.stages}
+    complete = all(s["state"] in {"ok", "fail"} for s in status["stages"])
     ctx.update({
         "page_title": settings.translate("scan.title"),
         "status": status,
         "stage_labels": stage_labels,
         "donut_option": build_donut(status["summary"], settings),
         "artifact_specs": {a.name: a for a in settings.reports.artifacts},
-        "complete": all(s["state"] in {"ok", "fail"} for s in status["stages"]),
+        "complete": complete,
+        "elapsed_seconds": None if complete else _elapsed_seconds(status),
     })
     return ctx
 

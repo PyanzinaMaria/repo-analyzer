@@ -25,7 +25,10 @@ def start_scan(project_id: str, body: ScanCreate | None = None) -> ScanInfo:
         return get_scan_orchestrator().start_scan(
             project_id,
             enable_ai=payload.enable_ai,
+            methods=payload.methods,
         )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001

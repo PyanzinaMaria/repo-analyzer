@@ -25,6 +25,7 @@ class ScanRecord(BaseModel):
     id: str
     created_at: str
     source: dict[str, Any]        # {kind: link|files|zip, url?, file_count?}
+    options: dict[str, Any] = Field(default_factory=dict)  # {methods?, formats?, model?}
     stages: dict[str, str] = Field(default_factory=lambda: {"intake": "ok"})
     error: str | None = None      # zip guard code when intake failed
 
@@ -56,12 +57,18 @@ def scan_dir(settings: Settings, scan_id: str) -> Any:
     return settings.paths.uploads / scan_id
 
 
-def create_scan(settings: Settings, source: dict[str, Any]) -> ScanRecord:
+def create_scan(
+    settings: Settings,
+    source: dict[str, Any],
+    *,
+    options: dict[str, Any] | None = None,
+) -> ScanRecord:
     scan_id = str(uuid.uuid4())
     record = ScanRecord(
         id=scan_id,
         created_at=datetime.now(UTC).isoformat(),
         source=source,
+        options=options or {},
     )
     persist(settings, record)
 
@@ -69,6 +76,7 @@ def create_scan(settings: Settings, source: dict[str, Any]) -> ScanRecord:
         "scan_id": scan_id,
         "created_at": record.created_at,
         "source": source,
+        "options": record.options,
     }
     queue_path = settings.paths.queue / f"{scan_id}.json"
     queue_path.write_text(json.dumps(job, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -142,6 +150,7 @@ def scan_status(settings: Settings, scan_id: str) -> dict[str, Any] | None:
         "id": record.id,
         "created_at": record.created_at,
         "source": record.source,
+        "options": record.options,
         "stages": stages,
         "artifacts": available_artifacts(settings, scan_id),
         "summary": read_summary(settings, scan_id),

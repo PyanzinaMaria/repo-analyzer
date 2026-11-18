@@ -46,14 +46,22 @@ class Form:
     def field(self, name: str) -> FieldSpec:
         return next(f for f in self.spec.fields if f.name == name)
 
+    @staticmethod
+    def _is_visible(field: FieldSpec, values: dict[str, Any]) -> bool:
+        """Visibility per the field's condition: `equals` for single-value
+        fields, `includes` for multi (checkbox list) fields."""
+        cond = field.visible_when
+        if cond is None:
+            return True
+        if cond.equals is not None:
+            return values.get(cond.field) == cond.equals
+        if cond.includes is not None:
+            chosen = values.get(cond.field) or []
+            return cond.includes in chosen
+        return True
+
     def visible_fields(self, values: dict[str, Any]) -> list[FieldSpec]:
-        """Fields whose visibility condition is satisfied by current values."""
-        visible = []
-        for field in self.spec.fields:
-            cond = field.visible_when
-            if cond is None or values.get(cond.field) == cond.equals:
-                visible.append(field)
-        return visible
+        return [f for f in self.spec.fields if self._is_visible(f, values)]
 
     def default_values(self) -> dict[str, Any]:
         return {f.name: f.default for f in self.spec.fields if f.default is not None}
@@ -76,6 +84,8 @@ class Form:
             error = self._validate_field(field, value, file_args)
             if error is not None:
                 errors[field.name] = error
+            elif field.multi:
+                clean[field.name] = [str(v) for v in (value or [])]
             else:
                 clean[field.name] = value
         return clean, errors
@@ -85,6 +95,8 @@ class Form:
     ) -> ValidationError | None:
         if field.type == "file-multi":
             return self._validate_files(field, files or [])
+        if field.multi:
+            return self._validate_multi(field, value or [])
         if field.required and not value:
             return ValidationError("errors.required")
         validators = field.validators
@@ -95,9 +107,27 @@ class Form:
             if not host or host.lower() not in [h.lower() for h in validators.allowed_hosts]:
                 return ValidationError("errors.bad_url")
         if value and field.choices:
-            allowed = {c["value"] for c in field.choices}
-            if str(value) not in allowed:
-                return ValidationError("errors.bad_choice")
+            error = self._check_choice(field, str(value))
+            if error is not None:
+                return error
+        return None
+
+    def _validate_multi(self, field: FieldSpec, values: list[Any]) -> ValidationError | None:
+        if field.required and not values:
+            return ValidationError("errors.required")
+        for value in values:
+            error = self._check_choice(field, str(value))
+            if error is not None:
+                return error
+        return None
+
+    def _check_choice(self, field: FieldSpec, value: str) -> ValidationError | None:
+        allowed = {c["value"] for c in field.choices}
+        if value not in allowed:
+            return ValidationError("errors.bad_choice")
+        disabled = {c["value"] for c in field.choices if c.get("disabled")}
+        if value in disabled:
+            return ValidationError("errors.unavailable_choice")
         return None
 
     def _validate_files(self, field: FieldSpec, files: list[Any]) -> ValidationError | None:

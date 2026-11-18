@@ -25,11 +25,6 @@ data/*.json
 Thumbs.db
 .idea/
 .vscode/
-.repo-analyzer.Dockerfile
-intrapanel.db
-data/sandbox-targets/
-# External cloned DAST demos (nested git / local venv) — not part of this repo
-sandbox/dast/targets/purposefully-vulnerable-repo/
 
 # --- merged monorepo (branch frontend) ---
 # frontend contract runtime data + analyzer workspaces

@@ -22,11 +22,15 @@
             </li>
             {% endfor %}
         </ul>
+        {% if not complete and elapsed_seconds is not none %}
+        <p class="timing">{{ t("scan.elapsed", seconds=elapsed_seconds) }}</p>
+        {% endif %}
     </section>
 
     <section class="card card--raised">
         <h2>{{ t("results.title") }}</h2>
         {% if status.artifacts or donut_option %}
+        <p class="disclaimer disclaimer--compact">{{ t("disclaimer.scan") }}</p>
         <div class="results-grid">
             {% if donut_option %}
             {# tojson escapes single quotes but not double quotes, so this
@@ -44,11 +48,19 @@
                 {% for name in status.artifacts %}
                 {% set spec = artifact_specs[name] %}
                 {% if spec.download %}
-                <a class="button button--secondary" href="/api/scans/{{ status.id }}/artifacts/{{ name }}" download>{{ t(spec.label_key) }}</a>
+                <a class="button button--secondary" href="/api/scans/{{ status.id }}/artifacts/{{ name }}" download>{{ t(spec.label_key) }}{% if spec.format %} · {{ spec.format | upper }}{% endif %}</a>
                 {% endif %}
                 {% endfor %}
             </div>
         </div>
+        {% set timing = status.summary.timing if status.summary else none %}
+        {% if timing %}
+        <p class="timing">
+            {{ t("timing.analysis", analysis=timing.analysis_seconds) }} ·
+            {{ t("timing.report", report=timing.report_seconds) }} ·
+            {{ t("timing.total", total=timing.total_seconds) }}
+        </p>
+        {% endif %}
         {% else %}
         <p>{{ t("results.pending") }}</p>
         {% endif %}

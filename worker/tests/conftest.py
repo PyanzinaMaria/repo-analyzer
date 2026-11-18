@@ -18,7 +18,7 @@ from worker.config import WorkerConfig, load_config  # noqa: E402
 
 @pytest.fixture()
 def cfg(tmp_path) -> WorkerConfig:
-    base = load_config()  # real worker.yaml: palette + disclaimer
+    base = load_config()  # real worker.yaml + frontend contract configs
     return WorkerConfig(
         data_dir=tmp_path / "data",
         poll_interval_seconds=base.poll_interval_seconds,
@@ -26,6 +26,9 @@ def cfg(tmp_path) -> WorkerConfig:
         colors=base.colors,
         severity_colors=base.severity_colors,
         doc_disclaimer=base.doc_disclaimer,
+        analysis=base.analysis,
+        reports=base.reports,
+        formats_enabled=base.formats_enabled,
     )
 
 

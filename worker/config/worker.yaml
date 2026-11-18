@@ -9,29 +9,37 @@ poll_interval_seconds: 2.0
 # When false the analyzer's own settings.yaml ai.enabled governs (default off).
 enable_ai: false
 
+# Format engines this worker runs. Chosen formats not enabled here are
+# skipped for every scan (with a log line); html is always produced.
+formats:
+  md: true
+  html: true
+  pdf: true
+  docx: true
+
 # Mirror of frontend/config/theme.yaml tokens. Kept local so the worker
 # renders artifacts without reading another service's config tree; if you
 # retheme the frontend, update the colors here too.
 theme:
   colors:
-    bg: "#FFE3F1"
-    surface: "#FFD6EC"
-    surface-raised: "#FFF0F8"
-    accent: "#FF8FC7"
-    accent-strong: "#E754A8"
-    ink: "#4A1F36"
-    ink-soft: "#8A5A73"
-    ok: "#7BC47F"
-    warn: "#F2B75C"
-    fail: "#E86A6A"
-    border: "#F5B8D8"
+    bg: "#12101E"
+    surface: "#1A1730"
+    surface-raised: "#252042"
+    accent: "#6C5CE7"
+    accent-strong: "#8F7BFF"
+    ink: "#EDEBFA"
+    ink-soft: "#A49FD1"
+    ok: "#5FBF77"
+    warn: "#E0A34E"
+    fail: "#E05B6C"
+    border: "#37315C"
   # severity -> resolved hex (frontend maps severity -> token -> hex).
   severity_colors:
-    critical: "#E86A6A"
-    high: "#F2B75C"
-    medium: "#FF8FC7"
-    low: "#FFC2E0"
-    info: "#8A5A73"
+    critical: "#E05B6C"
+    high: "#E0A34E"
+    medium: "#8F7BFF"
+    low: "#6C5CE7"
+    info: "#A49FD1"
 
 doc:
   disclaimer: >-
