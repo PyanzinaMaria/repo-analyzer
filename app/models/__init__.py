@@ -1,3 +1,4 @@
+from app.models.dast import DastScanCreate, DastScanInfo, DastScanStatus
 from app.models.finding import CodeInventory, Finding, LanguageAnalysis, Severity
 from app.models.project import (
     ProjectCreate,
@@ -17,6 +18,9 @@ __all__ = [
     "Finding",
     "LanguageAnalysis",
     "Severity",
+    "DastScanCreate",
+    "DastScanInfo",
+    "DastScanStatus",
     "ProjectCreate",
     "ProjectInfo",
     "ProjectSourceType",

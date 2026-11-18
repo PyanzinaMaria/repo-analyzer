@@ -72,6 +72,10 @@ class Pipeline:
         are built (get_settings() reads the environment on first call)."""
         os.environ["DATA_DIR"] = str(self.cfg.workspaces_dir)
 
+        kind = source.get("kind")
+        if kind == "dast":
+            return self._analyze_dast(scan_id, source)
+
         from app.services.ingest import IngestService
         from app.services.scan import ScanOrchestrator
         from app.services.store import ProjectStore
@@ -80,7 +84,6 @@ class Pipeline:
         ingest = IngestService(store=store)
         orchestrator = ScanOrchestrator(store=store)
 
-        kind = source.get("kind")
         if kind == "link":
             # Derive a readable project name from the repo URL; scan_id only
             # as fallback when the URL has no usable last segment.
@@ -102,14 +105,41 @@ class Pipeline:
             raise RuntimeError(f"Analyzer produced no result for scan {scan_id}")
         return result
 
+    def _analyze_dast(self, scan_id: str, source: dict[str, Any]):
+        from app.dast import DastOrchestrator
+        from app.models.dast import DastScanCreate
+
+        target_url = source.get("target_url") or source.get("url")
+        if not target_url:
+            raise ValueError("DAST job requires source.target_url")
+        options = source.get("options") or {}
+        body = DastScanCreate(
+            target_url=target_url,
+            max_duration_seconds=options.get("max_duration_seconds"),
+            follow_redirects=bool(options.get("follow_redirects", True)),
+        )
+        logger.info("Scan %s: DAST target %s", scan_id, target_url)
+        return DastOrchestrator().run_to_result(body, scan_id=scan_id)
+
     def _produce(self, reports_dir: Path, result) -> None:
         reports_dir.mkdir(parents=True, exist_ok=True)
 
         from worker.rendering import severity_counts
 
-        summary = {"severities": severity_counts(result)}
+        scan_kind = (result.summary or {}).get("scan_kind") or (
+            (result.meta or {}).get("dast") and "dast"
+        ) or "sast"
+        summary = {
+            "severities": severity_counts(result),
+            "meta": {"scan_kind": scan_kind},
+        }
         (reports_dir / "summary.json").write_text(
             json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         (reports_dir / "report.html").write_text(render_report(result, self.cfg), encoding="utf-8")
         (reports_dir / "doc.html").write_text(render_doc(result, self.cfg), encoding="utf-8")
+
+        if scan_kind in {"dast", "sast+dast"} or (result.meta or {}).get("dast"):
+            from app.dast.report import write_dast_bundle
+
+            write_dast_bundle(result, reports_dir)

@@ -64,6 +64,23 @@ def load_yaml_settings(path: Path) -> dict[str, Any]:
                 "max_file_bytes": 40000,
                 "max_findings": 50,
             },
+            "dast": {
+                "enabled": True,
+                "engine": "zap_baseline",
+                "zap_image": "ghcr.io/zaproxy/zaproxy:stable",
+                "timeout_seconds": 300,
+                "allowed_schemes": ["http", "https"],
+                "allow_private_targets": False,
+            },
+            "sandbox": {
+                "enabled": True,
+                "boot_timeout_seconds": 90,
+                "memory": "512m",
+                "cpus": "1.0",
+                "network": "repo-analyzer-dast",
+                "base_image": "python:3.9-slim",
+                "publish_host": "127.0.0.1",
+            },
         }
     with path.open("r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}

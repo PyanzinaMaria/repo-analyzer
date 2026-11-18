@@ -102,6 +102,28 @@ docker compose up --build
 Отчёты: `GET …/reports/security?format=markdown|json`, `GET …/reports/fstec?format=markdown`.
 Результат целиком: `GET /api/v1/projects/{id}/scans/{scan_id}/result`.
 
+### SAST + DAST на одном intake
+
+Скан репозитория/папки (`POST /api/v1/projects/.../scans` или worker `link|zip|files`) теперь:
+1. SAST по коду;
+2. автоподъём веб-приложения в Docker-песочнице (`Dockerfile`/`compose` или Python-эвристика);
+3. DAST (preflight + ZAP) по поднятому URL;
+4. контейнер гасится; findings сливаются в один `ScanResult` (`summary.scan_kind=sast+dast`).
+
+Если поднять приложение нельзя — SAST-отчёт всё равно готов, DAST в `meta.dast.status=skipped`.
+На машине worker нужен Docker. Настройки: `sandbox:` и `dast:` в [`config/settings.yaml`](config/settings.yaml).
+
+### DAST только по URL (без UI)
+
+| Действие | Запрос |
+|---|---|
+| Старт | `POST /api/v1/dast/scans` → `{"target_url":"http://127.0.0.1:8001/"}` |
+| Статус | `GET /api/v1/dast/scans/{id}` |
+| Результат | `GET /api/v1/dast/scans/{id}/result` |
+| Отчёт | `GET /api/v1/dast/scans/{id}/reports/dast?format=json\|markdown` |
+
+Учебные мишени: [`sandbox/dast/`](sandbox/dast/).
+
 > Черновик ФСТЭК **не является** полным сертифицированным комплектом по приказу №76.
 
 ## Языковые плагины
@@ -114,8 +136,8 @@ enabled_languages:
   # - javascript   # stub, пока не реализован
 ```
 
-- Контракт: [`app/languages/base.py`](app/languages/base.py) — `detect` / `analyze`.
-- **Python:** Bandit + pip-audit + инвентаризация модулей/классов/функций/импортов.
+- Контракт: [`app/languages/base.py`](app/languages/base.py) — `detect` / `analyze` / `detect_runtime` / `analyze_dast` / `detect_runnable`.
+- **Python:** Bandit + pip-audit + инвентаризация; sandbox-эвристика Flask/FastAPI/Django.
 
 ## ИИ-анализ
 

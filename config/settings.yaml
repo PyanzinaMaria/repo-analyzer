@@ -38,3 +38,27 @@ ai:
   max_files: 25
   max_file_bytes: 40000
   max_findings: 50
+
+# Dynamic Application Security Testing (HTTP web only).
+# Language-specific DAST hooks follow enabled_languages via LanguageHandler.
+dast:
+  enabled: true
+  engine: zap_baseline
+  zap_image: "ghcr.io/zaproxy/zaproxy:stable"
+  timeout_seconds: 300
+  allowed_schemes:
+    - http
+    - https
+  # Allow RFC1918 / localhost targets (needed for sandbox/dev). Keep false in prod.
+  allow_private_targets: true
+
+# Auto-boot web targets in Docker after SAST so DAST can run on the same intake.
+sandbox:
+  enabled: true
+  boot_timeout_seconds: 90
+  memory: 512m
+  cpus: "1.0"
+  network: repo-analyzer-dast
+  # 3.9 works better with intentionally old vulnerable demo deps
+  base_image: "python:3.9-slim"
+  publish_host: "127.0.0.1"

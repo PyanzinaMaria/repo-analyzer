@@ -1,0 +1,32 @@
+{
+  "site": [
+    {
+      "alerts": [
+        {
+          "pluginid": "10020",
+          "name": "Missing Anti-clickjacking Header",
+          "description": "X-Frame-Options header missing",
+          "riskcode": "2",
+          "cweid": "1021",
+          "solution": "Set X-Frame-Options",
+          "instances": [
+            {
+              "uri": "http://example.test/",
+              "method": "GET",
+              "evidence": "X-Frame-Options header not set"
+            }
+          ]
+        },
+        {
+          "pluginid": "10021",
+          "alert": "X-Content-Type-Options Header Missing",
+          "desc": "missing nosniff",
+          "risk": "Low",
+          "cweid": "693",
+          "url": "http://example.test/",
+          "method": "GET"
+        }
+      ]
+    }
+  ]
+}
