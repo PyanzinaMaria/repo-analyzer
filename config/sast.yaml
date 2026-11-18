@@ -1,0 +1,48 @@
+# SAST tools and product-code scope. Flags verified against installed versions (see README).
+merge_line_tol: 3
+
+# Optional explicit binary paths; otherwise PATH and scripts/setup.sh locations are used.
+tool_paths: {}
+
+exclude_dirs: [node_modules, .git, .venv, venv, dist, build, coverage, vendor, __pycache__]
+
+tools:
+  semgrep:
+    enabled: true
+    timeout_s: 1200
+    args:
+      python: [--config, p/python, --config, p/owasp-top-ten]
+      javascript: [--config, p/javascript, --config, p/typescript, --config, p/owasp-top-ten]
+      typescript: [--config, p/javascript, --config, p/typescript, --config, p/owasp-top-ten]
+  bandit:
+    enabled: true
+    timeout_s: 1200
+  eslint:
+    enabled: true
+    timeout_s: 1200
+  codeql:
+    enabled: true
+    timeout_s: 1800
+    args:
+      python: [codeql/python-queries:codeql-suites/python-security-extended.qls]
+      javascript: [codeql/javascript-queries:codeql-suites/javascript-security-extended.qls]
+      typescript: [codeql/javascript-queries:codeql-suites/javascript-security-extended.qls]
+
+# Product-code scope: findings and code-index entries outside it (tests, examples, docs, vendored and
+# minified code) are dropped. The benchmark uses the same rules for its ground truth.
+path_excludes:
+  - '(^|/)(tests?|__tests__|spec|specs|testing|e2e|fixtures?|mocks?|examples?|docs?|benchmarks?)/'
+  - '(^|/)(test_[^/]*|[^/]*_test)\.py$'
+  - '\.(test|spec)\.[cm]?[jt]sx?$'
+  - '(^|/)(conftest|setup|noxfile|tasks)\.py$'
+  - '(^|/)(node_modules|vendor|vendored|third_party|dist|build|out|coverage|site-packages|\.venv|venv)/'
+  - '\.min\.js$'
+  - '\.bundle\.js$'
+  - '(^|/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|poetry\.lock|Pipfile\.lock)$'
+  - '(?i)(^|/)(changelog|changes|history|news|authors|contributors)[^/]*$'
+  - '\.d\.ts$'
+
+source_extensions:
+  python: [.py]
+  javascript: [.js, .cjs, .mjs, .jsx]
+  typescript: [.ts, .tsx, .mts, .cts]
