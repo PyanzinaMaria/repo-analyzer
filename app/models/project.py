@@ -82,4 +82,4 @@ class ReportFormat(str, Enum):
     markdown = "markdown"
 
 
-ReportKind = Literal["security", "fstec"]
+ReportKind = Literal["security", "fstec", "audit"]

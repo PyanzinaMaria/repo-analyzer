@@ -1,12 +1,10 @@
 # Language plugins: only listed ids with a registered handler will run.
 # Add/remove ids here to enable/disable languages without code changes.
+#   python      Bandit + Semgrep + CodeQL (SARIF, merged across tools) + pip-audit, AST inventory
+#   javascript  ESLint (eslint-plugin-security) + Semgrep + CodeQL for JS/TS, tree-sitter inventory
 enabled_languages:
   - python
-
-# Example for later:
-# enabled_languages:
-#   - python
-#   - javascript
+  - javascript
 
 scan:
   exclude_dirs:
@@ -21,20 +19,54 @@ scan:
     - .mypy_cache
     - .ruff_cache
 
+# Static analysis per language family. Tool flags, rulesets, timeouts and the product-code scope
+# (what counts as tests/vendor/docs and is dropped) are in config/sast.yaml.
+# A tool that is not installed is skipped and reported in the scan meta.
+# Override for one run: SECAUDIT_SAST_TOOLS=bandit,semgrep
+sast:
+  tools:
+    python: [bandit, semgrep, codeql]
+    javascript: [eslint, semgrep, codeql]
+
 reports:
   disclaimer: >
     Черновик для личного пользования / подготовки материалов.
     Не является полным сертифицированным комплектом документации
     по требованиям ФСТЭК России (приказ №76 и смежные документы).
 
-# Optional LLM code review (post-scan). Requires AI_API_KEY in .env.
-# Soft-fail: errors do not fail the deterministic scan.
+# LLM stage (post-scan). Requires a key: AI_API_KEY, or OPENROUTER_API_KEY when base_url is OpenRouter.
+# Soft-fail: quota/provider errors never fail the deterministic scan. Answers are cached in
+# data/llm_cache/cache.sqlite, so re-scanning unchanged code costs nothing.
 ai:
   enabled: false
   provider: openai_compatible
-  base_url: https://api.openai.com/v1
-  model: gpt-4o-mini
+  # Any OpenAI-compatible endpoint: OpenRouter (free models), OpenAI, local vLLM/Ollama.
+  #   OpenAI:  base_url: https://api.openai.com/v1   model: gpt-4o-mini
+  base_url: https://openrouter.ai/api/v1
+  model: nvidia/nemotron-3-ultra-550b-a55b:free
+  # triage    — verdict, CWE and explanation for each top SAST finding; false positives are removed
+  # discovery — hunt from entry points and sinks (with SAST hints) for what the analyzers missed
+  # review    — one-shot review of selected files (original module, app/ai/service.py)
+  # Override: AI_MODES=triage,discovery
+  modes: [triage, discovery]
   timeout_seconds: 120
+  budget_usd: 0.0              # 0 = free models only; a paid OpenRouter model stops the LLM stage
+  requests_per_minute: 16      # OpenRouter free tier
+  requests_per_day: 50         # free tier without credits (1000 with >= $10 credits)
+  max_concurrency: 1
+  reasoning_headroom: 3000     # extra max_tokens for reasoning models (hidden reasoning tokens)
+  params:
+    reasoning: {effort: low}   # OpenRouter-only params are sent in extra_body
+  triage:
+    max_findings: 10           # top-ranked SAST findings per language that get a verdict
+    per_prompt: 5              # findings judged per call
+    budget_tokens: 6000        # code-context budget per group of findings
+  discovery:
+    n_base: 6                  # candidate functions for a small repository
+    n_cap: 12                  # max candidate functions
+    per_prompt: 5
+    budget_tokens: 10000
+  # review mode only:
   max_files: 25
   max_file_bytes: 40000
   max_findings: 50

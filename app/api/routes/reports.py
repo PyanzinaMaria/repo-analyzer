@@ -45,6 +45,14 @@ def get_report(
             raise HTTPException(status_code=404, detail="FSTEC draft not found")
         return PlainTextResponse(path.read_text(encoding="utf-8"), media_type="text/markdown")
 
+    if kind == "audit":
+        if format == ReportFormat.json:
+            raise HTTPException(status_code=400, detail="Audit report is markdown-only; use security?format=json")
+        path = reports_dir / "audit_report.md"
+        if not path.exists():
+            raise HTTPException(status_code=404, detail="Audit report not found")
+        return PlainTextResponse(path.read_text(encoding="utf-8"), media_type="text/markdown")
+
     raise HTTPException(status_code=400, detail="Unsupported report request")
 
 
@@ -62,6 +70,7 @@ def download_report(
         ("security", ReportFormat.json): reports_dir / "security_report.json",
         ("security", ReportFormat.markdown): reports_dir / "security_report.md",
         ("fstec", ReportFormat.markdown): reports_dir / "fstec_draft.md",
+        ("audit", ReportFormat.markdown): reports_dir / "audit_report.md",
     }
     path = mapping.get((kind, format))
     if path is None or not path.exists():
