@@ -164,7 +164,7 @@ def _find_root() -> Path:
     env = os.environ.get("SIRIUS_APP_ROOT")
     if env:
         return Path(env).resolve()
-    # backend/app/core/config.py -> repo root
+    # web/app/core/config.py -> project root (frontend/ in the monorepo)
     return Path(__file__).resolve().parents[3]
 
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from app.core.config import Settings, ThemeConfig
 
 _TOKEN_ALIASES = {"family": "font-family", "size-base": "font-size"}
@@ -18,7 +20,12 @@ def render_theme_css(theme: ThemeConfig) -> str:
 
 
 def ensure_theme_css(settings: Settings) -> None:
-    """Regenerate static/css/theme.css on every startup (idempotent)."""
-    target = settings.root / "backend" / "app" / "static" / "css" / "theme.css"
+    """Regenerate static/css/theme.css on every startup (idempotent).
+
+    The stylesheet lives inside the app package, so the target is derived
+    from this module's location — not from settings.root, whose layout
+    changed when the project moved into the monorepo.
+    """
+    target = Path(__file__).resolve().parents[1] / "static" / "css" / "theme.css"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(render_theme_css(settings.theme), encoding="utf-8")
