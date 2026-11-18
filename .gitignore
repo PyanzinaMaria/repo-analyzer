@@ -32,3 +32,8 @@ data/queue/
 data/uploads/
 data/reports/
 frontend/data/
+
+# secaudit runtime: LLM answer cache, benchmark data (default SECBENCH_DATA)
+data/llm_cache/
+data/bench/
+data/results/
