@@ -69,6 +69,12 @@ class ScanOrchestrator:
             write_security_json(result, reports_dir / "security_report.json")
             render_security_markdown(result, reports_dir / "security_report.md")
             render_fstec_draft(result, reports_dir / "fstec_draft.md")
+            if (result.summary or {}).get("scan_kind") == "sast+dast" or (result.meta or {}).get(
+                "dast"
+            ):
+                from app.dast.report import write_dast_bundle
+
+                write_dast_bundle(result, reports_dir)
 
             scan.status = ScanStatus.completed
             scan.findings_count = len(result.findings)
@@ -130,6 +136,7 @@ class ScanOrchestrator:
                 if f.severity in {Severity.critical, Severity.high}
             ),
             "ai_findings": sum(1 for f in findings if f.source == "ai"),
+            "scan_kind": "sast",
         }
         meta: dict = {"languages": language_meta, "ai": ai_meta}
         if methods is not None:
@@ -144,3 +151,7 @@ class ScanOrchestrator:
             summary=summary,
             meta=meta,
         )
+
+        from app.services.scan.dast_merge import merge_dast_via_sandbox
+
+        return merge_dast_via_sandbox(sast_result, root, registry=self.registry)

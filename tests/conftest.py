@@ -24,6 +24,8 @@ def tmp_data_dir(tmp_path, monkeypatch):
     deps.get_store.cache_clear()
     deps.get_ingest_service.cache_clear()
     deps.get_scan_orchestrator.cache_clear()
+    deps.get_dast_store.cache_clear()
+    deps.get_dast_orchestrator.cache_clear()
     return data_dir
 
 

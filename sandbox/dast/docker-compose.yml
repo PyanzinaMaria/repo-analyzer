@@ -1,0 +1,11 @@
+services:
+  python-vuln:
+    build: ./targets/python_vuln
+    ports:
+      - "8001:8001"
+    networks:
+      - dast-net
+
+networks:
+  dast-net:
+    name: dast-net
