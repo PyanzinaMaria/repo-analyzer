@@ -55,6 +55,8 @@ formats:
     label: PDF
   docx:
     label: Word (.docx)
+  json:
+    label: JSON
 
 rules:
   title: Правила загрузки
@@ -83,15 +85,21 @@ results:
   title: Результаты
   pending: Отчёт готовится. Обновите страницу позже.
   no_summary: Сводные данные пока недоступны.
+  scan_kind: Тип проверки
+  kinds:
+    sast: SAST
+    dast: DAST
+    sast_dast: SAST + DAST
 
 docs:
   title: Документация
-  description: После завершения аудита здесь будут доступны документация по ФСТЭК и отчёт аудита.
+  description: После завершения аудита здесь будут доступны документация по ФСТЭК, отчёт аудита и при успешном подъёме приложения — отчёт DAST.
 
 artifacts:
   docs:
     report: Отчёт аудита
     doc: Документация ФСТЭК
+    dast_report: Отчёт DAST
   view: Смотреть
   download: Скачать
   back: К заявке

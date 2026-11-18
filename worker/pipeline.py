@@ -28,6 +28,10 @@ logger = logging.getLogger(__name__)
 
 STAGE_ORDER = ("analysis", "report")
 
+# Produced by write_dast_bundle when sandbox/DAST actually ran; not part of
+# the regular documents×formats render plan.
+DAST_ARTIFACTS = ("dast_report.md", "dast_report.json")
+
 
 def write_manifest(reports_dir: Path, stages: dict[str, str], artifacts: list[str]) -> None:
     """Whole-file manifest rewrite. The frontend treats an unparseable
@@ -105,9 +109,12 @@ class Pipeline:
 
     def _format_plan(self, chosen_formats: list[str]) -> list[str]:
         """Artifact names to produce: every document's html plus the chosen
-        formats each document supports, honoring the engine switches."""
+        formats each document supports, honoring the engine switches.
+        ``dast_report`` is excluded — it is emitted only when DAST ran."""
         names: list[str] = []
         for doc in self.cfg.reports.get("documents", []):
+            if doc.get("id") == "dast_report":
+                continue
             for fmt in doc.get("formats", []):
                 if fmt != "html" and fmt not in chosen_formats:
                     continue
@@ -158,11 +165,12 @@ class Pipeline:
             "Scan %s: project %s (%s), runners=%s, starting analysis",
             scan_id, project.id, kind, runners,
         )
+        # Pass explicit bool — None would fall back to analyzer settings.yaml
+        # and run OpenRouter even when worker.enable_ai is false.
         if runners is None:
-            # Legacy job without method selection: worker/analyzer yaml governs.
-            enable_arg = True if self.cfg.enable_ai else None
+            enable_arg = self.cfg.enable_ai
         else:
-            enable_arg = "ai" in runners
+            enable_arg = bool(self.cfg.enable_ai and "ai" in runners)
         scan = orchestrator.start_scan(project.id, enable_ai=enable_arg, methods=runners)
         result = store.get_result(project.id, scan.id)
         if result is None:
@@ -206,13 +214,29 @@ class Pipeline:
             produced.append(name)
         report_seconds = round(time.monotonic() - started, 1)
 
+        scan_kind = (result.summary or {}).get("scan_kind") or (
+            (result.meta or {}).get("dast") and "dast"
+        ) or "sast"
         timing = {
             "analysis_seconds": analysis_seconds,
             "report_seconds": report_seconds,
             "total_seconds": round(analysis_seconds + report_seconds, 1),
         }
-        summary = {"severities": severity_counts(result), "timing": timing}
+        summary = {
+            "severities": severity_counts(result),
+            "timing": timing,
+            "meta": {"scan_kind": scan_kind},
+        }
         (reports_dir / "summary.json").write_text(
             json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
         )
+
+        if scan_kind in {"dast", "sast+dast"} or (result.meta or {}).get("dast"):
+            from app.dast.report import write_dast_bundle
+
+            write_dast_bundle(result, reports_dir)
+            for name in DAST_ARTIFACTS:
+                if (reports_dir / name).is_file() and name not in produced:
+                    produced.append(name)
+
         return produced
