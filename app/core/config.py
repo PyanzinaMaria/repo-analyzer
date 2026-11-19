@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     ai_enabled: bool | None = Field(default=None, validation_alias="AI_ENABLED")
     ai_base_url: str | None = Field(default=None, validation_alias="AI_BASE_URL")
     ai_model: str | None = Field(default=None, validation_alias="AI_MODEL")
+    ai_modes: str | None = Field(default=None, validation_alias="AI_MODES")
+    openrouter_api_key: str | None = Field(default=None, validation_alias="OPENROUTER_API_KEY")
 
     def resolve_paths(self) -> None:
         if not self.data_dir.is_absolute():
@@ -92,3 +94,9 @@ def get_settings() -> Settings:
     settings = Settings()
     settings.resolve_paths()
     return settings
+
+
+def reload_settings() -> Settings:
+    """Clear cached Settings (tests / CLI after env changes)."""
+    get_settings.cache_clear()
+    return get_settings()

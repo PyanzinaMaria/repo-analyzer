@@ -12,6 +12,13 @@ methods:
   - ai
   - dynamic
 
+# SAST tool lists per language family (see config/sast.yaml for timeouts/args).
+# Missing binaries are soft-skipped and recorded in language meta.
+sast:
+  tools:
+    python: [bandit, semgrep]
+    javascript: [eslint, semgrep]
+
 # Example for later:
 # enabled_languages:
 #   - python
@@ -36,8 +43,10 @@ reports:
     Не является полным сертифицированным комплектом документации
     по требованиям ФСТЭК России (приказ №76 и смежные документы).
 
-# Optional LLM code review (post-scan). Requires AI_API_KEY in .env.
+# Optional LLM stage. Requires AI_API_KEY in .env.
 # Soft-fail: errors do not fail the deterministic scan.
+# modes: review (file review), triage (SAST verdicts), discovery (entry/sink hunt).
+# Only runs when the job selects the `ai` runner (UI: LLM-агент).
 ai:
   enabled: false
   provider: openai_compatible
@@ -47,6 +56,18 @@ ai:
   max_files: 25
   max_file_bytes: 40000
   max_findings: 50
+  modes: [review, triage, discovery]
+  max_concurrency: 1
+  budget_usd: 0
+  triage:
+    max_findings: 10
+    per_prompt: 5
+    budget_tokens: 6000
+  discovery:
+    n_base: 6
+    n_cap: 12
+    per_prompt: 5
+    budget_tokens: 10000
 
 # Dynamic Application Security Testing (HTTP web only).
 # Language-specific DAST hooks follow enabled_languages via LanguageHandler.

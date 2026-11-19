@@ -10,9 +10,16 @@ def render_heuristic_dockerfile(plan: RunPlan, cfg: SandboxConfig) -> str:
     """Generate a Dockerfile that installs deps and runs the detected CMD."""
     req_line = ""
     if plan.requirements_file:
+        # Old vulnerable demos often pin packages that omit transitive deps
+        # (e.g. paramiko without six) — install requirements then a small
+        # compatibility set so the container can boot for DAST.
         req_line = (
             f"COPY {plan.requirements_file} /tmp/requirements.txt\n"
-            "RUN pip install --no-cache-dir -r /tmp/requirements.txt\n"
+            "RUN pip install --no-cache-dir -r /tmp/requirements.txt "
+            # Compat for old vulnerable demos (Flask 0.12 / Jinja2 2.x / paramiko 2.4):
+            # modern transitive deps break import (six, markupsafe, itsdangerous).
+            "&& pip install --no-cache-dir "
+            "'six>=1.16' 'markupsafe<2.1' 'itsdangerous<2.1' setuptools wheel\n"
         )
     else:
         # Minimal web stack fallbacks

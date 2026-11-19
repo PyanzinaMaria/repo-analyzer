@@ -52,7 +52,13 @@ def _ensure_pdf_font() -> Path | None:
 
 
 def _pdf_via_xhtml2pdf(html: str) -> bytes:
+    import re
+
     from xhtml2pdf import pisa
+
+    # Large SVG donuts / complex boxes blow up reportlab LayoutError on long audits.
+    html = re.sub(r"<svg\b[\s\S]*?</svg>", "", html, flags=re.IGNORECASE)
+    html = html.replace("\u2011", "-").replace("\u2013", "-").replace("\u2014", "-")
 
     font = _ensure_pdf_font()
     path_base = ""
@@ -62,6 +68,7 @@ def _pdf_via_xhtml2pdf(html: str) -> bytes:
             "@font-face{font-family:DocFont;src:url('DocFont.ttf');}"
             "@font-face{font-family:DocFont;src:url('DocFont.ttf');font-weight:bold;}"
             "*{font-family:DocFont,sans-serif;}"
+            "svg{display:none}"
             "</style>"
         )
         path_base = str(font.parent) + "/"
@@ -73,11 +80,43 @@ def _pdf_via_xhtml2pdf(html: str) -> bytes:
         else:
             html = f"<html><head>{style}</head><body>{html}</body></html>"
 
-    buffer = io.BytesIO()
-    result = pisa.CreatePDF(html, dest=buffer, encoding="utf-8", path=path_base)
-    if result.err:
-        raise RuntimeError(f"xhtml2pdf failed to render PDF ({result.err} errors)")
-    return buffer.getvalue()
+    def _render(src: str) -> bytes:
+        buf = io.BytesIO()
+        res = pisa.CreatePDF(src, dest=buf, encoding="utf-8", path=path_base)
+        if res.err:
+            raise RuntimeError(f"xhtml2pdf failed to render PDF ({res.err} errors)")
+        data = buf.getvalue()
+        if not data:
+            raise RuntimeError("xhtml2pdf produced an empty PDF")
+        return data
+
+    try:
+        return _render(html)
+    except Exception as first:  # noqa: BLE001 — fall back to a flatter document
+        # Huge nested cards / flex layouts trip reportlab LayoutError; retry a
+        # plain text-ish HTML so PDF remains available on Windows.
+        plain = re.sub(r"<style\b[\s\S]*?</style>", "", html, flags=re.IGNORECASE)
+        plain = re.sub(r"<script\b[\s\S]*?</script>", "", plain, flags=re.IGNORECASE)
+        plain = re.sub(r"<svg\b[\s\S]*?</svg>", "", plain, flags=re.IGNORECASE)
+        plain = re.sub(r' class="[^"]*"', "", plain)
+        plain = re.sub(r' style="[^"]*"', "", plain)
+        # Keep the document bounded for the PDF engine.
+        if len(plain) > 180_000:
+            plain = plain[:180_000] + "\n</body></html>"
+        if font is not None:
+            plain = (
+                "<html><head><meta charset='utf-8'/>"
+                "<style>@font-face{font-family:DocFont;src:url('DocFont.ttf');}"
+                "body{font-family:DocFont,sans-serif;font-size:11pt;}</style></head>"
+                f"<body>{plain}</body></html>"
+            )
+        try:
+            return _render(plain)
+        except Exception as second:  # noqa: BLE001
+            raise RuntimeError(
+                f"xhtml2pdf failed ({type(first).__name__}: {first}); "
+                f"plain retry also failed ({type(second).__name__}: {second})"
+            ) from second
 
 
 def html_to_pdf(html: str) -> bytes:

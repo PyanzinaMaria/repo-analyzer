@@ -105,29 +105,71 @@ def _inventory_rows(result) -> list[dict]:
 def _finding_method(source: str | None) -> str:
     """Map analyzer finding.source to a report section id."""
     src = (source or "").lower()
-    if src == "ai":
+    if src == "ai" or src.startswith("ai-") or src.startswith("ai+"):
         return "llm"
     if src.startswith("dast") or src in {"zap-baseline", "zap"}:
         return "dast"
     return "sast"
 
 
+# Long ZAP/LLM texts collapse in the HTML report; keep a short preview open.
+_DESC_COLLAPSE_CHARS = 280
+
+
+def _plain_text(value: str | None) -> str:
+    """Strip markup so ZAP HTML blobs do not show raw <p>/<ul> in the report."""
+    import html as html_lib
+    import re
+
+    text = str(value or "")
+    text = re.sub(r"(?is)<script[^>]*>.*?</script>", " ", text)
+    text = re.sub(r"(?is)<style[^>]*>.*?</style>", " ", text)
+    text = re.sub(r"(?i)<br\s*/?>", "\n", text)
+    text = re.sub(r"(?i)</p\s*>", "\n\n", text)
+    text = re.sub(r"(?i)</li\s*>", "\n", text)
+    text = re.sub(r"(?i)<li[^>]*>", "• ", text)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = html_lib.unescape(text)
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"[ \t]{2,}", " ", text)
+    return text.strip()
+
+
 def _finding_row(finding, position: int) -> dict:
     extra = finding.extra or {}
+    dismissed = bool(extra.get("dismissed"))
+    description = _plain_text(finding.description)
+    preview = description
+    collapse = len(description) > _DESC_COLLAPSE_CHARS
+    if collapse:
+        cut = description[:_DESC_COLLAPSE_CHARS].rsplit(" ", 1)[0]
+        preview = (cut or description[:_DESC_COLLAPSE_CHARS]).rstrip(".,;:") + "…"
+    triage = extra.get("triage")
+    if isinstance(triage, dict) and triage.get("explanation"):
+        triage = {**triage, "explanation": _plain_text(triage.get("explanation"))}
     return {
         "position": position,
         "title": finding.title,
-        "description": finding.description,
+        "description": description,
+        "description_preview": preview,
+        "description_collapse": collapse,
         "severity": finding.severity.value,
         "cwe": finding.cwe,
         "file": finding.file,
         "line": finding.line,
         "rule_id": finding.rule_id,
         "source": finding.source,
-        "remediation": finding.remediation,
+        "remediation": _plain_text(finding.remediation) if finding.remediation else finding.remediation,
         "url": extra.get("url"),
         "evidence": extra.get("evidence"),
         "method": _finding_method(finding.source),
+        "dismissed": dismissed,
+        "verdict": extra.get("verdict"),
+        "triage": triage,
+        "dataflow": extra.get("dataflow"),
+        "tools": extra.get("tools"),
+        "snippet": extra.get("snippet"),
     }
 
 
@@ -177,13 +219,15 @@ def _active_sections(result) -> list[str]:
 
 def _method_sections(result) -> list[dict]:
     """Findings grouped under SAST / LLM / DAST for the unified report."""
-    rows = _finding_rows(result)
+    rows = [r for r in _finding_rows(result) if not r.get("dismissed")]
     by_method: dict[str, list[dict]] = {key: [] for key in SECTION_LABELS}
     for row in rows:
         by_method.setdefault(row["method"], []).append(row)
 
     meta = result.meta or {}
     dast_meta = meta.get("dast") or {}
+    attack = meta.get("attack_surface") or {}
+    ranking = meta.get("ranking")
     sections = []
     for section_id in _active_sections(result):
         entry = {
@@ -191,6 +235,9 @@ def _method_sections(result) -> list[dict]:
             "label": SECTION_LABELS[section_id],
             "findings": by_method.get(section_id, []),
             "dast": dast_meta if section_id == "dast" else None,
+            "attack_surface": attack if section_id == "sast" and attack else None,
+            "ranking": ranking if section_id in {"sast", "llm"} else None,
+            "llm_meta": (meta.get("llm") or meta.get("ai") or {}) if section_id == "llm" else None,
         }
         sections.append(entry)
     return sections

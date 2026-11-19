@@ -11,7 +11,8 @@ import httpx
 from app.languages.base import LanguageHandler
 from app.languages.python.inventory import build_inventory, iter_python_files
 from app.languages.python.runnable import detect_python_runnable
-from app.languages.python.scanners import run_bandit, run_pip_audit
+from app.languages.python.scanners import run_pip_audit
+from app.languages.sast_support import run_static_stage
 from app.models.finding import Finding, LanguageAnalysis, Severity
 from app.sandbox.models import RunPlan
 
@@ -29,19 +30,21 @@ class PythonHandler(LanguageHandler):
         return bool(iter_python_files(root))
 
     def analyze(self, root: Path, job_ctx: dict[str, Any] | None = None) -> LanguageAnalysis:
+        """SAST via shared SARIF engine + pip-audit. DAST hooks stay on this class."""
         logger.info("Python analysis started for %s", root)
-        findings = []
-        findings.extend(run_bandit(root))
+        findings, run = run_static_stage(root, "python", job_ctx)
         findings.extend(run_pip_audit(root))
         inventory = build_inventory(root)
+        ok_tools = [t for t, s in run.tools.items() if s.get("ok")]
         return LanguageAnalysis(
             language=self.id,
             findings=findings,
             inventory=inventory,
             meta={
-                "scanners": ["bandit", "pip-audit"],
+                "scanners": ok_tools + ["pip-audit"],
                 "files_scanned": inventory.files_count,
-                "job_ctx": job_ctx or {},
+                "secaudit": run.meta(),
+                "job_ctx": {k: v for k, v in (job_ctx or {}).items() if k != "work_dir"},
             },
         )
 

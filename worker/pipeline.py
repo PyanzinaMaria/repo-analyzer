@@ -203,21 +203,35 @@ class Pipeline:
         started = time.monotonic()
         html_by_doc: dict[str, str] = {}
         produced: list[str] = []
+        format_errors: list[str] = []
         for name in plan:
             doc_id, _, fmt = name.rpartition(".")
             target = reports_dir / name
-            if fmt == "html":
-                html = self._render_html(doc_id, result)
-                html_by_doc[doc_id] = html
-                target.write_text(html, encoding="utf-8")
-            elif fmt == "md":
-                render_document_markdown(doc_id, result, target)
-            elif fmt in HTML_CONVERTERS:
-                html = html_by_doc.get(doc_id) or self._render_html(doc_id, result)
-                target.write_bytes(HTML_CONVERTERS[fmt](html))
-            else:
-                raise ValueError(f"no handler for format {fmt!r}")
-            produced.append(name)
+            try:
+                if fmt == "html":
+                    html = self._render_html(doc_id, result)
+                    html_by_doc[doc_id] = html
+                    target.write_text(html, encoding="utf-8")
+                elif fmt == "md":
+                    render_document_markdown(doc_id, result, target)
+                elif fmt in HTML_CONVERTERS:
+                    html = html_by_doc.get(doc_id) or self._render_html(doc_id, result)
+                    target.write_bytes(HTML_CONVERTERS[fmt](html))
+                else:
+                    raise ValueError(f"no handler for format {fmt!r}")
+                produced.append(name)
+            except Exception as exc:  # noqa: BLE001 — one format must not fail the whole report
+                logger.warning("Artifact %s failed: %s", name, exc)
+                format_errors.append(f"{name}: {exc}")
+                if target.exists():
+                    try:
+                        target.unlink()
+                    except OSError:
+                        pass
+        if not produced:
+            raise RuntimeError(
+                "no report artifacts produced: " + "; ".join(format_errors[:5])
+            )
         report_seconds = round(time.monotonic() - started, 1)
 
         scan_kind = (result.summary or {}).get("scan_kind") or (

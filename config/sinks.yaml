@@ -1,0 +1,37 @@
+# Dangerous APIs (spec §5.4). `callee` is a regex matched against the full callee text of a
+# call site (e.g. "subprocess.check_output", "child_process.exec", "res.redirect").
+# `args` (optional) must also match the argument text. Used for discovery candidate scoring and
+# given to the LLM as a hint list. Not ground truth.
+python:
+  - {callee: '^(os\.)?(system|popen)$', cwe: CWE-78}
+  - {callee: '^subprocess\.(run|call|check_call|check_output|Popen|getoutput|getstatusoutput)$', cwe: CWE-78}
+  - {callee: '^(subprocess\.)?(run|call|check_output|Popen)$', args: 'shell\s*=\s*True', cwe: CWE-78}
+  - {callee: '^(eval|exec|compile)$', cwe: CWE-94}
+  - {callee: '(^|\.)(loads|load)$', args: '', cwe: CWE-502, only: '^(pickle|cPickle|dill|marshal|shelve|jsonpickle|joblib|torch)\.'}
+  - {callee: '^yaml\.(load|unsafe_load|full_load|load_all)$', cwe: CWE-502}
+  - {callee: '^(open|io\.open|codecs\.open)$', cwe: CWE-22}
+  - {callee: '(^|\.)(send_file|send_from_directory|FileResponse|safe_join)$', cwe: CWE-22}
+  - {callee: '^os\.(remove|unlink|rename|makedirs|rmdir)$|^shutil\.(rmtree|copy|copyfile|move)$', cwe: CWE-22}
+  - {callee: '(^|\.)(extractall|extract)$', cwe: CWE-22}
+  - {callee: '(^|\.)(execute|executemany|executescript|raw|extra)$', cwe: CWE-89}
+  - {callee: '(^|\.)text$', only: '^(sqlalchemy\.|sa\.)', cwe: CWE-89}
+  - {callee: '^requests\.(get|post|put|delete|head|request)$|^(urllib\.request\.)?urlopen$|^httpx\.(get|post|request)$', cwe: CWE-918}
+  - {callee: '(^|\.)(redirect|HttpResponseRedirect)$', cwe: CWE-601}
+  - {callee: '(^|\.)(Markup|mark_safe|render_template_string|format_html)$', cwe: CWE-79}
+  - {callee: '(^|\.)(fromstring|parse|XMLParser)$', only: '^(etree|ET|lxml|xml|minidom|ElementTree)', cwe: CWE-611}
+  - {callee: '^re\.(compile|match|search|fullmatch|sub)$', cwe: CWE-1333}
+  - {callee: '(^|\.)(setattr|__setattr__)$', cwe: CWE-915}
+javascript:
+  - {callee: '(^|\.)(exec|execSync|spawn|spawnSync|execFile|execFileSync|fork)$', cwe: CWE-78}
+  - {callee: '^(eval|Function|setTimeout|setInterval)$|(^|\.)(runInNewContext|runInThisContext|runInContext|compileFunction)$', cwe: CWE-94}
+  - {callee: '^new Function$|^Function$', cwe: CWE-94}
+  - {callee: '(^|\.)(readFile|readFileSync|writeFile|writeFileSync|createReadStream|createWriteStream|unlink|unlinkSync|rmdir|rm|rmSync|mkdir|mkdirSync|appendFile|readdir|copyFile|rename)$', cwe: CWE-22}
+  - {callee: '(^|\.)(sendFile|download|join|resolve)$', only: '^(res|response|path)\.', cwe: CWE-22}
+  - {callee: '(^|\.)redirect$', cwe: CWE-601}
+  - {callee: '(^|\.)(query|raw|execute)$', cwe: CWE-89}
+  - {callee: '(^|\.)(merge|extend|assign|defaultsDeep|set|setWith|deepmerge|mixin)$', cwe: CWE-1321}
+  - {callee: '^RegExp$|^new RegExp$', cwe: CWE-1333}
+  - {callee: '(^|\.)(get|request|fetch|post)$', only: '^(axios|http|https|got|request|needle|superagent|fetch)', cwe: CWE-918}
+  - {callee: '(^|\.)(innerHTML|write|html|send)$', only: '^(document|res|\$)', cwe: CWE-79}
+  - {callee: '(^|\.)(parseXml|parseString)$', cwe: CWE-611}
+  - {callee: '(^|\.)(deserialize|unserialize)$', cwe: CWE-502}
