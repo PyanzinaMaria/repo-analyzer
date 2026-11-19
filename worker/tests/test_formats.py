@@ -32,7 +32,10 @@ def test_docx_converter():
 
 
 def test_pdf_converter():
-    pytest.importorskip("weasyprint")
-    html = "<h1>Отчёт</h1><p>Проверка PDF</p>"
+    # Windows uses xhtml2pdf; Linux/Docker prefer WeasyPrint. Either engine
+    # satisfies the converter contract.
+    pytest.importorskip("xhtml2pdf")
+    html = "<html><head></head><body><h1>Отчёт</h1><p>Проверка PDF</p></body></html>"
     data = HTML_CONVERTERS["pdf"](html)
     assert data[:5] == b"%PDF-"
+    assert len(data) > 1000  # embedded font for Cyrillic on Windows

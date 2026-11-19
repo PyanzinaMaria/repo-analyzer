@@ -13,27 +13,22 @@ formats:
   - { id: docx, media_type: application/vnd.openxmlformats-officedocument.wordprocessingml.document, viewer: none, download: true }
   - { id: json, media_type: application/json, viewer: none, download: true }
 
-# Formats the FSTEC documentation inherits when the client does not choose
-# any in the form. html is always produced by the worker regardless of this
-# list: it feeds the viewer and is the conversion source for pdf/docx.
+# Formats both the audit report and FSTEC documentation inherit when the
+# client does not choose any in the form.
 defaults:
   formats: [md]
 
 # Serveable documents. The serveable artifact list (ReportConfig.artifacts)
 # is derived as documents x formats with names following {document}.{format}.
-# Format options in the submission form apply only to the FSTEC document
-# (`doc`); the audit report (`report`) is always delivered as html.
-# `dast_report` is produced by the worker only when dynamic analysis ran.
+# Form checkboxes = shared export formats for `report` and `doc`.
+# DAST findings live inside the unified audit report — no separate dast_report.
 documents:
   - id: report
     label_key: artifacts.docs.report
-    formats: [html]
+    formats: [html, md, pdf, docx]
   - id: doc
     label_key: artifacts.docs.doc
     formats: [html, md, pdf, docx]
-  - id: dast_report
-    label_key: artifacts.docs.dast_report
-    formats: [md, json]
 
 # Pipeline stages producers report through manifest.json. Order is display
 # order; a stage may be absent from the manifest until producers know it.

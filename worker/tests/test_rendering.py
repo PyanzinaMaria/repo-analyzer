@@ -34,11 +34,13 @@ def test_render_report_structure(cfg, scan_result):
     assert 'lang="ru"' in html
     assert "demo-app" in html
     assert "Отчёт аудита безопасности" in html
+    assert "SAST — статический анализ" in html
+    assert "LLM-агент" in html
     assert "Слабое хеширование" in html
     assert "ИИ-анализ: skipped" in html
-    # self-contained: no external resource references (sandboxed iframe)
-    assert "http://" not in html and "https://" not in html
+    # self-contained: no external resource tags (sandboxed iframe)
     assert "<script" not in html
+    assert 'src="http' not in html and 'href="http' not in html
 
 
 def test_render_doc_structure(cfg, scan_result):

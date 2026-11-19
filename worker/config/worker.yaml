@@ -9,8 +9,8 @@ poll_interval_seconds: 2.0
 # When false the analyzer's own settings.yaml ai.enabled governs (default off).
 enable_ai: false
 
-# Format engines this worker runs. Chosen formats not enabled here are
-# skipped for every scan (with a log line); html is always produced.
+# Format engines this worker runs. Chosen FSTEC doc formats not enabled
+# here are skipped. The audit report (report.html) is always produced.
 formats:
   md: true
   html: true

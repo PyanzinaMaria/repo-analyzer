@@ -21,17 +21,17 @@ def test_scan_create_defaults():
 
 
 def test_enabled_runners_come_from_settings_yaml():
-    # The repo settings.yaml enables [static, ai] (dynamic/manual unimplemented).
-    assert enabled_runners() == ("static", "ai")
+    # The repo settings.yaml enables static + ai + dynamic (manual still off).
+    assert enabled_runners() == ("static", "ai", "dynamic")
 
 
 def test_check_runners_known_vs_unknown():
     check_runners(None)  # legacy path: no restriction
-    check_runners(["static", "ai"])
+    check_runners(["static", "ai", "dynamic"])
     with pytest.raises(ValueError, match="unknown analysis runner"):
         check_runners(["tarot"])
     with pytest.raises(ValueError, match="disabled in this deployment"):
-        check_runners(["dynamic"])  # known, but not enabled in settings.yaml
+        check_runners(["manual"])  # known, but not enabled in settings.yaml
 
 
 def test_scan_endpoint_rejects_disabled_runner(client, tmp_path):
@@ -41,7 +41,7 @@ def test_scan_endpoint_rejects_disabled_runner(client, tmp_path):
         json={"source_type": "local_path", "local_path": str(sample), "name": "runners"},
     ).json()["id"]
 
-    r = client.post(f"/api/v1/projects/{project_id}/scans", json={"methods": ["dynamic"]})
+    r = client.post(f"/api/v1/projects/{project_id}/scans", json={"methods": ["manual"]})
     assert r.status_code == 400
     assert "disabled in this deployment" in r.json()["detail"]
 

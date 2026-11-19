@@ -73,7 +73,9 @@ def test_choices_from_resolved_from_analysis_config():
     values = {c["value"] for c in field.choices}
     assert {"sast", "llm_agentic", "dast", "pentest"} <= values
     disabled = {c["value"] for c in field.choices if c.get("disabled")}
-    assert disabled == {"dast", "pentest"}
+    assert disabled == {"pentest"}
+    assert "dast" in {c["value"] for c in field.choices}
+    assert "dast" not in disabled
     assert field.default == ["sast"]  # defaults_from analysis.defaults.methods
 
 
@@ -82,9 +84,9 @@ def test_multi_validation_rejects_unknown_and_disabled():
     _, errors = form.validate(base_raw(methods=["sast", "tarot"]))
     assert "methods" in errors  # unknown -> bad_choice
 
-    _, errors = form.validate(base_raw(methods=["sast", "dast"]))
+    _, errors = form.validate(base_raw(methods=["sast", "pentest"]))
     assert errors["methods"].key == "errors.unavailable_choice"  # planned -> rejected
 
-    clean, errors = form.validate(base_raw(methods=["sast", "llm_agentic"]))
+    clean, errors = form.validate(base_raw(methods=["sast", "dast", "llm_agentic"]))
     assert not errors
-    assert clean["methods"] == ["sast", "llm_agentic"]
+    assert clean["methods"] == ["sast", "dast", "llm_agentic"]

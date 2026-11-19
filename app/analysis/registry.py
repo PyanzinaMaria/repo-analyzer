@@ -15,9 +15,9 @@ from app.core.config import get_settings, load_yaml_settings
 RUNNER_STATIC = "static"
 RUNNER_AI = "ai"
 
-# Runner keys that exist as concepts. dynamic/manual have no implementation
-# yet: enabling them in settings.yaml makes scans fail fast on them rather
-# than silently skipping.
+# Runner keys that exist as concepts. `dynamic` runs sandbox + DAST after
+# SAST; `manual` (pentest) is not implemented yet — enabling it in
+# settings.yaml makes scans fail fast rather than silently skipping.
 KNOWN_RUNNERS = (RUNNER_STATIC, RUNNER_AI, "dynamic", "manual")
 
 # Runners used when a scan does not request any (legacy jobs): the static

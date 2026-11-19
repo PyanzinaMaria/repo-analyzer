@@ -8,10 +8,10 @@ Jinja2>=3.1.4
 httpx>=0.27.0
 bandit>=1.7.10
 pip-audit>=2.7.3
-# Output format engines (worker): PDF via WeasyPrint, DOCX via python-docx.
-# WeasyPrint additionally needs the GTK/Pango runtime (Linux images have it;
-# on Windows install MSYS2 GTK3 or the PDF handler stays unavailable).
+# Output format engines (worker): PDF via WeasyPrint (Linux/Docker) with
+# xhtml2pdf fallback for Windows without GTK/Pango; DOCX via python-docx.
 weasyprint>=62.0
+xhtml2pdf>=0.2.16
 python-docx>=1.1.0
 htmldocx>=0.0.6
 pytest>=8.3.0

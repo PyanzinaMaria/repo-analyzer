@@ -27,11 +27,85 @@ def render_document_markdown(doc_id: str, result: Any, target: Path) -> None:
         raise ValueError(f"no markdown renderer for document {doc_id!r}")
 
 
+_CYRILLIC_FONTS = (
+    Path(r"C:\Windows\Fonts\arial.ttf"),
+    Path(r"C:\Windows\Fonts\segoeui.ttf"),
+    Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+    Path("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
+)
+_FONT_CACHE = Path(__file__).resolve().parent / "assets" / "fonts" / "DocFont.ttf"
+
+
+def _ensure_pdf_font() -> Path | None:
+    """Copy a system TTF into the worker tree so xhtml2pdf's resource policy
+    (paths must stay under the project) can embed Cyrillic glyphs."""
+    import shutil
+
+    if _FONT_CACHE.is_file():
+        return _FONT_CACHE
+    src = next((p for p in _CYRILLIC_FONTS if p.is_file()), None)
+    if src is None:
+        return None
+    _FONT_CACHE.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, _FONT_CACHE)
+    return _FONT_CACHE
+
+
+def _pdf_via_xhtml2pdf(html: str) -> bytes:
+    from xhtml2pdf import pisa
+
+    font = _ensure_pdf_font()
+    path_base = ""
+    if font is not None:
+        style = (
+            "<style>"
+            "@font-face{font-family:DocFont;src:url('DocFont.ttf');}"
+            "@font-face{font-family:DocFont;src:url('DocFont.ttf');font-weight:bold;}"
+            "*{font-family:DocFont,sans-serif;}"
+            "</style>"
+        )
+        path_base = str(font.parent) + "/"
+        lower = html.lower()
+        if "<head" in lower:
+            idx = lower.index("<head")
+            gt = html.index(">", idx) + 1
+            html = html[:gt] + style + html[gt:]
+        else:
+            html = f"<html><head>{style}</head><body>{html}</body></html>"
+
+    buffer = io.BytesIO()
+    result = pisa.CreatePDF(html, dest=buffer, encoding="utf-8", path=path_base)
+    if result.err:
+        raise RuntimeError(f"xhtml2pdf failed to render PDF ({result.err} errors)")
+    return buffer.getvalue()
+
+
 def html_to_pdf(html: str) -> bytes:
-    try:
-        from weasyprint import HTML
-    except ImportError as exc:  # pragma: no cover - exercised via importorskip
-        raise RuntimeError("PDF output requires weasyprint (see worker requirements)") from exc
+    """WeasyPrint on Linux/Docker; xhtml2pdf on Windows (no GTK/Pango)."""
+    import sys
+
+    engines: list[tuple[str, Callable[[str], bytes]]] = []
+    if sys.platform == "win32":
+        engines.append(("xhtml2pdf", _pdf_via_xhtml2pdf))
+        engines.append(("weasyprint", _pdf_via_weasyprint))
+    else:
+        engines.append(("weasyprint", _pdf_via_weasyprint))
+        engines.append(("xhtml2pdf", _pdf_via_xhtml2pdf))
+
+    errors: list[BaseException] = []
+    for _name, engine in engines:
+        try:
+            return engine(html)
+        except Exception as exc:  # noqa: BLE001 — try the next engine
+            errors.append(exc)
+    raise RuntimeError(
+        "PDF output requires weasyprint (with GTK/Pango) or xhtml2pdf"
+    ) from (errors[-1] if errors else None)
+
+
+def _pdf_via_weasyprint(html: str) -> bytes:
+    from weasyprint import HTML
+
     return HTML(string=html).write_pdf()
 
 

@@ -14,6 +14,7 @@
 | Всего находок | {{ result.summary.get('total_findings', result.findings|length) }} |
 | Critical/High | {{ result.summary.get('high_or_above', 0) }} |
 | ИИ-находки | {{ result.summary.get('ai_findings', 0) }} |
+| Тип проверки | {{ result.summary.get('scan_kind', 'sast') }} |
 
 ### По severity
 
@@ -23,40 +24,80 @@
 - Находок нет
 {% endfor %}
 
+{% set runners = (result.meta or {}).get('runners') or [] %}
+{% set dast_meta = (result.meta or {}).get('dast') or {} %}
 {% set ai_meta = (result.meta or {}).get('ai') or {} %}
-## ИИ-анализ
+{% set has_sast = (not runners) or ('static' in runners) %}
+{% set has_llm = ('ai' in runners) or (ai_meta.get('enabled')|default(false)) %}
+{% set has_dast = ('dynamic' in runners) or dast_meta or (result.summary.get('scan_kind') in ['dast', 'sast+dast']) %}
 
-{% if ai_meta %}
-- **Статус модуля:** {{ ai_meta.get('status', '—') }}
-- **Включён:** {{ ai_meta.get('enabled', false) }}
-- **Модель:** {{ ai_meta.get('model') or '—' }}
-- **Файлов отправлено:** {{ ai_meta.get('files_sent', 0) }}
-- **Находок от ИИ:** {{ ai_meta.get('findings_count', 0) }}
-{% if ai_meta.get('error') %}- **Примечание:** {{ ai_meta.get('error') }}
-{% endif %}
-{% else %}
-Модуль ИИ-анализа не запускался.
-{% endif %}
-
-> Находки с источником `ai` — эвристики LLM по отобранным файлам. Это не замена ручному аудиту и не сертификационный вывод.
-
-## Находки
-
-{% if result.findings %}
-{% for f in result.findings %}
-### {{ loop.index }}. {{ f.title }}
+{% macro render_finding(f, index) -%}
+### {{ index }}. {{ f.title }}
 
 - **Severity:** {{ f.severity.value }}
 - **CWE:** {{ f.cwe or '—' }}
 - **Источник:** {{ f.source }} / {{ f.language }}
 - **Правило:** {{ f.rule_id or '—' }}
 - **Где:** {{ f.file or '—' }}{% if f.line %}:{{ f.line }}{% endif %}
+{% if (f.extra or {}).get('url') %}- **URL:** {{ f.extra.url }}
+{% endif %}
 - **Описание:** {{ f.description }}
 - **Рекомендация:** {{ f.remediation or 'Требуется ручная оценка и устранение.' }}
+{%- endmacro %}
+
+{% if has_sast %}
+## SAST — статический анализ
+
+{% set ns = namespace(found=false) %}
+{% for f in result.findings if f.source != 'ai' and not ((f.source or '').startswith('dast') or f.source in ['zap-baseline', 'zap']) %}
+{% set ns.found = true %}
+{{ render_finding(f, loop.index) }}
 
 {% endfor %}
-{% else %}
-Автоматизированные сканеры не выявили находок. Это не гарантирует отсутствие уязвимостей.
+{% if not ns.found %}
+Находок по статическому анализу нет.
+{% endif %}
+{% endif %}
+
+{% if has_llm %}
+## LLM-агент
+
+{% if ai_meta %}
+- **Статус модуля:** {{ ai_meta.get('status', '—') }}
+- **Включён:** {{ ai_meta.get('enabled', false) }}
+- **Модель:** {{ ai_meta.get('model') or '—' }}
+{% if ai_meta.get('error') %}- **Примечание:** {{ ai_meta.get('error') }}
+{% endif %}
+{% endif %}
+
+{% set ns = namespace(found=false) %}
+{% for f in result.findings if f.source == 'ai' %}
+{% set ns.found = true %}
+{{ render_finding(f, loop.index) }}
+
+{% endfor %}
+{% if not ns.found %}
+Находок от ИИ-анализа нет.
+{% endif %}
+{% endif %}
+
+{% if has_dast %}
+## DAST — динамический анализ
+
+{% if dast_meta %}
+- **Статус:** {{ dast_meta.get('status', '—') }}
+- **Цель:** {{ dast_meta.get('target_url') or '—' }}
+{% endif %}
+
+{% set ns = namespace(found=false) %}
+{% for f in result.findings if (f.source or '').startswith('dast') or f.source in ['zap-baseline', 'zap'] %}
+{% set ns.found = true %}
+{{ render_finding(f, loop.index) }}
+
+{% endfor %}
+{% if not ns.found %}
+Находок по динамическому анализу нет.
+{% endif %}
 {% endif %}
 
 ## Инвентаризация кода

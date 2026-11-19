@@ -102,41 +102,126 @@ def _inventory_rows(result) -> list[dict]:
     return rows
 
 
+def _finding_method(source: str | None) -> str:
+    """Map analyzer finding.source to a report section id."""
+    src = (source or "").lower()
+    if src == "ai":
+        return "llm"
+    if src.startswith("dast") or src in {"zap-baseline", "zap"}:
+        return "dast"
+    return "sast"
+
+
+def _finding_row(finding, position: int) -> dict:
+    extra = finding.extra or {}
+    return {
+        "position": position,
+        "title": finding.title,
+        "description": finding.description,
+        "severity": finding.severity.value,
+        "cwe": finding.cwe,
+        "file": finding.file,
+        "line": finding.line,
+        "rule_id": finding.rule_id,
+        "source": finding.source,
+        "remediation": finding.remediation,
+        "url": extra.get("url"),
+        "evidence": extra.get("evidence"),
+        "method": _finding_method(finding.source),
+    }
+
+
 def _finding_rows(result) -> list[dict]:
-    rows = []
-    for position, finding in enumerate(ordered_findings(result), start=1):
-        rows.append(
-            {
-                "position": position,
-                "title": finding.title,
-                "description": finding.description,
-                "severity": finding.severity.value,
-                "cwe": finding.cwe,
-                "file": finding.file,
-                "line": finding.line,
-                "rule_id": finding.rule_id,
-                "source": finding.source,
-                "remediation": finding.remediation,
-            }
-        )
-    return rows
+    return [
+        _finding_row(finding, position)
+        for position, finding in enumerate(ordered_findings(result), start=1)
+    ]
+
+
+SECTION_LABELS = {
+    "sast": "SAST — статический анализ",
+    "llm": "LLM-агент",
+    "dast": "DAST — динамический анализ",
+}
+
+# Runner keys from orchestrator meta.runners → section ids.
+_RUNNER_TO_SECTION = {"static": "sast", "ai": "llm", "dynamic": "dast"}
+
+
+def _active_sections(result) -> list[str]:
+    """Ordered section ids that should appear in the unified audit report."""
+    meta = result.meta or {}
+    summary = result.summary or {}
+    runners = meta.get("runners")
+    if runners:
+        sections = []
+        for runner in runners:
+            section = _RUNNER_TO_SECTION.get(runner)
+            if section and section not in sections:
+                sections.append(section)
+        return sections
+
+    # Legacy jobs without an explicit runner list: infer from result.
+    sections: list[str] = ["sast"]
+    ai = meta.get("ai") or {}
+    if ai.get("enabled") or any(_finding_method(f.source) == "llm" for f in result.findings):
+        sections.append("llm")
+    if (
+        meta.get("dast")
+        or summary.get("scan_kind") in {"dast", "sast+dast"}
+        or any(_finding_method(f.source) == "dast" for f in result.findings)
+    ):
+        sections.append("dast")
+    return sections
+
+
+def _method_sections(result) -> list[dict]:
+    """Findings grouped under SAST / LLM / DAST for the unified report."""
+    rows = _finding_rows(result)
+    by_method: dict[str, list[dict]] = {key: [] for key in SECTION_LABELS}
+    for row in rows:
+        by_method.setdefault(row["method"], []).append(row)
+
+    meta = result.meta or {}
+    dast_meta = meta.get("dast") or {}
+    sections = []
+    for section_id in _active_sections(result):
+        entry = {
+            "id": section_id,
+            "label": SECTION_LABELS[section_id],
+            "findings": by_method.get(section_id, []),
+            "dast": dast_meta if section_id == "dast" else None,
+        }
+        sections.append(entry)
+    return sections
 
 
 def _meta_lines(result) -> list[str]:
     meta = result.meta or {}
     lines: list[str] = []
+    sections = _active_sections(result)
+    if sections:
+        labels = [SECTION_LABELS[s] for s in sections]
+        lines.append("Методы: " + "; ".join(labels))
     languages = meta.get("languages") or {}
     for lang, info in sorted(languages.items()):
         if info.get("skipped"):
             lines.append(f"{lang}: анализ пропущен ({info.get('reason', 'нет данных')})")
     ai = meta.get("ai") or {}
-    if ai.get("enabled"):
+    if ai.get("enabled") or "llm" in sections:
         status = ai.get("status", "unknown")
         text = f"ИИ-анализ: {status}"
         if ai.get("model"):
             text += f", модель {ai['model']}"
         if ai.get("error"):
             text += f" ({ai['error']})"
+        lines.append(text)
+    dast = meta.get("dast") or {}
+    if dast:
+        status = dast.get("status", "unknown")
+        text = f"DAST: {status}"
+        if dast.get("target_url"):
+            text += f", цель {dast['target_url']}"
         lines.append(text)
     return lines
 
@@ -146,8 +231,9 @@ def _fmt_ts(value: datetime) -> str:
 
 
 def render_report(result, cfg) -> str:
-    """report.html — audit report for the «Отчёт аудита» viewer page."""
+    """report.html — unified audit report with method sections."""
     counts = severity_counts(result)
+    sections = _method_sections(result)
     template = _ENV.get_template("report.html.j2")
     return template.render(
         project_name=result.project_name,
@@ -158,6 +244,7 @@ def render_report(result, cfg) -> str:
         donut=svg_donut(counts, cfg.severity_colors),
         severity_colors=cfg.severity_colors,
         summary=result.summary or {},
+        sections=sections,
         findings=_finding_rows(result),
         meta_lines=_meta_lines(result),
         colors=cfg.colors,

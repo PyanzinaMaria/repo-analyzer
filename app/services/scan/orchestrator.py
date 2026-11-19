@@ -104,15 +104,20 @@ class ScanOrchestrator:
         inventories = []
         language_meta = {}
 
-        for handler in self.registry.enabled():
-            if not handler.detect(root):
-                language_meta[handler.id] = {"skipped": True, "reason": "not detected"}
-                continue
-            analysis = handler.analyze(root, {"project_id": project_id, "scan_id": scan_id})
-            findings.extend(analysis.findings)
-            if analysis.inventory:
-                inventories.append(analysis.inventory)
-            language_meta[handler.id] = analysis.meta
+        # Legacy jobs (methods is None) keep the historical default: run SAST.
+        run_static = methods is None or "static" in methods
+        if run_static:
+            for handler in self.registry.enabled():
+                if not handler.detect(root):
+                    language_meta[handler.id] = {"skipped": True, "reason": "not detected"}
+                    continue
+                analysis = handler.analyze(root, {"project_id": project_id, "scan_id": scan_id})
+                findings.extend(analysis.findings)
+                if analysis.inventory:
+                    inventories.append(analysis.inventory)
+                language_meta[handler.id] = analysis.meta
+        else:
+            language_meta["_static"] = {"skipped": True, "reason": "static runner not selected"}
 
         # Explicit runner selection overrides the enable_ai flag; otherwise
         # the legacy flag/config semantics apply unchanged.
@@ -141,7 +146,7 @@ class ScanOrchestrator:
         meta: dict = {"languages": language_meta, "ai": ai_meta}
         if methods is not None:
             meta["runners"] = list(methods)
-        return ScanResult(
+        sast_result = ScanResult(
             scan_id=scan_id,
             project_id=project_id,
             project_name=project_name,
@@ -151,6 +156,11 @@ class ScanOrchestrator:
             summary=summary,
             meta=meta,
         )
+
+        # DAST (sandbox boot + ZAP/preflight) when the client asked for
+        # `dynamic`, or on legacy jobs with no method list (previous default).
+        if methods is not None and "dynamic" not in methods:
+            return sast_result
 
         from app.services.scan.dast_merge import merge_dast_via_sandbox
 

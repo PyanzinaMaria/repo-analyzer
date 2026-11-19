@@ -40,6 +40,7 @@
   .stat b { font-size: 18px; }
   .meta { margin: 10px 0 0; color: var(--ink-soft); font-size: 13px; }
   .meta li { margin: 2px 0; }
+  .section-note { color: var(--ink-soft); font-size: 14px; margin: 0 0 14px; }
   .finding {
     background: var(--raised); border: 1px solid var(--border);
     border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;
@@ -92,10 +93,17 @@
     {% endif %}
   </div>
 
+  {% for section in sections %}
   <div class="card">
-    <h2>Находки и рекомендации</h2>
-    {% if findings %}
-      {% for f in findings %}
+    <h2>{{ section.label }}</h2>
+    {% if section.dast %}
+    <p class="section-note">
+      Статус: <b>{{ section.dast.status or '—' }}</b>
+      {% if section.dast.target_url %} · цель: {{ section.dast.target_url }}{% endif %}
+    </p>
+    {% endif %}
+    {% if section.findings %}
+      {% for f in section.findings %}
       <div class="finding">
         <header>
           <span class="badge" style="background: {{ severity_colors.get(f.severity, severity_colors['info']) }};">
@@ -104,20 +112,30 @@
           </span>
           <h3>{{ f.position }}. {{ f.title }}</h3>
         </header>
-        {% if f.file %}
-        <p class="where">{{ f.file }}{% if f.line %}:{{ f.line }}{% endif %}
+        {% if f.file or f.url %}
+        <p class="where">
+          {%- if f.file %}{{ f.file }}{% if f.line %}:{{ f.line }}{% endif %}{% endif %}
+          {%- if f.url %}{% if f.file %} · {% endif %}{{ f.url }}{% endif %}
           {%- if f.cwe %} · {{ f.cwe }}{% endif %}
           {%- if f.rule_id %} · {{ f.rule_id }}{% endif %}
-          {%- if f.source %} · источник: {{ f.source }}{% endif %}</p>
+          {%- if f.source %} · источник: {{ f.source }}{% endif %}
+        </p>
         {% endif %}
         <p>{{ f.description }}</p>
+        {% if f.evidence %}<p class="where">Доказательство: {{ f.evidence }}</p>{% endif %}
         {% if f.remediation %}<div class="fix"><b>Как исправить:</b> {{ f.remediation }}</div>{% endif %}
       </div>
       {% endfor %}
     {% else %}
-      <p class="empty">Уязвимостей не обнаружено.</p>
+      <p class="empty">Находок по этому методу нет.</p>
     {% endif %}
   </div>
+  {% else %}
+  <div class="card">
+    <h2>Находки и рекомендации</h2>
+    <p class="empty">Уязвимостей не обнаружено.</p>
+  </div>
+  {% endfor %}
 
   <p class="foot">Отчёт сформирован автоматически сервисом анализа репозиториев и не заменяет ручной аудит безопасности.</p>
 </div>

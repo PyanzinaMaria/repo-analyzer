@@ -106,7 +106,10 @@ def _check_options(settings: Settings, options: dict) -> None:
     for method_id in options.get("methods") or []:
         if analysis.method(str(method_id)) is None or not analysis.method(str(method_id)).available:
             raise IntakeError("errors.unavailable_choice")
-    known_formats = {f.id for f in settings.reports.formats}
+    # Form formats = shared export set for report + doc (intersection).
+    known_formats = {
+        c["value"] for c in settings.reports.format_choices()
+    }
     for format_id in options.get("formats") or []:
         if str(format_id) not in known_formats:
             raise IntakeError("errors.unavailable_choice")

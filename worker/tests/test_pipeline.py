@@ -34,11 +34,12 @@ def test_happy_path_produces_contract_artifacts(cfg, make_job, pipe):
     reports_dir = cfg.reports_dir / scan_id
     manifest = read_manifest(reports_dir)
     assert manifest["stages"] == {"analysis": "ok", "report": "ok"}
-    # No options -> inherited defaults (md). md applies to the FSTEC doc
-    # only; the audit report is always html.
-    assert manifest["artifacts"] == ["report.html", "doc.html", "doc.md"]
-    for name in ("report.html", "doc.html", "doc.md", "summary.json"):
+    # No options -> inherited defaults (md) for both report and doc.
+    assert manifest["artifacts"] == ["report.md", "doc.md"]
+    for name in ("report.md", "doc.md", "summary.json"):
         assert (reports_dir / name).stat().st_size > 0
+    assert not (reports_dir / "report.html").exists()
+    assert not (reports_dir / "doc.html").exists()
 
     summary = json.loads((reports_dir / "summary.json").read_text(encoding="utf-8"))
     # unknown -> info, zero counts dropped
@@ -63,21 +64,31 @@ def test_resolve_options_maps_methods_to_runners(cfg):
 def test_resolve_options_rejects_unavailable_and_unknown(cfg):
     pipe = Pipeline(cfg)
     with pytest.raises(ValueError, match="not available"):
-        pipe._resolve_options({"methods": ["dast"]})  # planned, available: false
+        pipe._resolve_options({"methods": ["pentest"]})  # planned, available: false
     with pytest.raises(ValueError, match="not available"):
         pipe._resolve_options({"methods": ["tarot"]})  # unknown
     with pytest.raises(ValueError, match="formats not available"):
         pipe._resolve_options({"formats": ["rtf"]})
+    with pytest.raises(ValueError, match="formats not available"):
+        # json is internal to dast_report, not a form/doc format
+        pipe._resolve_options({"formats": ["json"]})
 
 
 def test_format_plan_intersection(cfg):
     pipe = Pipeline(cfg)
-    # html is always produced; chosen formats apply to the FSTEC doc only
-    # (the audit report document carries html alone).
-    assert pipe._format_plan(["md"]) == ["report.html", "doc.html", "doc.md"]
-    assert pipe._format_plan(["md", "pdf", "docx"]) == [
+    # report.* and doc.* follow the form checkboxes exactly.
+    assert pipe._format_plan(["md"]) == ["report.md", "doc.md"]
+    assert pipe._format_plan(["html"]) == ["report.html", "doc.html"]
+    assert pipe._format_plan(["html", "pdf"]) == [
         "report.html",
+        "report.pdf",
         "doc.html",
+        "doc.pdf",
+    ]
+    assert pipe._format_plan(["md", "pdf", "docx"]) == [
+        "report.md",
+        "report.pdf",
+        "report.docx",
         "doc.md",
         "doc.pdf",
         "doc.docx",
@@ -89,7 +100,7 @@ def test_format_plan_honors_engine_switches(cfg):
 
     disabled_pdf = dc_replace(cfg, formats_enabled={"pdf": False})
     pipe = Pipeline(disabled_pdf)
-    assert pipe._format_plan(["md", "pdf"]) == ["report.html", "doc.html", "doc.md"]
+    assert pipe._format_plan(["md", "pdf"]) == ["report.md", "doc.md"]
 
 
 def test_chosen_format_without_engine_fails_report_stage(cfg, make_job, scan_result, monkeypatch):
@@ -101,9 +112,12 @@ def test_chosen_format_without_engine_fails_report_stage(cfg, make_job, scan_res
     monkeypatch.setattr(pipe, "_analyze", lambda scan_id, source, options: scan_result)
 
     def broken_pdf(html):
-        raise RuntimeError("no weasyprint")
+        raise RuntimeError("no pdf engine")
 
-    monkeypatch.setattr("worker.formats.html_to_pdf", broken_pdf)
+    # Pipeline calls HTML_CONVERTERS["pdf"], not the html_to_pdf name.
+    import worker.formats as formats_mod
+
+    monkeypatch.setitem(formats_mod.HTML_CONVERTERS, "pdf", broken_pdf)
     pipe.process({
         "scan_id": scan_id,
         "source": {"kind": "zip"},
@@ -116,7 +130,11 @@ def test_chosen_format_without_engine_fails_report_stage(cfg, make_job, scan_res
 
 def test_report_html_escapes_finding_fields(cfg, pipe, scan_result):
     scan_id = "11111111-1111-1111-1111-111111111111"
-    pipe.process({"scan_id": scan_id, "source": {"kind": "zip"}})
+    pipe.process({
+        "scan_id": scan_id,
+        "source": {"kind": "zip"},
+        "options": {"formats": ["html"]},
+    })
     html = (cfg.reports_dir / scan_id / "report.html").read_text(encoding="utf-8")
 
     assert "app/db&lt;x&gt;.py" in html
@@ -124,11 +142,17 @@ def test_report_html_escapes_finding_fields(cfg, pipe, scan_result):
     assert "SQL-инъекция" in html
     assert "Использовать параметризованные запросы." in html
     assert 'class="donut"' in html
+    assert "SAST — статический анализ" in html
+    assert "LLM-агент" in html
 
 
 def test_doc_html_contains_protocol_and_disclaimer(cfg, pipe):
     scan_id = "11111111-1111-1111-1111-111111111111"
-    pipe.process({"scan_id": scan_id, "source": {"kind": "zip"}})
+    pipe.process({
+        "scan_id": scan_id,
+        "source": {"kind": "zip"},
+        "options": {"formats": ["html"]},
+    })
     html = (cfg.reports_dir / scan_id / "doc.html").read_text(encoding="utf-8")
 
     assert "ФСТЭК России" in html
@@ -166,7 +190,11 @@ def test_produce_failure_fails_only_report_stage(cfg, make_job, scan_result, mon
         raise RuntimeError("template error")
 
     monkeypatch.setattr("worker.pipeline.render_report", broken_render)
-    pipe.process({"scan_id": scan_id, "source": {"kind": "zip"}})
+    pipe.process({
+        "scan_id": scan_id,
+        "source": {"kind": "zip"},
+        "options": {"formats": ["html"]},
+    })
 
     manifest = read_manifest(cfg.reports_dir / scan_id)
     assert manifest["stages"] == {"analysis": "ok", "report": "fail"}

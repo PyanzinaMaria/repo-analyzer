@@ -28,11 +28,6 @@ logger = logging.getLogger(__name__)
 
 STAGE_ORDER = ("analysis", "report")
 
-# Produced by write_dast_bundle when sandbox/DAST actually ran; not part of
-# the regular documents×formats render plan.
-DAST_ARTIFACTS = ("dast_report.md", "dast_report.json")
-
-
 def write_manifest(reports_dir: Path, stages: dict[str, str], artifacts: list[str]) -> None:
     """Whole-file manifest rewrite. The frontend treats an unparseable
     manifest as absent, so torn reads only ever look like 'pending'."""
@@ -98,29 +93,40 @@ class Pipeline:
                 if runner and runner not in runners:
                     runners.append(runner)
 
-        # Formats come from reports.yaml (defaults + serveable formats).
+        # Formats come from reports.yaml defaults + shared report/doc formats.
         formats = list(options.get("formats")
                        or (self.cfg.reports.get("defaults") or {}).get("formats", []))
-        known_formats = {f.get("id") for f in self.cfg.reports.get("formats", [])}
-        unknown = [f for f in formats if f not in known_formats]
+        export_docs = [
+            doc for doc in self.cfg.reports.get("documents", [])
+            if doc.get("id") in {"report", "doc"}
+        ]
+        if export_docs:
+            allowed = set(export_docs[0].get("formats", []))
+            for doc in export_docs[1:]:
+                allowed &= set(doc.get("formats", []))
+        else:
+            allowed = {f.get("id") for f in self.cfg.reports.get("formats", [])}
+        allowed.discard("json")
+        unknown = [f for f in formats if f not in allowed]
         if unknown:
             raise ValueError(f"output formats not available: {unknown!r}")
         return runners, formats
 
     def _format_plan(self, chosen_formats: list[str]) -> list[str]:
-        """Artifact names to produce: every document's html plus the chosen
-        formats each document supports, honoring the engine switches.
-        ``dast_report`` is excluded — it is emitted only when DAST ran."""
+        """Artifact names to produce: ``report.*`` and ``doc.*`` exactly for
+        the chosen formats. PDF/DOCX render HTML in memory when needed.
+        DAST is folded into the audit report — no separate dast_report.*."""
         names: list[str] = []
         for doc in self.cfg.reports.get("documents", []):
-            if doc.get("id") == "dast_report":
+            doc_id = doc.get("id")
+            if doc_id not in {"report", "doc"}:
                 continue
             for fmt in doc.get("formats", []):
-                if fmt != "html" and fmt not in chosen_formats:
+                if fmt not in chosen_formats:
                     continue
                 if self.cfg.formats_enabled and not self.cfg.formats_enabled.get(fmt, True):
                     continue
-                names.append(f"{doc.get('id')}.{fmt}")
+                names.append(f"{doc_id}.{fmt}")
         return names
 
     def _render_html(self, doc_id: str, result) -> str:
@@ -165,12 +171,12 @@ class Pipeline:
             "Scan %s: project %s (%s), runners=%s, starting analysis",
             scan_id, project.id, kind, runners,
         )
-        # Pass explicit bool — None would fall back to analyzer settings.yaml
-        # and run OpenRouter even when worker.enable_ai is false.
+        # Legacy jobs (no methods): honor worker.enable_ai. Form-driven jobs
+        # pass the runner list; orchestrator turns AI on iff "ai" is in it.
         if runners is None:
             enable_arg = self.cfg.enable_ai
         else:
-            enable_arg = bool(self.cfg.enable_ai and "ai" in runners)
+            enable_arg = "ai" in runners
         scan = orchestrator.start_scan(project.id, enable_ai=enable_arg, methods=runners)
         result = store.get_result(project.id, scan.id)
         if result is None:
@@ -230,13 +236,4 @@ class Pipeline:
         (reports_dir / "summary.json").write_text(
             json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
         )
-
-        if scan_kind in {"dast", "sast+dast"} or (result.meta or {}).get("dast"):
-            from app.dast.report import write_dast_bundle
-
-            write_dast_bundle(result, reports_dir)
-            for name in DAST_ARTIFACTS:
-                if (reports_dir / name).is_file() and name not in produced:
-                    produced.append(name)
-
         return produced

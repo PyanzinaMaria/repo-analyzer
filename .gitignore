@@ -32,3 +32,5 @@ data/queue/
 data/uploads/
 data/reports/
 frontend/data/
+# Runtime-copied system TTF for xhtml2pdf Cyrillic (not redistributed).
+worker/assets/fonts/

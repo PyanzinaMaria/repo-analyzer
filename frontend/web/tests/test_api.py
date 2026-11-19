@@ -121,12 +121,22 @@ def test_submission_rejects_unavailable_method(client):
 
 
 def test_index_renders_analysis_and_format_choices(client):
+    import re
+
     c, _, _ = client
     r = c.get("/")
     assert r.status_code == 200
     assert 'name="methods"' in r.text
-    assert 'value="dast"' in r.text and "запланировано" in r.text
+    assert 'value="dast"' in r.text
+    assert 'value="pentest"' in r.text and "запланировано" in r.text
+    # DAST checkbox itself must not be disabled (pentest still is).
+    dast_input = re.search(r'<input[^>]*value="dast"[^>]*>', r.text)
+    assert dast_input is not None and "disabled" not in dast_input.group(0)
     assert 'name="formats"' in r.text
+    assert 'value="html"' in r.text and 'value="pdf"' in r.text and 'value="docx"' in r.text
+    # JSON is not an export format for report/doc — must not appear as a checkbox.
+    assert not re.search(r'<input[^>]*name="formats"[^>]*value="json"', r.text)
+    assert "Форматы отчёта" in r.text
     assert 'name="model"' not in r.text  # model choice removed: analyzer serves its own ai.model
 
 
@@ -268,7 +278,7 @@ def test_scan_page_shows_results_when_ready(client, demo_scan):
     assert "Документация ФСТЭК" in r.text
     assert "Документация ФСТЭК · PDF" in r.text
     assert "Документация ФСТЭК · MD" in r.text
-    assert "Отчёт аудита · MD" not in r.text  # audit report: html only, no format options
+    assert "Отчёт аудита · MD" not in r.text  # demo fixture publishes report.html only
     assert 'data-option' in r.text  # donut option embedded
     assert "Анализ: 41.7 с" in r.text  # timing block from summary.json
     assert "Всего: 42.0 с" in r.text

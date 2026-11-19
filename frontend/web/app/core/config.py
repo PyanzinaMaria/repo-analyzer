@@ -123,7 +123,23 @@ class ReportsConfig(BaseModel):
         return next((a for a in self.artifacts if a.name == name), None)
 
     def format_choices(self) -> list[dict[str, str]]:
-        return [{"value": f.id, "label_key": f"formats.{f.id}.label"} for f in self.formats]
+        """Formats offered in the submission form = intersection of export
+        formats shared by ``report`` and ``doc``. Internal-only ids such as
+        ``json`` stay out of the checkboxes."""
+        export_docs = [d for d in self.documents if d.id in {"report", "doc"}]
+        if export_docs:
+            allowed: set[str] = set(export_docs[0].formats)
+            for doc in export_docs[1:]:
+                allowed &= set(doc.formats)
+        else:
+            allowed = {f.id for f in self.formats}
+        # Never offer raw json in the form even if a document lists it.
+        allowed.discard("json")
+        return [
+            {"value": f.id, "label_key": f"formats.{f.id}.label"}
+            for f in self.formats
+            if f.id in allowed
+        ]
 
 
 class MethodSpec(BaseModel):

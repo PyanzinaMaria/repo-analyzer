@@ -27,7 +27,7 @@ methods:
       timeout_seconds: 1200
   - id: dast
     runner: dynamic
-    available: false
+    available: true
     label_key: methods.dast.label
     description_key: methods.dast.description
   - id: pentest

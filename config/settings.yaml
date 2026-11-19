@@ -5,11 +5,12 @@ enabled_languages:
 
 # Analysis runners this deployment offers (see app/analysis/registry.py).
 # The frontend picks methods in the form; the worker maps them to these
-# runner keys via frontend/config/analysis.yaml. dynamic/manual are not
-# implemented yet — requesting them fails the scan fast.
+# runner keys via frontend/config/analysis.yaml. `dynamic` boots the
+# sandbox and runs DAST (ZAP/preflight). `manual` is not implemented yet.
 methods:
   - static
   - ai
+  - dynamic
 
 # Example for later:
 # enabled_languages:
