@@ -39,10 +39,10 @@ reports:
 # Optional LLM code review (post-scan). Requires AI_API_KEY in .env.
 # Soft-fail: errors do not fail the deterministic scan.
 ai:
-  enabled: false
+  enabled: true
   provider: openai_compatible
-  base_url: https://api.openai.com/v1
-  model: gpt-4o-mini
+  base_url: https://openrouter.ai/api/v1
+  model: nvidia/nemotron-3.5-super-vl:free
   timeout_seconds: 120
   max_files: 25
   max_file_bytes: 40000
@@ -70,4 +70,9 @@ sandbox:
   network: repo-analyzer-dast
   # 3.9 works better with intentionally old vulnerable demo deps
   base_image: "python:3.9-slim"
+  # IP the target port is published on (docker -p bind) and host it is
+  # reachable on from the worker process (readiness/preflight URLs).
+  # SANDBOX_PUBLISH_BIND / SANDBOX_CONNECT_HOST override for a worker that
+  # itself runs in a container (0.0.0.0 / host.docker.internal).
   publish_host: "127.0.0.1"
+  connect_host: "127.0.0.1"

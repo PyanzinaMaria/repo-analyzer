@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -14,6 +15,16 @@ class DastConfig:
     timeout_seconds: int = 300
     allowed_schemes: tuple[str, ...] = ("http", "https")
     allow_private_targets: bool = False
+    # Shared directory ZAP writes its JSON report into. Empty -> a temp dir
+    # (works when the worker runs on the daemon host). A containerized worker
+    # points it at a named volume also mounted into the ZAP container, or the
+    # sibling container's volume mount would be invisible to the worker.
+    work_dir: str = ""
+    # Daemon-side name of that named volume. When set, ZAP is started with
+    # --mount type=volume (volume-subpath per scan) instead of a -v path,
+    # because a -v path from a containerized worker resolves on the daemon
+    # host filesystem, not inside the worker container.
+    docker_volume: str = ""
 
 
 def get_dast_config() -> DastConfig:
@@ -28,4 +39,8 @@ def get_dast_config() -> DastConfig:
         timeout_seconds=int(raw.get("timeout_seconds", 300)),
         allowed_schemes=tuple(str(s).lower() for s in schemes),
         allow_private_targets=bool(raw.get("allow_private_targets", False)),
+        work_dir=os.environ.get("ZAP_WORK_DIR", str(raw.get("work_dir", ""))).strip(),
+        docker_volume=os.environ.get(
+            "ZAP_DOCKER_VOLUME", str(raw.get("docker_volume", ""))
+        ).strip(),
     )

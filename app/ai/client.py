@@ -28,20 +28,53 @@ class OpenAICompatibleClient:
             "Content-Type": "application/json",
         }
 
-    def chat_json(self, user_prompt: str, *, repair: bool = False) -> str:
+    def chat(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        *,
+        json_mode: bool = False,
+        repair_prompt: str | None = None,
+    ) -> str:
+        """One completion with an explicit system prompt. ``json_mode`` adds
+        the json_object response format; document generation (Markdown
+        answers) runs without it."""
         messages: list[dict[str, str]] = [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ]
-        if repair:
-            messages.append({"role": "user", "content": REPAIR_PROMPT})
+        if repair_prompt:
+            messages.append({"role": "user", "content": repair_prompt})
 
         body: dict[str, Any] = {
             "model": self.settings.model,
             "temperature": 0.1,
             "messages": messages,
-            "response_format": {"type": "json_object"},
         }
+        if json_mode:
+            body["response_format"] = {"type": "json_object"}
+        content, finish_reason = self._post(body)
+        if not content.strip() and "response_format" in body:
+            # Some OpenAI-compatible gateways occasionally answer json_object
+            # requests with an empty content; retry once without the format.
+            body.pop("response_format")
+            content, finish_reason = self._post(body)
+        if not content.strip():
+            raise AiClientError(
+                f"Empty AI response content (finish_reason={finish_reason})"
+            )
+        return content
+
+    def chat_json(self, user_prompt: str, *, repair: bool = False) -> str:
+        return self.chat(
+            SYSTEM_PROMPT,
+            user_prompt,
+            json_mode=True,
+            repair_prompt=REPAIR_PROMPT if repair else None,
+        )
+
+    def _post(self, body: dict[str, Any]) -> tuple[str, str | None]:
+        """Returns (content, finish_reason)."""
         url = f"{self.settings.base_url}/chat/completions"
         try:
             with httpx.Client(
@@ -59,10 +92,12 @@ class OpenAICompatibleClient:
 
         try:
             data = response.json()
-            content = data["choices"][0]["message"]["content"]
+            choice = data["choices"][0]
+            content = choice["message"]["content"]
+            finish_reason = choice.get("finish_reason")
         except (KeyError, IndexError, TypeError, ValueError) as exc:
             raise AiClientError(f"Unexpected AI response shape: {exc}") from exc
 
-        if not isinstance(content, str) or not content.strip():
-            raise AiClientError("Empty AI response content")
-        return content
+        if not isinstance(content, str):
+            content = ""
+        return content, finish_reason

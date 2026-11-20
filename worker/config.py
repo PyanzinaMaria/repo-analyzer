@@ -20,6 +20,11 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 CONFIG_PATH = Path(__file__).resolve().parent / "config" / "worker.yaml"
 FRONTEND_CONFIG_DIR = ROOT_DIR / "frontend" / "config"
 
+# Document ids from frontend/config/reports.yaml produced by an LLM call;
+# worker.yaml `ai_documents:` holds their per-document specs (system prompt,
+# timeout). A declared LLM document without a spec is excluded from the plan.
+AI_DOC_IDS = ("fstec", "codedocs")
+
 
 def _read_yaml(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
@@ -41,6 +46,15 @@ class WorkerConfig:
     # Format engines this worker runs (worker.yaml `formats:`); a format not
     # enabled here is skipped for every scan. Absent key = enabled.
     formats_enabled: dict[str, bool] = field(default_factory=dict)
+    # LLM-generated documents (worker.yaml `ai_documents:`): doc id ->
+    # {prompt, timeout_seconds}. Produced only when ai_documents_enabled is
+    # true (WORKER_ENABLE_AI_DOCUMENTS overrides the yaml switch); each spec
+    # names its system prompt under system_prompts/.
+    ai_documents_enabled: bool = False
+    ai_documents: dict[str, dict[str, Any]] = field(default_factory=dict)
+
+    def is_ai_doc(self, doc_id: str) -> bool:
+        return doc_id in AI_DOC_IDS
 
     @property
     def queue_dir(self) -> Path:
@@ -83,6 +97,16 @@ def load_config(path: Path | None = None) -> WorkerConfig:
     doc = raw.get("doc") or {}
     formats_enabled = {str(k): bool(v) for k, v in (raw.get("formats") or {}).items()}
 
+    raw_ai_docs = raw.get("ai_documents") or {}
+    ai_docs_enabled = os.environ.get(
+        "WORKER_ENABLE_AI_DOCUMENTS", str(raw_ai_docs.get("enabled", False))
+    ).strip().lower() in {"1", "true", "yes"}
+    ai_documents = {
+        str(doc_id): dict(spec)
+        for doc_id, spec in raw_ai_docs.items()
+        if isinstance(spec, dict)
+    }
+
     # The frontend contract is required: without it the worker cannot map
     # method ids to runners nor decide which artifacts to produce.
     analysis_path = FRONTEND_CONFIG_DIR / "analysis.yaml"
@@ -102,4 +126,6 @@ def load_config(path: Path | None = None) -> WorkerConfig:
         analysis=_read_yaml(analysis_path),
         reports=_read_yaml(reports_path),
         formats_enabled=formats_enabled,
+        ai_documents_enabled=ai_docs_enabled,
+        ai_documents=ai_documents,
     )

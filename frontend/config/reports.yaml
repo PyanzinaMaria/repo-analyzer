@@ -12,11 +12,12 @@ formats:
   - { id: pdf,  media_type: application/pdf, viewer: none, download: true }
   - { id: docx, media_type: application/vnd.openxmlformats-officedocument.wordprocessingml.document, viewer: none, download: true }
   - { id: json, media_type: application/json, viewer: none, download: true }
+  - { id: zip, media_type: application/zip, viewer: none, download: true }
 
 # Formats both the audit report and FSTEC documentation inherit when the
 # client does not choose any in the form.
 defaults:
-  formats: [md]
+  formats: [html, docx]
 
 # Serveable documents. The serveable artifact list (ReportConfig.artifacts)
 # is derived as documents x formats with names following {document}.{format}.
@@ -28,7 +29,13 @@ documents:
     formats: [html, md, pdf, docx]
   - id: doc
     label_key: artifacts.docs.doc
-    formats: [html, md, pdf, docx]
+    formats: [html, pdf, docx]
+  - id: fstec
+    label_key: artifacts.docs.fstec
+    formats: [html, pdf, docx]
+  - id: codedocs
+    label_key: artifacts.docs.codedocs
+    formats: [zip]
 
 # Pipeline stages producers report through manifest.json. Order is display
 # order; a stage may be absent from the manifest until producers know it.

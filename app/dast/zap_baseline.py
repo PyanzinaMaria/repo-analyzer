@@ -92,10 +92,19 @@ def run_zap_baseline(
         cmd.extend(["--network", docker_network])
     else:
         cmd.append("--add-host=host.docker.internal:host-gateway")
+    if work_dir is not None and cfg.docker_volume:
+        # Sibling-container topology: the report travels through the named
+        # volume (daemon-side); volume-subpath isolates concurrent scans.
+        # A plain -v path from a containerized worker resolves on the daemon
+        # host filesystem, not inside the worker container.
+        cmd.extend([
+            "--mount",
+            f"type=volume,src={cfg.docker_volume},dst=/zap/wrk,volume-subpath={work_dir.name}",
+        ])
+    else:
+        cmd.extend(["-v", f"{out_dir.resolve()}:/zap/wrk:rw"])
     cmd.extend(
         [
-            "-v",
-            f"{out_dir.resolve()}:/zap/wrk:rw",
             cfg.zap_image,
             "zap-baseline.py",
             "-t",

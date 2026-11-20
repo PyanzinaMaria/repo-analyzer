@@ -98,10 +98,11 @@ Failed intake scans are withdrawn: the queue job is deleted and
 | `{document}.{format}` | optional | serveable artifacts from `config/reports.yaml` documents × formats |
 
 Serveable artifact names follow `{document}.{format}` — `report` (audit
-report, always html) and `doc` (ФСТЭК documentation; the client picks
-md/pdf/docx in the form). The serveable set is derived from
-`config/reports.yaml`; the frontend serves exactly the artifacts the
-manifest declares and that exist on disk.
+report, always html) and `doc` (ФСТЭК documentation in three formats:
+html for the viewer plus pdf/docx picked in the form; md/json are
+serving-only formats for the DAST report and never appear in the form).
+The serveable set is derived from `config/reports.yaml`; the frontend
+serves exactly the artifacts the manifest declares and that exist on disk.
 
 `manifest.json` schema (stages come from `config/reports.yaml`; only report
 progress is meaningful to producers — `intake` is owned by the frontend):
@@ -109,7 +110,7 @@ progress is meaningful to producers — `intake` is owned by the frontend):
 ```json
 {
   "stages": {"analysis": "running", "report": "pending"},
-  "artifacts": ["report.html", "report.md", "report.pdf"]
+  "artifacts": ["report.html", "doc.html", "doc.docx"]
 }
 ```
 

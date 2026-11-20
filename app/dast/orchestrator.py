@@ -4,6 +4,7 @@ import logging
 import time
 import uuid
 from collections import Counter
+from pathlib import Path
 from urllib.parse import urlparse
 
 from app.dast.config import DastConfig, get_dast_config
@@ -125,6 +126,7 @@ class DastOrchestrator:
                 timeout_seconds=body.max_duration_seconds,
                 allowed_schemes=cfg.allowed_schemes,
                 allow_private_targets=cfg.allow_private_targets,
+                work_dir=cfg.work_dir,
             )
 
         if not skip_ssrf:
@@ -176,10 +178,19 @@ class DastOrchestrator:
                     f.language = language_tag
 
         zap_url = zap_target_url or target_url
+        zap_work_dir = None
+        if cfg.work_dir:
+            # Pre-create through the worker's own mount so the volume
+            # subpath exists for the daemon-side --mount below. The ZAP
+            # image runs as a non-root user, so the dir must be writable.
+            zap_work_dir = Path(cfg.work_dir) / scan_id
+            zap_work_dir.mkdir(parents=True, exist_ok=True)
+            zap_work_dir.chmod(0o777)
         zap_findings, zap_meta = run_zap_baseline(
             zap_url,
             cfg,
             language=language_tag,
+            work_dir=zap_work_dir,
             docker_network=zap_docker_network,
         )
         findings.extend(zap_findings)

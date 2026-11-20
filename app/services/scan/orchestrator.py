@@ -131,6 +131,14 @@ class ScanOrchestrator:
         findings.extend(ai_findings)
 
         severity_counts = Counter(f.severity.value for f in findings)
+        has_ai = "ai" in (methods or [])
+        has_dast = "dynamic" in (methods or [])
+        if has_dast:
+            scan_kind = "sast+dast"
+        elif has_ai:
+            scan_kind = "sast_ai"
+        else:
+            scan_kind = "sast"
         summary = {
             "total_findings": len(findings),
             "by_severity": dict(severity_counts),
@@ -141,7 +149,7 @@ class ScanOrchestrator:
                 if f.severity in {Severity.critical, Severity.high}
             ),
             "ai_findings": sum(1 for f in findings if f.source == "ai"),
-            "scan_kind": "sast",
+            "scan_kind": scan_kind,
         }
         meta: dict = {"languages": language_meta, "ai": ai_meta}
         if methods is not None:

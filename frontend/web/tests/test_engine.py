@@ -16,7 +16,7 @@ def base_raw(**overrides) -> dict:
         "source_kind": "link",
         "repo_url": "https://github.com/owner/repo",
         "methods": ["sast"],
-        "formats": ["md"],
+        "formats": ["pdf"],
     }
     raw.update(overrides)
     return raw

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import httpx
+import pytest
 
 from app.ai.client import OpenAICompatibleClient
 from app.ai.config import AiSettings, is_ai_enabled
@@ -71,7 +72,9 @@ def test_is_ai_enabled_requires_key_and_config(tmp_path, monkeypatch):
         encoding="utf-8",
     )
     monkeypatch.setenv("SETTINGS_PATH", str(cfg))
-    monkeypatch.delenv("AI_API_KEY", raising=False)
+    # Empty, not deleted: a developer's real .env (picked up via env_file)
+    # must not leak an API key into this test.
+    monkeypatch.setenv("AI_API_KEY", "")
     monkeypatch.delenv("AI_ENABLED", raising=False)
     get_settings.cache_clear()
 
@@ -174,7 +177,9 @@ def test_run_ai_missing_key_skips(tmp_path, monkeypatch):
     cfg = tmp_path / "settings.yaml"
     cfg.write_text("ai:\n  enabled: true\n", encoding="utf-8")
     monkeypatch.setenv("SETTINGS_PATH", str(cfg))
-    monkeypatch.delenv("AI_API_KEY", raising=False)
+    # Empty, not deleted: a developer's real .env (picked up via env_file)
+    # must not leak an API key into this test.
+    monkeypatch.setenv("AI_API_KEY", "")
     get_settings.cache_clear()
 
     findings, meta = run_ai_analysis(root, [], [])
@@ -283,6 +288,44 @@ def test_client_chat_json_shape():
     assert '"findings"' in text
 
 
+def test_client_retries_empty_json_content_without_response_format():
+    """Gateways occasionally answer json_object requests with empty content:
+    the client must retry once without the format flag before failing."""
+    calls: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content.decode("utf-8"))
+        calls.append(body)
+        if "response_format" in body:
+            content = ""
+        else:
+            content = '{"findings": []}'
+        return httpx.Response(
+            200,
+            content=json.dumps({"choices": [{"message": {"content": content}, "finish_reason": "stop"}]}),
+            headers={"content-type": "application/json"},
+        )
+
+    client = OpenAICompatibleClient(_ai_settings(), transport=httpx.MockTransport(handler))
+    text = client.chat_json("hi")
+    assert '"findings"' in text
+    assert len(calls) == 2  # first with response_format, retry without
+    assert "response_format" in calls[0] and "response_format" not in calls[1]
+
+
+def test_client_raises_on_persistently_empty_content():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            content=json.dumps({"choices": [{"message": {"content": ""}, "finish_reason": "length"}]}),
+            headers={"content-type": "application/json"},
+        )
+
+    client = OpenAICompatibleClient(_ai_settings(), transport=httpx.MockTransport(handler))
+    with pytest.raises(Exception, match="Empty AI response content"):
+        client.chat_json("hi")
+
+
 def test_scan_endpoint_accepts_enable_ai_body(client, tmp_path, monkeypatch):
     sample = _sample_repo(tmp_path / "sample_repo")
     create = client.post(
@@ -292,8 +335,16 @@ def test_scan_endpoint_accepts_enable_ai_body(client, tmp_path, monkeypatch):
     assert create.status_code == 201, create.text
     project_id = create.json()["id"]
 
-    # Force AI path but soft-skip via missing key unless we stub service — just ensure API accepts body
-    monkeypatch.delenv("AI_API_KEY", raising=False)
+    # Deterministic AI stub: the developer's real .env (AI_API_KEY via
+    # env_file) must not leak into endpoint tests.
+    import app.services.scan.orchestrator as orch_mod
+
+    monkeypatch.setattr(
+        orch_mod, "run_ai_analysis",
+        lambda *a, **k: ([], {"enabled": True, "status": "skipped", "model": None,
+                              "files_sent": 0, "findings_count": 0, "error": "test_stub"}),
+    )
+    monkeypatch.setenv("AI_API_KEY", "")
     get_settings.cache_clear()
     from app.api import deps
 
@@ -312,11 +363,11 @@ def test_scan_endpoint_accepts_enable_ai_body(client, tmp_path, monkeypatch):
     assert result.status_code == 200
     meta_ai = result.json()["meta"]["ai"]
     assert meta_ai["status"] == "skipped"
-    assert meta_ai["error"] in {"missing_api_key", "disabled_in_config"}
+    assert meta_ai["error"] == "test_stub"  # AI call stubbed in this test
 
     security_md = client.get(
         f"/api/v1/projects/{project_id}/scans/{scan.json()['id']}/reports/security",
         params={"format": "markdown"},
     )
     assert security_md.status_code == 200
-    assert "ИИ-анализ" in security_md.text
+    assert "Отчёт по уязвимостям" in security_md.text  # template no longer has an AI section

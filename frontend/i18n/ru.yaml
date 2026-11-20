@@ -8,7 +8,7 @@ disclaimer:
   scan: "Результаты носят рекомендательный характер и могут содержать пропуски (false negatives)."
 
 nav:
-  home: Главная
+  home: На главную
 
 form:
   title: Отправка репозитория на аудит
@@ -71,7 +71,6 @@ scan:
   status_title: Статус
   created_at: Создано
   not_found: Заявка не найдена
-  elapsed: "Прошло: {seconds} с"
   stages:
     intake: Приём данных
     analysis: Анализ
@@ -84,12 +83,14 @@ scan:
 results:
   title: Результаты
   pending: Отчёт готовится. Обновите страницу позже.
+  report_hint: Полный отчёт встроен в эту страницу ниже.
   no_summary: Сводные данные пока недоступны.
   scan_kind: Тип проверки
   kinds:
     sast: SAST
     dast: DAST
     sast_dast: SAST + DAST
+    sast_ai: SAST + ИИ
 
 docs:
   title: Документация
@@ -98,6 +99,8 @@ docs:
 artifacts:
   docs:
     report: Отчёт аудита
+    fstec: Протокол исследований ФСТЭК
+    codedocs: Документация к коду
     doc: Документация ФСТЭК
   view: Смотреть
   download: Скачать

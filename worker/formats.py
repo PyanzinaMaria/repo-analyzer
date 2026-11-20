@@ -27,6 +27,29 @@ def render_document_markdown(doc_id: str, result: Any, target: Path) -> None:
         raise ValueError(f"no markdown renderer for document {doc_id!r}")
 
 
+def markdown_to_html(markdown_text: str) -> str:
+    """Convert a Markdown document (LLM answer) to HTML for the viewer and
+    as the conversion source for pdf/docx."""
+    try:
+        import markdown as md_lib
+    except ImportError as exc:  # pragma: no cover - exercised via importorskip
+        raise RuntimeError(
+            "HTML output requires the 'markdown' package (see requirements.txt)"
+        ) from exc
+    return md_lib.markdown(markdown_text, extensions=["tables", "fenced_code"])
+
+
+def create_zip_artifact(source_dir: Path, target: Path) -> None:
+    """Zip a directory tree (e.g. the LLM code-docs kit) into an artifact."""
+    import zipfile
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as zf:
+        for file_path in source_dir.rglob("*"):
+            if file_path.is_file():
+                zf.write(file_path, file_path.relative_to(source_dir))
+
+
 _CYRILLIC_FONTS = (
     Path(r"C:\Windows\Fonts\arial.ttf"),
     Path(r"C:\Windows\Fonts\segoeui.ttf"),

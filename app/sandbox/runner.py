@@ -139,16 +139,36 @@ def _build_and_run_image(
     if run.returncode != 0:
         raise SandboxError(f"docker run failed: {(run.stderr or run.stdout)[-2000:]}")
 
+    try:
+        return _finish_boot(docker, plan, cfg, container_name=container_name, image_tag=image_tag)
+    except Exception:
+        # The container exists now; remove it (and its scan image) before
+        # re-raising so a failed readiness probe does not leak it.
+        _run([docker, "rm", "-f", container_name], timeout=60)
+        _run([docker, "rmi", "-f", image_tag], timeout=60)
+        raise
+
+
+def _finish_boot(
+    docker: str,
+    plan: RunPlan,
+    cfg: SandboxConfig,
+    *,
+    container_name: str,
+    image_tag: str,
+) -> SandboxSession:
+    """Resolve the published port and wait for readiness; used by the
+    dockerfile boot path (the container is already running at this point)."""
     host_port = _parse_host_port(docker, container_name, plan.port)
-    host_url = f"http://{cfg.publish_host}:{host_port}{plan.health_path if plan.health_path.startswith('/') else '/' + plan.health_path}"
+    host_url = f"http://{cfg.connect_host}:{host_port}{plan.health_path if plan.health_path.startswith('/') else '/' + plan.health_path}"
     # Wait on root-ish URL for readiness (health_path may 404 for some apps)
-    ready_url = f"http://{cfg.publish_host}:{host_port}/"
+    ready_url = f"http://{cfg.connect_host}:{host_port}/"
     _wait_http(ready_url, timeout_seconds=cfg.boot_timeout_seconds)
     network_url = f"http://{container_name}:{plan.port}/"
     return SandboxSession(
         container_name=container_name,
         network=cfg.network,
-        host_url=f"http://{cfg.publish_host}:{host_port}/",
+        host_url=f"http://{cfg.connect_host}:{host_port}/",
         network_url=network_url,
         plan=plan,
         meta={
@@ -161,6 +181,29 @@ def _build_and_run_image(
             "entry": plan.entry,
         },
     )
+
+
+def _published_port(docker: str, container: str) -> tuple[int, int]:
+    """First published tcp port pair from ``docker port``: returns
+    (host_port, container_port), (0, 0) when nothing is published. Unlike
+    probing a fixed candidate list, this sees any container port a
+    project's compose file happens to expose."""
+    out = _run([docker, "port", container])
+    for line in (out.stdout or "").splitlines():
+        # e.g. "8001/tcp -> 0.0.0.0:32770" or "8001/tcp -> [::]:32770"
+        left, sep, right = line.partition("->")
+        if not sep:
+            continue
+        left = left.strip()
+        if not left.endswith("/tcp"):
+            continue
+        try:
+            container_port = int(left.split("/", 1)[0])
+            host_port = int(right.strip().rsplit(":", 1)[1])
+        except (ValueError, IndexError):
+            continue
+        return host_port, container_port
+    return 0, 0
 
 
 def _run_compose(
@@ -190,7 +233,8 @@ def _run_compose(
     if up.returncode != 0:
         raise SandboxError(f"docker compose up failed: {(up.stderr or up.stdout)[-2000:]}")
 
-    # Discover first published http-ish port from `docker compose ps`
+    # Container names from `docker compose ps`; fall back to container ids
+    # from `ps -q` when the name template yields nothing.
     ps = _run(
         [
             docker,
@@ -201,34 +245,47 @@ def _run_compose(
             project_name,
             "ps",
             "--format",
-            "{{.Name}} {{.Publishers}}",
+            "{{.Name}}",
         ]
     )
+    containers = [line.strip() for line in (ps.stdout or "").splitlines() if line.strip()]
+    if not containers:
+        ids = _run(
+            [
+                docker,
+                "compose",
+                "-f",
+                str(compose_file),
+                "-p",
+                project_name,
+                "ps",
+                "-q",
+            ]
+        )
+        containers = [line.strip() for line in (ids.stdout or "").splitlines() if line.strip()]
+
     container_name = ""
     host_port = 0
-    for line in (ps.stdout or "").splitlines():
-        parts = line.strip().split(maxsplit=1)
-        if not parts:
-            continue
-        container_name = parts[0]
-        # Try docker port on common ports
-        for candidate in (plan.port, 8000, 5000, 3000, 8080):
-            try:
-                host_port = _parse_host_port(docker, container_name, candidate)
-                plan.port = candidate
+    try:
+        for name in containers:
+            host_port, container_port = _published_port(docker, name)
+            if host_port:
+                container_name = name
+                plan.port = container_port
                 break
-            except SandboxError:
-                continue
-        if host_port:
-            break
 
-    if not container_name or not host_port:
-        raise SandboxError("compose started but no published port discovered")
+        if not container_name or not host_port:
+            raise SandboxError("compose started but no published port discovered")
+    except Exception:
+        # Boot already created the project; tear it down before re-raising
+        # so a failed discovery does not leak containers.
+        _run([docker, "compose", "-p", project_name, "down", "-v", "--remove-orphans"], timeout=120)
+        raise
 
     # Connect container to sandbox network for ZAP
     _run([docker, "network", "connect", cfg.network, container_name])
 
-    ready_url = f"http://{cfg.publish_host}:{host_port}/"
+    ready_url = f"http://{cfg.connect_host}:{host_port}/"
     _wait_http(ready_url, timeout_seconds=cfg.boot_timeout_seconds)
     return SandboxSession(
         container_name=container_name,

@@ -42,7 +42,7 @@ def test_dast_result_folds_into_unified_report(cfg, monkeypatch) -> None:
     job = {
         "scan_id": "dastscan1",
         "source": {"kind": "zip"},
-        "options": {"methods": ["sast", "dast"], "formats": ["html", "md"]},
+        "options": {"methods": ["sast", "dast"], "formats": ["html", "pdf"]},
     }
     (cfg.uploads_dir / "dastscan1" / "repo").mkdir(parents=True)
     pipeline.process(job)
@@ -50,9 +50,9 @@ def test_dast_result_folds_into_unified_report(cfg, monkeypatch) -> None:
     out = cfg.reports_dir / "dastscan1"
     assert (out / "summary.json").is_file()
     assert (out / "report.html").is_file()
-    assert (out / "report.md").is_file()
+    assert (out / "report.pdf").is_file()
     assert (out / "doc.html").is_file()
-    assert (out / "doc.md").is_file()
+    assert (out / "doc.pdf").is_file()
     assert not (out / "dast_report.json").exists()
     assert not (out / "dast_report.md").exists()
 
@@ -65,9 +65,9 @@ def test_dast_result_folds_into_unified_report(cfg, monkeypatch) -> None:
     assert manifest["stages"] == {"analysis": "ok", "report": "ok"}
     assert set(manifest["artifacts"]) == {
         "report.html",
-        "report.md",
+        "report.pdf",
         "doc.html",
-        "doc.md",
+        "doc.pdf",
     }
     assert "dast_report.md" not in manifest["artifacts"]
     assert "dast_report.json" not in manifest["artifacts"]
