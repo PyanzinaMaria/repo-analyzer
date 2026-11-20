@@ -78,6 +78,12 @@ docker compose up --build
 `worker/config/worker.yaml`, переопределения через env: `WORKER_DATA_DIR`,
 `WORKER_POLL_INTERVAL_SECONDS`, `WORKER_ENABLE_AI` (+ `AI_API_KEY` для ИИ-анализа).
 
+## Документация для передачи
+
+- [`docs/SPEC.md`](docs/SPEC.md) — **инженерная спецификация / handoff**: контракты, запуск, чеклист приёмки, что нельзя ломать.
+- [`docs/process.md`](docs/process.md) — смысл процесса для пользователя (методы, форматы, что в отчёте).
+- [`docs/REPORT.md`](docs/REPORT.md) / [`docs/BENCHMARK.md`](docs/BENCHMARK.md) — research-контур secaudit / bench (не UI).
+
 ## Содержание
 
 - [Быстрый старт](#быстрый-старт-без-docker-два-процесса)
