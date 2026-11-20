@@ -1,0 +1,456 @@
+{
+  "budget": 600,
+  "candidates": 40,
+  "dev_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "test_seeds": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120,
+    121,
+    122,
+    123,
+    124,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149
+  ],
+  "random_dev": {
+    "proofs": 0.35,
+    "found": 0.3,
+    "states": 63.55,
+    "transitions": 143.65,
+    "discovered_actions": 200.85
+  },
+  "chosen": {
+    "Q-tuned": {
+      "config": {
+        "alpha": 0.85,
+        "gamma": 0.4,
+        "epsilon": 0.45,
+        "bonus": 2.0,
+        "power": 1.0,
+        "use_time": false
+      },
+      "dev": {
+        "proofs": 0.7,
+        "found": 0.6,
+        "states": 77.1,
+        "transitions": 191.25,
+        "discovered_actions": 241.1
+      }
+    },
+    "GA-tuned": {
+      "config": {
+        "population": 6,
+        "mutation": 0.28,
+        "immigrants": 0.36,
+        "tournament": 2,
+        "scoring": "sum",
+        "power": 1.0
+      },
+      "dev": {
+        "proofs": 0.6,
+        "found": 0.5,
+        "states": 61.25,
+        "transitions": 135.95,
+        "discovered_actions": 192.3
+      }
+    }
+  },
+  "test": {
+    "Random": {
+      "proofs": 0.24,
+      "found": 0.2,
+      "states": 64.04,
+      "transitions": 147.68,
+      "discovered_actions": 203.84,
+      "hits": 10
+    },
+    "Q-original": {
+      "proofs": 0.2,
+      "found": 0.2,
+      "states": 55.58,
+      "transitions": 121.32,
+      "discovered_actions": 178.56,
+      "hits": 10,
+      "vs_random": {
+        "proofs": {
+          "delta": -0.04,
+          "low": -0.24,
+          "high": 0.14
+        },
+        "found": {
+          "delta": 0,
+          "low": -0.16,
+          "high": 0.16
+        },
+        "transitions": {
+          "delta": -26.36,
+          "low": -31.82,
+          "high": -20.92
+        }
+      }
+    },
+    "GA-original": {
+      "proofs": 0.14,
+      "found": 0.14,
+      "states": 56.86,
+      "transitions": 130.78,
+      "discovered_actions": 181.34,
+      "hits": 7,
+      "vs_random": {
+        "proofs": {
+          "delta": -0.1,
+          "low": -0.26,
+          "high": 0.06
+        },
+        "found": {
+          "delta": -0.06,
+          "low": -0.2,
+          "high": 0.06
+        },
+        "transitions": {
+          "delta": -16.9,
+          "low": -21.06,
+          "high": -12.44
+        }
+      }
+    },
+    "Q-tuned": {
+      "proofs": 0.82,
+      "found": 0.7,
+      "states": 76.8,
+      "transitions": 189.38,
+      "discovered_actions": 240,
+      "hits": 35,
+      "vs_random": {
+        "proofs": {
+          "delta": 0.58,
+          "low": 0.34,
+          "high": 0.8
+        },
+        "found": {
+          "delta": 0.5,
+          "low": 0.32,
+          "high": 0.68
+        },
+        "transitions": {
+          "delta": 41.7,
+          "low": 36.7,
+          "high": 46.92
+        }
+      }
+    },
+    "GA-tuned": {
+      "proofs": 0.26,
+      "found": 0.24,
+      "states": 59.48,
+      "transitions": 134.16,
+      "discovered_actions": 189.4,
+      "hits": 12,
+      "vs_random": {
+        "proofs": {
+          "delta": 0.02,
+          "low": -0.18,
+          "high": 0.22
+        },
+        "found": {
+          "delta": 0.04,
+          "low": -0.12,
+          "high": 0.2
+        },
+        "transitions": {
+          "delta": -13.52,
+          "low": -19.42,
+          "high": -7.62
+        }
+      }
+    }
+  },
+  "hybrid_seeds": [
+    200,
+    201,
+    202,
+    203,
+    204,
+    205,
+    206,
+    207,
+    208,
+    209,
+    210,
+    211,
+    212,
+    213,
+    214,
+    215,
+    216,
+    217,
+    218,
+    219,
+    220,
+    221,
+    222,
+    223,
+    224,
+    225,
+    226,
+    227,
+    228,
+    229,
+    230,
+    231,
+    232,
+    233,
+    234,
+    235,
+    236,
+    237,
+    238,
+    239,
+    240,
+    241,
+    242,
+    243,
+    244,
+    245,
+    246,
+    247,
+    248,
+    249
+  ],
+  "hybrids": {
+    "Random": {
+      "proofs": 0.44,
+      "found": 0.42,
+      "states": 63.24,
+      "transitions": 146.72,
+      "discovered_actions": 200.76,
+      "hits": 21
+    },
+    "Q-tuned": {
+      "proofs": 0.68,
+      "found": 0.58,
+      "states": 76.12,
+      "transitions": 185.42,
+      "discovered_actions": 237.2,
+      "hits": 29,
+      "vs_random": {
+        "proofs": {
+          "delta": 0.24,
+          "low": 0,
+          "high": 0.5
+        },
+        "found": {
+          "delta": 0.16,
+          "low": -0.04,
+          "high": 0.38
+        },
+        "transitions": {
+          "delta": 38.7,
+          "low": 34.08,
+          "high": 43.4
+        }
+      }
+    },
+    "GA-tuned": {
+      "proofs": 0.38,
+      "found": 0.32,
+      "states": 60.26,
+      "transitions": 136.54,
+      "discovered_actions": 191.86,
+      "hits": 16,
+      "vs_random": {
+        "proofs": {
+          "delta": -0.06,
+          "low": -0.28,
+          "high": 0.18
+        },
+        "found": {
+          "delta": -0.1,
+          "low": -0.28,
+          "high": 0.1
+        },
+        "transitions": {
+          "delta": -10.18,
+          "low": -15.04,
+          "high": -5.44
+        }
+      }
+    },
+    "Random+Q": {
+      "proofs": 0.58,
+      "found": 0.5,
+      "states": 72.52,
+      "transitions": 177.12,
+      "discovered_actions": 227.22,
+      "hits": 25,
+      "vs_random": {
+        "proofs": {
+          "delta": 0.14,
+          "low": -0.06,
+          "high": 0.32
+        },
+        "found": {
+          "delta": 0.08,
+          "low": -0.1,
+          "high": 0.26
+        },
+        "transitions": {
+          "delta": 30.4,
+          "low": 26.86,
+          "high": 34.14
+        }
+      }
+    },
+    "Random+GA": {
+      "proofs": 0.38,
+      "found": 0.32,
+      "states": 61.06,
+      "transitions": 139.58,
+      "discovered_actions": 192.56,
+      "hits": 16,
+      "vs_random": {
+        "proofs": {
+          "delta": -0.06,
+          "low": -0.2,
+          "high": 0.1
+        },
+        "found": {
+          "delta": -0.1,
+          "low": -0.24,
+          "high": 0.04
+        },
+        "transitions": {
+          "delta": -7.14,
+          "low": -10.74,
+          "high": -3.76
+        }
+      }
+    },
+    "Q+GA": {
+      "proofs": 0.54,
+      "found": 0.46,
+      "states": 67.36,
+      "transitions": 158.2,
+      "discovered_actions": 212.82,
+      "hits": 23,
+      "vs_random": {
+        "proofs": {
+          "delta": 0.1,
+          "low": -0.12,
+          "high": 0.34
+        },
+        "found": {
+          "delta": 0.04,
+          "low": -0.16,
+          "high": 0.24
+        },
+        "transitions": {
+          "delta": 11.48,
+          "low": 7.16,
+          "high": 15.86
+        }
+      }
+    }
+  },
+  "hybrids_vs_q": {
+    "Random+Q": {
+      "proofs": {
+        "delta": -0.1,
+        "low": -0.36,
+        "high": 0.14
+      },
+      "transitions": {
+        "delta": -8.3,
+        "low": -12.58,
+        "high": -3.92
+      }
+    },
+    "Random+GA": {
+      "proofs": {
+        "delta": -0.3,
+        "low": -0.56,
+        "high": -0.04
+      },
+      "transitions": {
+        "delta": -45.84,
+        "low": -51.4,
+        "high": -40.32
+      }
+    },
+    "Q+GA": {
+      "proofs": {
+        "delta": -0.14,
+        "low": -0.3,
+        "high": 0.02
+      },
+      "transitions": {
+        "delta": -27.22,
+        "low": -30.52,
+        "high": -23.82
+      }
+    }
+  }
+}
