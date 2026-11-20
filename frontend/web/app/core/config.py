@@ -78,6 +78,7 @@ class DocumentSpec(BaseModel):
     id: str
     label_key: str
     formats: list[str]
+    legacy_formats: list[str] = Field(default_factory=list)
 
 
 class ReportsDefaults(BaseModel):
@@ -102,7 +103,7 @@ class ReportsConfig(BaseModel):
         fmt = {f.id: f for f in self.formats}
         artifacts = []
         for doc in self.documents:
-            for format_id in doc.formats:
+            for format_id in dict.fromkeys(doc.formats + doc.legacy_formats):
                 spec = fmt.get(format_id)
                 if spec is None:
                     raise ValueError(
@@ -123,18 +124,9 @@ class ReportsConfig(BaseModel):
         return next((a for a in self.artifacts if a.name == name), None)
 
     def format_choices(self) -> list[dict[str, str]]:
-        """Formats offered in the submission form = intersection of export
-        formats shared by ``report`` and ``doc``. Internal-only ids such as
-        ``json`` stay out of the checkboxes."""
-        export_docs = [d for d in self.documents if d.id in {"report", "doc"}]
-        if export_docs:
-            allowed: set[str] = set(export_docs[0].formats)
-            for doc in export_docs[1:]:
-                allowed &= set(doc.formats)
-        else:
-            allowed = {f.id for f in self.formats}
-        # Never offer raw json in the form even if a document lists it.
-        allowed.discard("json")
+        """Formats offered for the FSTEC documentation."""
+        fstec = next((doc for doc in self.documents if doc.id == "doc"), None)
+        allowed = set(fstec.formats) if fstec else set()
         return [
             {"value": f.id, "label_key": f"formats.{f.id}.label"}
             for f in self.formats

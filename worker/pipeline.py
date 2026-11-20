@@ -93,25 +93,21 @@ class Pipeline:
                 if runner and runner not in runners:
                     runners.append(runner)
 
-        # Formats come from reports.yaml defaults; every format id declared
-        # in the contract is acceptable here (zip serves the codedocs kit
-        # even though it is not a form checkbox).
-        formats = list(options.get("formats")
-                       or (self.cfg.reports.get("defaults") or {}).get("formats", []))
-        known = {f.get("id") for f in self.cfg.reports.get("formats", [])}
-        known.discard("json")  # serving-only id, never a valid choice
-        unknown = [f for f in formats if f not in known]
+        defaults = (self.cfg.reports.get("defaults") or {}).get("formats", [])
+        formats = options.get("formats") or defaults
+        fstec = next(
+            (doc for doc in self.cfg.reports.get("documents", []) if doc.get("id") == "doc"),
+            {},
+        )
+        allowed = set(fstec.get("formats", []))
+        # Older queue entries may still request DOCX or ZIP.
+        unknown = [f for f in formats if f not in allowed and f not in {"docx", "zip"}]
         if unknown:
             raise ValueError(f"output formats not available: {unknown!r}")
-        return runners, formats
+        return runners, [f for f in formats if f in allowed] or list(defaults)
 
     def _format_plan(self, chosen_formats: list[str]) -> list[str]:
-        """Artifact names to produce. ``report.*`` and ``doc.*`` exactly for
-        the chosen formats (PDF/DOCX render HTML in memory when needed; DAST
-        is folded into the audit report — no separate dast_report.*). LLM
-        documents join when the worker's ``ai_documents`` switch is on:
-        ``fstec`` follows the chosen formats (html produced automatically),
-        ``codedocs`` always ships its zip archive."""
+        """Plan the fixed audit and code formats and the selected FSTEC formats."""
         names: list[str] = []
         for doc in self.cfg.reports.get("documents", []):
             doc_id = doc.get("id")
@@ -121,15 +117,11 @@ class Pipeline:
             elif doc_id not in {"report", "doc"}:
                 continue
             for fmt in doc.get("formats", []):
-                if self.cfg.is_ai_doc(doc_id):
-                    # codedocs: always include all formats (zip); fstec:
-                    # html is automatic, other formats follow the choice.
-                    if doc_id != "codedocs" and fmt != "html" and fmt not in chosen_formats:
+                if doc_id in {"doc", "fstec"}:
+                    if fmt not in chosen_formats:
                         continue
-                elif fmt not in chosen_formats:
-                    continue
-                if self.cfg.formats_enabled and not self.cfg.formats_enabled.get(fmt, True):
-                    continue
+                    if not self.cfg.formats_enabled.get(fmt, True):
+                        continue
                 names.append(f"{doc_id}.{fmt}")
         return names
 
@@ -174,7 +166,8 @@ class Pipeline:
 
         combined, files = generate_document(doc_id, result, self.cfg, workspace_root=workspace_root)
         if files:
-            written = write_files(files, reports_dir / "docs")
+            attachments_dir = "docs" if doc_id == "codedocs" else doc_id
+            written = write_files(files, reports_dir / attachments_dir)
             logger.info("Wrote %d/%d attached files for %s", len(written), len(files), doc_id)
         return combined
 
@@ -312,12 +305,8 @@ class Pipeline:
                     html_by_doc[doc_id] = html
                     target.write_bytes(HTML_CONVERTERS[fmt](html))
                 elif fmt == "zip":
-                    # codedocs: zip the generated docs kit directory.
-                    docs_kit_dir = reports_dir / "docs"
-                    if docs_kit_dir.is_dir():
-                        create_zip_artifact(docs_kit_dir, target)
-                    else:
-                        logger.warning("Docs kit directory not found for %s zip", doc_id)
+                    docs_kit_dir = reports_dir / "docs" if docs_status[doc_id] == "ok" else None
+                    create_zip_artifact(docs_kit_dir, target, fallback_markdown=combined)
                 else:
                     raise ValueError(f"no handler for format {fmt!r}")
                 produced.append(name)

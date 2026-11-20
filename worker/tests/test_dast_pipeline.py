@@ -50,7 +50,6 @@ def test_dast_result_folds_into_unified_report(cfg, monkeypatch) -> None:
     out = cfg.reports_dir / "dastscan1"
     assert (out / "summary.json").is_file()
     assert (out / "report.html").is_file()
-    assert (out / "report.pdf").is_file()
     assert (out / "doc.html").is_file()
     assert (out / "doc.pdf").is_file()
     assert not (out / "dast_report.json").exists()
@@ -65,7 +64,6 @@ def test_dast_result_folds_into_unified_report(cfg, monkeypatch) -> None:
     assert manifest["stages"] == {"analysis": "ok", "report": "ok"}
     assert set(manifest["artifacts"]) == {
         "report.html",
-        "report.pdf",
         "doc.html",
         "doc.pdf",
     }

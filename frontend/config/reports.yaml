@@ -14,25 +14,27 @@ formats:
   - { id: json, media_type: application/json, viewer: none, download: true }
   - { id: zip, media_type: application/zip, viewer: none, download: true }
 
-# Formats both the audit report and FSTEC documentation inherit when the
-# client does not choose any in the form.
+# Default FSTEC format when the form has no selection.
 defaults:
-  formats: [html, docx]
+  formats: [html]
 
 # Serveable documents. The serveable artifact list (ReportConfig.artifacts)
 # is derived as documents x formats with names following {document}.{format}.
-# Form checkboxes = shared export formats for `report` and `doc`.
+# Legacy formats remain available for previously generated scans.
 # DAST findings live inside the unified audit report — no separate dast_report.
 documents:
   - id: report
     label_key: artifacts.docs.report
-    formats: [html, md, pdf, docx]
+    formats: [html]
+    legacy_formats: [md, pdf, docx]
   - id: doc
     label_key: artifacts.docs.doc
-    formats: [html, pdf, docx]
+    formats: [html, md, pdf]
+    legacy_formats: [docx]
   - id: fstec
     label_key: artifacts.docs.fstec
-    formats: [html, pdf, docx]
+    formats: [html, md, pdf]
+    legacy_formats: [docx]
   - id: codedocs
     label_key: artifacts.docs.codedocs
     formats: [zip]

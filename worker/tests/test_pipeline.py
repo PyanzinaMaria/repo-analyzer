@@ -34,10 +34,8 @@ def test_happy_path_produces_contract_artifacts(cfg, make_job, pipe):
     reports_dir = cfg.reports_dir / scan_id
     manifest = read_manifest(reports_dir)
     assert manifest["stages"] == {"analysis": "ok", "report": "ok"}
-    # No options -> inherited defaults (html, docx) for both report and doc;
-    # report.html also feeds the embedded viewer on the scan page.
-    assert manifest["artifacts"] == ["report.html", "report.docx", "doc.html", "doc.docx"]
-    for name in ("report.html", "report.docx", "doc.html", "doc.docx", "summary.json"):
+    assert manifest["artifacts"] == ["report.html", "doc.html"]
+    for name in ("report.html", "doc.html", "summary.json"):
         assert (reports_dir / name).stat().st_size > 0
 
     summary = json.loads((reports_dir / "summary.json").read_text(encoding="utf-8"))
@@ -52,7 +50,8 @@ def test_happy_path_produces_contract_artifacts(cfg, make_job, pipe):
 def test_resolve_options_maps_methods_to_runners(cfg):
     pipe = Pipeline(cfg)
     # legacy job: no selection -> yaml defaults
-    assert pipe._resolve_options({}) == (None, ["html", "docx"])
+    assert pipe._resolve_options({}) == (None, ["html"])
+    assert pipe._resolve_options({"formats": ["docx", "zip"]}) == (None, ["html"])
     runners, formats = pipe._resolve_options(
         {"methods": ["sast", "llm_agentic"], "formats": ["pdf"]}
     )
@@ -69,35 +68,30 @@ def test_resolve_options_rejects_unavailable_and_unknown(cfg):
     with pytest.raises(ValueError, match="formats not available"):
         pipe._resolve_options({"formats": ["rtf"]})
     with pytest.raises(ValueError, match="formats not available"):
-        # json is internal to dast_report, not a form/doc format
         pipe._resolve_options({"formats": ["json"]})
 
 
-def test_format_plan_intersection(cfg):
+def test_format_plan_applies_choices_only_to_fstec(cfg):
     pipe = Pipeline(cfg)
-    # report.* and doc.* follow the form checkboxes exactly; the FSTEC doc
-    # has no md format (html/pdf/docx only), so md applies to report alone.
     assert pipe._format_plan(["html"]) == ["report.html", "doc.html"]
     assert pipe._format_plan(["html", "pdf"]) == [
         "report.html",
-        "report.pdf",
         "doc.html",
         "doc.pdf",
     ]
-    assert pipe._format_plan(["pdf", "docx"]) == [
-        "report.pdf",
-        "report.docx",
+    assert pipe._format_plan(["md", "pdf"]) == [
+        "report.html",
+        "doc.md",
         "doc.pdf",
-        "doc.docx",
     ]
 
 
 def test_format_plan_honors_engine_switches(cfg):
     from dataclasses import replace as dc_replace
 
-    disabled_pdf = dc_replace(cfg, formats_enabled={"pdf": False})
-    pipe = Pipeline(disabled_pdf)
-    assert pipe._format_plan(["html", "pdf"]) == ["report.html", "doc.html"]
+    disabled_formats = dc_replace(cfg, formats_enabled={"html": False, "pdf": False})
+    pipe = Pipeline(disabled_formats)
+    assert pipe._format_plan(["html", "pdf"]) == ["report.html"]
 
 
 def test_chosen_format_without_engine_fails_report_stage(cfg, make_job, scan_result, monkeypatch):

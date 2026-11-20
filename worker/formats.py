@@ -39,15 +39,20 @@ def markdown_to_html(markdown_text: str) -> str:
     return md_lib.markdown(markdown_text, extensions=["tables", "fenced_code"])
 
 
-def create_zip_artifact(source_dir: Path, target: Path) -> None:
+def create_zip_artifact(
+    source_dir: Path | None, target: Path, *, fallback_markdown: str
+) -> None:
     """Zip a directory tree (e.g. the LLM code-docs kit) into an artifact."""
     import zipfile
 
     target.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as zf:
-        for file_path in source_dir.rglob("*"):
-            if file_path.is_file():
-                zf.write(file_path, file_path.relative_to(source_dir))
+        if source_dir is not None:
+            for file_path in source_dir.rglob("*"):
+                if file_path.is_file():
+                    zf.write(file_path, file_path.relative_to(source_dir))
+        if not zf.namelist():
+            zf.writestr("README.md", fallback_markdown)
 
 
 _CYRILLIC_FONTS = (

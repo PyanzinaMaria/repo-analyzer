@@ -69,7 +69,7 @@ def test_submission_carries_options_to_queue_job(client):
             "source_kind": "link",
             "repo_url": "https://github.com/owner/repo",
             "methods": ["sast", "llm_agentic"],
-            "formats": ["pdf", "docx"],
+            "formats": ["pdf", "md"],
         },
         follow_redirects=False,
     )
@@ -79,7 +79,7 @@ def test_submission_carries_options_to_queue_job(client):
     job = json.loads((data_dir / "queue" / f"{scan_id}.json").read_text(encoding="utf-8"))
     assert job["options"] == {
         "methods": ["sast", "llm_agentic"],
-        "formats": ["pdf", "docx"],
+        "formats": ["pdf", "md"],
     }
     status = c.get(f"/api/scans/{scan_id}/status").json()
     assert status["options"]["methods"] == ["sast", "llm_agentic"]
@@ -101,7 +101,7 @@ def test_submission_without_choices_inherits_config_defaults(client):
     job = json.loads((data_dir / "queue" / f"{scan_id}.json").read_text(encoding="utf-8"))
     # model is absent: the select stays hidden while methods=[sast], so the
     # producer inherits the analyzer-side default model.
-    assert job["options"] == {"methods": ["sast"], "formats": ["html", "docx"]}
+    assert job["options"] == {"methods": ["sast"], "formats": ["html"]}
 
 
 def test_submission_rejects_unavailable_method(client):
@@ -133,10 +133,10 @@ def test_index_renders_analysis_and_format_choices(client):
     dast_input = re.search(r'<input[^>]*value="dast"[^>]*>', r.text)
     assert dast_input is not None and "disabled" not in dast_input.group(0)
     assert 'name="formats"' in r.text
-    assert 'value="html"' in r.text and 'value="pdf"' in r.text and 'value="docx"' in r.text
-    # JSON is not an export format for report/doc — must not appear as a checkbox.
-    assert not re.search(r'<input[^>]*name="formats"[^>]*value="json"', r.text)
-    assert "Форматы отчёта" in r.text
+    assert set(re.findall(r'<input[^>]*name="formats"[^>]*value="([^"]+)"', r.text)) == {
+        "html", "md", "pdf",
+    }
+    assert "Форматы документации ФСТЭК" in r.text
     assert 'name="model"' not in r.text  # model choice removed: analyzer serves its own ai.model
 
 

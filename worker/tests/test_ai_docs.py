@@ -256,8 +256,7 @@ def test_pipeline_disabled_by_default_produces_no_llm_artifacts(cfg, make_job, s
     monkeypatch.setattr(pipe, "_analyze", lambda scan_id, source, options: scan_result)
     pipe.process({"scan_id": scan_id, "source": {"kind": "zip"}})
     manifest = json.loads((cfg.reports_dir / scan_id / "manifest.json").read_text("utf-8"))
-    # Defaults (html, docx) for report and doc; no LLM documents in the plan.
-    assert manifest["artifacts"] == ["report.html", "report.docx", "doc.html", "doc.docx"]
+    assert manifest["artifacts"] == ["report.html", "doc.html"]
     assert not any(name.startswith(("fstec.", "codedocs.")) for name in manifest["artifacts"])
 
 
@@ -274,11 +273,12 @@ def test_format_plan_includes_llm_docs_when_ready(cfg, monkeypatch):
 
     monkeypatch.setattr(Pipeline, "_ai_docs_configured", lambda self: True)
     pipe = Pipeline(dc_replace(cfg, ai_documents_enabled=True, ai_documents={"fstec": {}, "codedocs": {}}))
-    assert pipe._format_plan(["docx", "zip"]) == [
-        "report.docx",
-        "doc.docx",
-        "fstec.html",
-        "fstec.docx",
+    assert pipe._format_plan(["md", "pdf"]) == [
+        "report.html",
+        "doc.md",
+        "doc.pdf",
+        "fstec.md",
+        "fstec.pdf",
         "codedocs.zip",
     ]
 
@@ -286,33 +286,30 @@ def test_format_plan_includes_llm_docs_when_ready(cfg, monkeypatch):
 def test_pipeline_with_ai_docs_produces_artifacts_and_docs_kit(
     cfg, make_job, scan_result, monkeypatch
 ):
-    from dataclasses import replace as dc_replace
-
-    import worker.formats as formats_module
+    import zipfile
     from worker.pipeline import Pipeline
 
     scan_id = "11111111-1111-1111-1111-111111111111"
     make_job(scan_id, {"kind": "zip"})
     pipe = Pipeline(_enabled_cfg(cfg, monkeypatch))
     monkeypatch.setattr(pipe, "_analyze", lambda scan_id, source, options: scan_result)
-    monkeypatch.setattr(formats_module, "markdown_to_html", lambda text: f"<h1>md</h1>")
 
     def fake_generate(self, doc_id, result, reports_dir):
         main, files = split_files(SAMPLE_ANSWER)
         from worker.ai_docs import write_files
 
-        write_files(files, reports_dir / "docs")
+        write_files(files, reports_dir / ("docs" if doc_id == "codedocs" else doc_id))
         return build_combined_markdown(main, files)
 
     monkeypatch.setattr(Pipeline, "_generate_ai_document", fake_generate)
-    pipe.process({"scan_id": scan_id, "source": {"kind": "zip"}, "options": {"formats": ["docx", "zip"]}})
+    pipe.process({"scan_id": scan_id, "source": {"kind": "zip"}, "options": {"formats": ["md"]}})
 
     reports_dir = cfg.reports_dir / scan_id
     manifest = json.loads((reports_dir / "manifest.json").read_text("utf-8"))
-    assert "fstec.html" in manifest["artifacts"]
-    assert "fstec.docx" in manifest["artifacts"]
-    assert "codedocs.zip" in manifest["artifacts"]
-    assert (reports_dir / "fstec.docx").stat().st_size > 0
+    assert manifest["artifacts"] == ["report.html", "doc.md", "fstec.md", "codedocs.zip"]
+    assert (reports_dir / "fstec.md").stat().st_size > 0
+    with zipfile.ZipFile(reports_dir / "codedocs.zip") as archive:
+        assert "README.md" in archive.namelist()
     # Attached files land under docs/ (the kit's own docs/ prefix stripped).
     assert (reports_dir / "docs" / "README.md").is_file()
     assert (reports_dir / "docs" / "attachments" / "sbom-components.json").is_file()
@@ -322,6 +319,7 @@ def test_pipeline_with_ai_docs_produces_artifacts_and_docs_kit(
 
 
 def test_pipeline_ai_doc_failure_is_soft(cfg, make_job, scan_result, monkeypatch):
+    import zipfile
     from dataclasses import replace as dc_replace
 
     from worker.pipeline import Pipeline
@@ -331,7 +329,7 @@ def test_pipeline_ai_doc_failure_is_soft(cfg, make_job, scan_result, monkeypatch
     enabled = dc_replace(
         cfg,
         ai_documents_enabled=True,
-        ai_documents={"fstec": {"prompt": "x.md"}},
+        ai_documents={"fstec": {"prompt": "x.md"}, "codedocs": {"prompt": "x.md"}},
     )
     monkeypatch.setattr(Pipeline, "_ai_docs_configured", lambda self: True)
     pipe = Pipeline(enabled)
@@ -354,8 +352,11 @@ def test_pipeline_ai_doc_failure_is_soft(cfg, make_job, scan_result, monkeypatch
     assert any(name.startswith("fstec.") for name in manifest["artifacts"])
     # Placeholder document is generated (not failed)
     summary = json.loads((reports_dir / "summary.json").read_text("utf-8"))
-    assert summary["documents"] == {"fstec": "placeholder"}
+    assert summary["documents"] == {"fstec": "placeholder", "codedocs": "placeholder"}
     # Placeholder content explains the issue
     fstec_html = (reports_dir / "fstec.html").read_text("utf-8")
     assert "LLM unreachable" in fstec_html
     assert "AI_API_KEY" in fstec_html
+    assert "codedocs.zip" in manifest["artifacts"]
+    with zipfile.ZipFile(reports_dir / "codedocs.zip") as archive:
+        assert "LLM unreachable" in archive.read("README.md").decode("utf-8")
