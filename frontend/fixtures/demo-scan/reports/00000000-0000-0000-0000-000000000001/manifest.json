@@ -7,7 +7,6 @@
   "artifacts": [
     "report.html",
     "doc.html",
-    "doc.md",
     "doc.pdf"
   ]
 }

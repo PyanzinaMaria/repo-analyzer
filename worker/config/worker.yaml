@@ -16,6 +16,19 @@ formats:
   html: true
   pdf: true
   docx: true
+  zip: true
+
+# LLM-generated final documents. Each spec maps a document id from
+# frontend/config/reports.yaml to its system prompt (system_prompts/) and a
+# per-call timeout. WORKER_ENABLE_AI_DOCUMENTS overrides `enabled`.
+ai_documents:
+  enabled: true
+  fstec:
+    prompt: system_prompts/FSTEC.md
+    timeout_seconds: 900
+  codedocs:
+    prompt: system_prompts/CODE_DOCUMENTATION.md
+    timeout_seconds: 900
 
 # Mirror of frontend/config/theme.yaml tokens. Kept local so the worker
 # renders artifacts without reading another service's config tree; if you

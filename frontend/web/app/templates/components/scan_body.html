@@ -12,39 +12,30 @@
         {% if kind_key %}
         <p>{{ t("results.scan_kind") }}: {{ t("results.kinds." + kind_key) }}</p>
         {% endif %}
-        <ul class="stage-list">
+        {% set done = status.stages | selectattr("state", "in", ["ok", "fail"]) | list | length %}
+        {% set pct = ((done * 100 / (status.stages | length)) | round(0, "common")) | int if status.stages else 100 %}
+        <div class="stage-progress" role="progressbar" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="stage-progress__bar {% if complete %}stage-progress__bar--done{% endif %}" style="width: {{ pct }}%"></div>
+        </div>
+        <ol class="stage-list">
             {% for stage in status.stages %}
-            <li>
-                <span>{{ stage_labels[stage.name] }}</span>
+            <li class="stage--{{ stage.state }}">
+                <span class="stage__marker">{{ loop.index }}</span>
+                <span class="stage__label">{{ stage_labels[stage.name] }}</span>
                 <span class="badge {% if stage.state == 'ok' %}badge--ok{% elif stage.state == 'running' %}badge--running{% elif stage.state == 'fail' %}badge--fail{% endif %}">
                     {{ t("scan.stage_" + stage.state) }}
                 </span>
             </li>
             {% endfor %}
-        </ul>
-        {% if not complete and elapsed_seconds is not none %}
-        <p class="timing">{{ t("scan.elapsed", seconds=elapsed_seconds) }}</p>
-        {% endif %}
+        </ol>
     </section>
 
     <section class="card card--raised">
         <h2>{{ t("results.title") }}</h2>
-        {% if status.artifacts or donut_option %}
+        {% if status.artifacts %}
         <p class="disclaimer disclaimer--compact">{{ t("disclaimer.scan") }}</p>
         <div class="results-grid">
-            {% if donut_option %}
-            {# tojson escapes single quotes but not double quotes, so this
-               attribute must be single-quoted or the JSON truncates at the
-               first " and the chart gets invalid data #}
-            <div id="donut" class="donut" data-option='{{ donut_option | tojson }}'></div>
-            {% endif %}
             <div class="artifact-actions">
-                {% for name in status.artifacts %}
-                {% set spec = artifact_specs[name] %}
-                {% if spec.viewer == "framed" %}
-                <a class="button button--secondary" href="/scan/{{ status.id }}/view/{{ name }}">{{ t(spec.label_key) }}</a>
-                {% endif %}
-                {% endfor %}
                 {% for name in status.artifacts %}
                 {% set spec = artifact_specs[name] %}
                 {% if spec.download %}
@@ -53,16 +44,16 @@
                 {% endfor %}
             </div>
         </div>
-        {% set timing = status.summary.timing if status.summary else none %}
-        {% if timing %}
-        <p class="timing">
-            {{ t("timing.analysis", analysis=timing.analysis_seconds) }} ·
-            {{ t("timing.report", report=timing.report_seconds) }} ·
-            {{ t("timing.total", total=timing.total_seconds) }}
-        </p>
-        {% endif %}
         {% else %}
         <p>{{ t("results.pending") }}</p>
         {% endif %}
     </section>
+
+    {% if complete and "report.html" in status.artifacts %}
+    <section class="card card--raised">
+        <h2>{{ t("artifacts.docs.report") }}</h2>
+        <p class="subtitle">{{ t("results.report_hint") }}</p>
+        <iframe class="viewer-frame report-frame" src="/api/scans/{{ status.id }}/artifacts/report.html" sandbox="allow-scripts" referrerpolicy="no-referrer" title="{{ t("artifacts.docs.report") }}"></iframe>
+    </section>
+    {% endif %}
 </div>

@@ -27,7 +27,36 @@ services:
     environment:
       WORKER_DATA_DIR: /srv/data
       WORKER_ENABLE_AI: ${WORKER_ENABLE_AI:-false}
+      # LLM final documents (fstec/codedocs); needs AI_API_KEY as well.
+      WORKER_ENABLE_AI_DOCUMENTS: ${WORKER_ENABLE_AI_DOCUMENTS:-false}
       AI_API_KEY: ${AI_API_KEY:-}
+      # Without these passthroughs the worker falls back to ai.model /
+      # ai.base_url from config/settings.yaml baked into the image.
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_MODEL: ${AI_MODEL:-}
+      # The DAST sandbox target must be reachable from this container:
+      # publish the port on all daemon-host interfaces (a loopback bind is
+      # not reachable via host.docker.internal) and connect through it.
+      SANDBOX_PUBLISH_BIND: ${SANDBOX_PUBLISH_BIND:-0.0.0.0}
+      SANDBOX_CONNECT_HOST: ${SANDBOX_CONNECT_HOST:-host.docker.internal}
+      # ZAP (a sibling container on the daemon) writes its JSON report into
+      # this named volume; /zap/wrk here is the same volume, so the worker
+      # can read it back. A plain -v path would resolve on the daemon host
+      # filesystem, not inside this container.
+      ZAP_WORK_DIR: ${ZAP_WORK_DIR:-/zap/wrk}
+      ZAP_DOCKER_VOLUME: ${ZAP_DOCKER_VOLUME:-dast_zap_wrk}
     volumes:
       - ./data:/srv/data
+      - dast_zap_wrk:/zap/wrk
+      # Sibling daemon: sandbox targets and ZAP run as containers on the
+      # same engine this worker talks to through the mounted socket.
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      # Keeps host.docker.internal resolvable on Linux engines too.
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
+
+volumes:
+  # Fixed name: the worker passes it to the daemon verbatim (ZAP_DOCKER_VOLUME).
+  dast_zap_wrk:
+    name: dast_zap_wrk

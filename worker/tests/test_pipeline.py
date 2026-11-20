@@ -29,17 +29,18 @@ def test_write_manifest_creates_dir_and_payload(tmp_path):
 def test_happy_path_produces_contract_artifacts(cfg, make_job, pipe):
     scan_id = "11111111-1111-1111-1111-111111111111"
     make_job(scan_id, {"kind": "zip"})
-    pipe.process({"scan_id": scan_id, "source": {"kind": "zip"}})
+    pipe.process({
+        "scan_id": scan_id,
+        "source": {"kind": "zip"},
+        "options": {"formats": ["html"]},
+    })
 
     reports_dir = cfg.reports_dir / scan_id
     manifest = read_manifest(reports_dir)
     assert manifest["stages"] == {"analysis": "ok", "report": "ok"}
-    # No options -> inherited defaults (md) for both report and doc.
-    assert manifest["artifacts"] == ["report.md", "doc.md"]
-    for name in ("report.md", "doc.md", "summary.json"):
+    assert manifest["artifacts"] == ["report.html", "doc.html"]
+    for name in ("report.html", "doc.html", "summary.json"):
         assert (reports_dir / name).stat().st_size > 0
-    assert not (reports_dir / "report.html").exists()
-    assert not (reports_dir / "doc.html").exists()
 
     summary = json.loads((reports_dir / "summary.json").read_text(encoding="utf-8"))
     # unknown -> info, zero counts dropped
@@ -52,8 +53,11 @@ def test_happy_path_produces_contract_artifacts(cfg, make_job, pipe):
 
 def test_resolve_options_maps_methods_to_runners(cfg):
     pipe = Pipeline(cfg)
-    # legacy job: no selection -> yaml defaults
-    assert pipe._resolve_options({}) == (None, ["md"])
+    # legacy job: no selection -> yaml defaults (shared report/doc formats)
+    defaults = (cfg.reports.get("defaults") or {}).get("formats", ["html"])
+    assert pipe._resolve_options({}) == (None, list(defaults))
+    with pytest.raises(ValueError, match="formats not available"):
+        pipe._resolve_options({"formats": ["docx", "zip"]})
     runners, formats = pipe._resolve_options(
         {"methods": ["sast", "llm_agentic"], "formats": ["pdf"]}
     )
@@ -70,14 +74,11 @@ def test_resolve_options_rejects_unavailable_and_unknown(cfg):
     with pytest.raises(ValueError, match="formats not available"):
         pipe._resolve_options({"formats": ["rtf"]})
     with pytest.raises(ValueError, match="formats not available"):
-        # json is internal to dast_report, not a form/doc format
         pipe._resolve_options({"formats": ["json"]})
 
 
-def test_format_plan_intersection(cfg):
+def test_format_plan_applies_choices_to_report_and_doc(cfg):
     pipe = Pipeline(cfg)
-    # report.* and doc.* follow the form checkboxes exactly.
-    assert pipe._format_plan(["md"]) == ["report.md", "doc.md"]
     assert pipe._format_plan(["html"]) == ["report.html", "doc.html"]
     assert pipe._format_plan(["html", "pdf"]) == [
         "report.html",
@@ -85,27 +86,26 @@ def test_format_plan_intersection(cfg):
         "doc.html",
         "doc.pdf",
     ]
-    assert pipe._format_plan(["md", "pdf", "docx"]) == [
+    assert pipe._format_plan(["md", "pdf"]) == [
         "report.md",
         "report.pdf",
-        "report.docx",
         "doc.md",
         "doc.pdf",
-        "doc.docx",
     ]
 
 
 def test_format_plan_honors_engine_switches(cfg):
     from dataclasses import replace as dc_replace
 
-    disabled_pdf = dc_replace(cfg, formats_enabled={"pdf": False})
-    pipe = Pipeline(disabled_pdf)
-    assert pipe._format_plan(["md", "pdf"]) == ["report.md", "doc.md"]
+    disabled_formats = dc_replace(cfg, formats_enabled={"html": False, "pdf": False})
+    pipe = Pipeline(disabled_formats)
+    assert pipe._format_plan(["html", "pdf"]) == []
 
 
-def test_chosen_format_without_engine_fails_report_stage(cfg, make_job, scan_result, monkeypatch):
-    """A chosen binary format whose dependency is missing must fail the
-    report stage loudly, not silently drop the artifact."""
+def test_chosen_format_without_engine_soft_fails_that_format(
+    cfg, make_job, scan_result, monkeypatch
+):
+    """A broken binary format is skipped; other chosen formats still land."""
     scan_id = "11111111-1111-1111-1111-111111111111"
     make_job(scan_id, {"kind": "zip"})
     pipe = Pipeline(cfg)
@@ -114,7 +114,6 @@ def test_chosen_format_without_engine_fails_report_stage(cfg, make_job, scan_res
     def broken_pdf(html):
         raise RuntimeError("no pdf engine")
 
-    # Pipeline calls HTML_CONVERTERS["pdf"], not the html_to_pdf name.
     import worker.formats as formats_mod
 
     monkeypatch.setitem(formats_mod.HTML_CONVERTERS, "pdf", broken_pdf)
@@ -125,7 +124,11 @@ def test_chosen_format_without_engine_fails_report_stage(cfg, make_job, scan_res
     })
 
     manifest = read_manifest(cfg.reports_dir / scan_id)
-    assert manifest["stages"] == {"analysis": "ok", "report": "fail"}
+    assert manifest["stages"] == {"analysis": "ok", "report": "ok"}
+    assert "report.md" in manifest["artifacts"]
+    assert "doc.md" in manifest["artifacts"]
+    assert "report.pdf" not in manifest["artifacts"]
+    assert "doc.pdf" not in manifest["artifacts"]
 
 
 def test_report_html_escapes_finding_fields(cfg, pipe, scan_result):
@@ -189,7 +192,9 @@ def test_produce_failure_fails_only_report_stage(cfg, make_job, scan_result, mon
     def broken_render(result, cfg):
         raise RuntimeError("template error")
 
+    # Both HTML renderers fail → nothing produced → report stage fails.
     monkeypatch.setattr("worker.pipeline.render_report", broken_render)
+    monkeypatch.setattr("worker.pipeline.render_doc", broken_render)
     pipe.process({
         "scan_id": scan_id,
         "source": {"kind": "zip"},

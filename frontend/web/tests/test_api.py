@@ -69,7 +69,7 @@ def test_submission_carries_options_to_queue_job(client):
             "source_kind": "link",
             "repo_url": "https://github.com/owner/repo",
             "methods": ["sast", "llm_agentic"],
-            "formats": ["md", "pdf", "docx"],
+            "formats": ["pdf", "md"],
         },
         follow_redirects=False,
     )
@@ -79,7 +79,7 @@ def test_submission_carries_options_to_queue_job(client):
     job = json.loads((data_dir / "queue" / f"{scan_id}.json").read_text(encoding="utf-8"))
     assert job["options"] == {
         "methods": ["sast", "llm_agentic"],
-        "formats": ["md", "pdf", "docx"],
+        "formats": ["pdf", "md"],
     }
     status = c.get(f"/api/scans/{scan_id}/status").json()
     assert status["options"]["methods"] == ["sast", "llm_agentic"]
@@ -101,7 +101,7 @@ def test_submission_without_choices_inherits_config_defaults(client):
     job = json.loads((data_dir / "queue" / f"{scan_id}.json").read_text(encoding="utf-8"))
     # model is absent: the select stays hidden while methods=[sast], so the
     # producer inherits the analyzer-side default model.
-    assert job["options"] == {"methods": ["sast"], "formats": ["md"]}
+    assert job["options"] == {"methods": ["sast"], "formats": ["html"]}
 
 
 def test_submission_rejects_unavailable_method(client):
@@ -133,10 +133,10 @@ def test_index_renders_analysis_and_format_choices(client):
     dast_input = re.search(r'<input[^>]*value="dast"[^>]*>', r.text)
     assert dast_input is not None and "disabled" not in dast_input.group(0)
     assert 'name="formats"' in r.text
-    assert 'value="html"' in r.text and 'value="pdf"' in r.text and 'value="docx"' in r.text
-    # JSON is not an export format for report/doc — must not appear as a checkbox.
-    assert not re.search(r'<input[^>]*name="formats"[^>]*value="json"', r.text)
-    assert "Форматы отчёта" in r.text
+    assert set(re.findall(r'<input[^>]*name="formats"[^>]*value="([^"]+)"', r.text)) == {
+        "html", "md", "pdf",
+    }
+    assert "Форматы документации ФСТЭК" in r.text
     assert 'name="model"' not in r.text  # model choice removed: analyzer serves its own ai.model
 
 
@@ -223,8 +223,8 @@ def test_files_submission_lands_in_repo_dir(client):
     assert (data_dir / "uploads" / scan_id / "scan.json").is_file()
 
 
-def test_scan_page_shows_live_elapsed_while_running(client):
-    """Fresh submission: stages pending, the page shows a live elapsed line."""
+def test_scan_page_shows_no_live_elapsed_while_running(client):
+    """Fresh submission: stages pending, timings are not displayed."""
     c, _, _ = client
     r = c.post(
         "/api/scans",
@@ -234,7 +234,7 @@ def test_scan_page_shows_live_elapsed_while_running(client):
     scan_id = r.headers["location"].rsplit("/", 1)[-1]
     page = c.get(f"/scan/{scan_id}")
     assert page.status_code == 200
-    assert "Прошло:" in page.text
+    assert "Прошло:" not in page.text  # timings are data-only since the rebase
 
 
 def test_status_unknown_scan(client):
@@ -252,7 +252,8 @@ def test_scan_page_not_found(client):
 def test_artifacts_served_with_contract_headers(client, demo_scan):
     c, _, _ = client
     listing = c.get(f"/api/scans/{demo_scan}/artifacts").json()
-    assert set(listing["artifacts"]) == {"report.html", "doc.html", "doc.md", "doc.pdf"}
+    # doc.md is filtered out: md is no longer a format of the doc document
+    assert set(listing["artifacts"]) == {"report.html", "doc.html", "doc.pdf"}
     assert listing["summary"]["severities"]["critical"] == 1
 
     pdf = c.get(f"/api/scans/{demo_scan}/artifacts/doc.pdf")
@@ -277,11 +278,11 @@ def test_scan_page_shows_results_when_ready(client, demo_scan):
     assert r.status_code == 200
     assert "Документация ФСТЭК" in r.text
     assert "Документация ФСТЭК · PDF" in r.text
-    assert "Документация ФСТЭК · MD" in r.text
+    assert "Документация ФСТЭК · MD" not in r.text  # md left the FSTEC doc formats
     assert "Отчёт аудита · MD" not in r.text  # demo fixture publishes report.html only
-    assert 'data-option' in r.text  # donut option embedded
-    assert "Анализ: 41.7 с" in r.text  # timing block from summary.json
-    assert "Всего: 42.0 с" in r.text
+    assert 'id="donut"' not in r.text  # the only donut lives inside the embedded report
+    assert "/artifacts/report.html" in r.text  # audit report embedded on the page
+    assert "Анализ: 41.7 с" not in r.text  # timing block from summary.json is data-only
     assert "Прошло" not in r.text  # live elapsed only while stages run
 
     viewer = c.get(f"/scan/{demo_scan}/view/report.html")

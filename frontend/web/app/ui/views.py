@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
@@ -26,36 +25,6 @@ def human_size(n: int) -> str:
             return f"{int(value)} {unit}" if unit == "Б" else f"{value:.0f} {unit}"
         value /= 1024
     return f"{n} Б"
-
-
-def build_donut(summary: dict | None, settings: Settings) -> dict | None:
-    """ECharts option for the severity donut, built from producer summary.json."""
-    if not summary:
-        return None
-    severities = summary.get("severities")
-    if not severities:
-        return None
-    data = []
-    for severity, count in severities.items():
-        token = settings.theme.severity_colors.get(severity)
-        if token is None or not count:
-            continue
-        data.append({
-            "name": settings.translate(f"donut.severity.{severity}"),
-            "value": count,
-            "itemStyle": {"color": settings.theme.color(token)},
-        })
-    if not data:
-        return None
-    return {
-        "tooltip": {"trigger": "item"},
-        "series": [{
-            "type": "pie",
-            "radius": ["55%", "80%"],
-            "label": {"show": False},
-            "data": data,
-        }],
-    }
 
 
 def _base_context(request: Request, settings: Settings) -> dict:
@@ -101,18 +70,6 @@ def _require_scan(request: Request, scan_id: str) -> dict:
     return status
 
 
-def _elapsed_seconds(status: dict) -> int | None:
-    """Whole seconds since submission, for the live 'elapsed' line while
-    stages are still running. None when the timestamp is unparseable."""
-    try:
-        created = datetime.fromisoformat(status["created_at"])
-    except (KeyError, ValueError):
-        return None
-    if created.tzinfo is None:
-        created = created.replace(tzinfo=UTC)
-    return max(0, int((datetime.now(UTC) - created).total_seconds()))
-
-
 def _scan_context(request: Request, scan_id: str) -> dict:
     settings = get_settings()
     status = _require_scan(request, scan_id)
@@ -123,10 +80,8 @@ def _scan_context(request: Request, scan_id: str) -> dict:
         "page_title": settings.translate("scan.title"),
         "status": status,
         "stage_labels": stage_labels,
-        "donut_option": build_donut(status["summary"], settings),
         "artifact_specs": {a.name: a for a in settings.reports.artifacts},
         "complete": complete,
-        "elapsed_seconds": None if complete else _elapsed_seconds(status),
     })
     return ctx
 

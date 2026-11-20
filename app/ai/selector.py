@@ -150,3 +150,74 @@ def select_files(
             )
         )
     return selected
+
+
+def collect_all_files(
+    root: Path,
+    inventories: list[CodeInventory],
+    extensions: tuple[str, ...] = DEFAULT_EXTENSIONS,
+    max_file_bytes: int = 100_000,
+) -> list[SelectedFile]:
+    """Collect all source files from the workspace without max_files limit.
+    
+    Used for LLM document generation where full codebase context is needed.
+    """
+    excluded = _exclude_dirs()
+    seen: set[Path] = set()
+    out: list[SelectedFile] = []
+
+    for inv in inventories:
+        for mod in inv.modules:
+            path = root / mod
+            if path.is_file() and path not in seen:
+                seen.add(path)
+                _try_add_file(path, root, out, max_file_bytes)
+
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        if path.suffix.lower() not in extensions:
+            continue
+        if any(part in excluded for part in path.parts):
+            continue
+        if path not in seen:
+            seen.add(path)
+            _try_add_file(path, root, out, max_file_bytes)
+
+    return out
+
+
+def _try_add_file(
+    path: Path,
+    root: Path,
+    out: list[SelectedFile],
+    max_file_bytes: int,
+) -> None:
+    try:
+        size = path.stat().st_size
+    except OSError:
+        return
+    if size <= 0 or size > max_file_bytes:
+        return
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        return
+    if b"\x00" in raw[:1024]:
+        return
+    try:
+        content = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        content = raw.decode("utf-8", errors="ignore")
+    if not content.strip():
+        return
+    encoded = content.encode("utf-8")
+    if len(encoded) > max_file_bytes:
+        content = encoded[:max_file_bytes].decode("utf-8", errors="ignore")
+    out.append(
+        SelectedFile(
+            rel_path=path.relative_to(root).as_posix(),
+            content=content,
+            score=0,
+        )
+    )

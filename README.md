@@ -13,7 +13,7 @@ WORKER ──поллинг queue/──▶ CLAIM (rename .claimed)
    │  вызывает библиотеку ANALYZATOR (IngestService → ScanOrchestrator)
    │  bandit / pip-audit / AST — субпроцессы; GitHub-ссылки клонируются (git --depth 1)
    ▼
-data/reports/{id}/  ◀──пишет WORKER──  manifest.json · summary.json · {report,doc}.{html,md,pdf,docx}
+data/reports/{id}/  ◀──пишет WORKER──  manifest.json · summary.json · report.html · {doc,fstec}.{html,md,pdf} · codedocs.zip
                                              │
 Браузер ◀──HTMX-поллинг /scan/{id}/body── WEB читает manifest/summary и раздаёт артефакты
 ```
@@ -36,8 +36,8 @@ data/reports/{id}/  ◀──пишет WORKER──  manifest.json · summary.j
 | `data/queue/{scan_id}.json` | web (при подаче заявки): `{scan_id, created_at, source, options}` | worker (забирает rename'ом в `.claimed`) |
 | `data/uploads/{scan_id}/repo/` | web (распакованный payload; **одинаковый layout для zip и отдельных файлов**) | worker (для zip/файлов; клонирование — на воркере) |
 | `data/reports/{scan_id}/manifest.json` | worker: `stages: {analysis, report}` + список артефактов | web: слияние со статусом + HTMX-поллинг |
-| `data/reports/{scan_id}/summary.json` | worker: `{"severities": {...}, "timing": {...}}` | web: donut-виджет + тайминги этапов |
-| `data/reports/{scan_id}/{document}.{format}` | worker: `report.html/md/pdf/docx`, `doc.html/pdf/docx` | web: sandboxed iframe + скачивание |
+| `data/reports/{scan_id}/summary.json` | worker: `{"severities": {...}, "timing": {...}}` | web: donut-виджет (тайминги — машинные данные, UI их не показывает) |
+| `data/reports/{scan_id}/{document}.{format}` | worker: `report.html`, `doc` и `fstec` в HTML, Markdown или PDF, `codedocs.zip` | web: sandboxed iframe + скачивание |
 | `data/workspaces/{project_id}/` | анализатор (своё хранилище) | — |
 
 Этап `intake` принадлежит веб-фронтенду и в манифестах воркера не участвует.
@@ -152,13 +152,11 @@ Post-scan review отобранных файлов через OpenAI-compatible 
   получает их. Параметры метода мержатся поверх общих `defaults.params`
   (base → method). Воркер мапит id метода на ключ раннера (`static`, `ai`, …)
   и передаёт всё в `ScanOrchestrator`. Модель ИИ в выборе клиента не участвует.
-- [`frontend/config/reports.yaml`](frontend/config/reports.yaml) — форматы (`md`,
-  `html`, `pdf`, `docx`) и документы (`report` — отчёт аудита, `doc` — черновик
-  ФСТЭК). Список раздаваемых артефактов выводится как документы × форматы
-  (`{document}.{format}`); выбор форматов в форме относится **только к
-  документации ФСТЭК** — отчёт аудита всегда отдаётся в HTML; `defaults.formats` —
-  форматы документации, доставшиеся скану без явного выбора; `html` воркер
-  производит всегда (он кормит просмотрщик и служит источником конвертации).
+- [`frontend/config/reports.yaml`](frontend/config/reports.yaml) задаёт форматы
+  артефактов. Отчёт аудита всегда публикуется как `report.html`. Для документов
+  ФСТЭК (`doc` и `fstec`) в форме можно выбрать HTML, Markdown и PDF.
+  По умолчанию используется HTML. При включённой генерации LLM-документации
+  кодовая документация публикуется как `codedocs.zip`.
 
 Движки форматов включаются в `worker/config/worker.yaml` (`formats:`). PDF —
 WeasyPrint, DOCX — python-docx + htmldocx; зависимости импортируются лениво,

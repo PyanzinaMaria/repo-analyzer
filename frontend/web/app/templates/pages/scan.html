@@ -1,15 +1,11 @@
 {% extends "base.html" %}
-{% block head %}
-<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js" defer></script>
-<script src="/static/js/donut.js" defer></script>
-{% endblock %}
 {% block content %}
+<p class="home-nav"><a class="button button--primary" href="/">{{ t("nav.home") }}</a></p>
+
 <h1>{{ t("scan.title") }}</h1>
 <p class="subtitle">{{ t("scan.created_at") }}: {{ status.created_at[:19].replace("T", " ") }}</p>
 
 <div id="scan-live">
     {% include "components/scan_body.html" %}
 </div>
-
-<p><a href="/">{{ t("nav.home") }}</a></p>
 {% endblock %}

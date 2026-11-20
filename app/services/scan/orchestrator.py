@@ -254,6 +254,14 @@ class ScanOrchestrator:
         elif run_ai and review_meta.get("error") and not llm_meta.get("enabled"):
             ai_meta["error"] = review_meta.get("error")
 
+        has_ai = "ai" in (methods or []) if methods is not None else bool(run_ai)
+        has_dast = methods is None or "dynamic" in (methods or [])
+        if has_dast:
+            scan_kind = "sast+dast"
+        elif has_ai:
+            scan_kind = "sast_ai"
+        else:
+            scan_kind = "sast"
         summary = {
             "total_findings": len(active),
             "by_severity": dict(severity_counts),
@@ -271,7 +279,7 @@ class ScanOrchestrator:
                 1 for f in findings if (f.extra or {}).get("dismissed")
             ),
             "ranking": ranking.config,
-            "scan_kind": "sast",
+            "scan_kind": scan_kind,
         }
 
         audit = audit_data(

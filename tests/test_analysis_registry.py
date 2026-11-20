@@ -46,9 +46,19 @@ def test_scan_endpoint_rejects_disabled_runner(client, tmp_path):
     assert "disabled in this deployment" in r.json()["detail"]
 
 
-def test_scan_endpoint_threads_methods(client, tmp_path):
+def test_scan_endpoint_threads_methods(client, tmp_path, monkeypatch):
     """methods=[ai] forces the AI override regardless of config; the served
     model comes from the analyzer's own settings (ai.model), not the client."""
+    # Deterministic AI stub: the developer's real .env (AI_API_KEY via
+    # env_file) must not leak into endpoint tests.
+    import app.services.scan.orchestrator as orch_mod
+
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setattr(
+        orch_mod, "run_ai_analysis",
+        lambda *a, **k: ([], {"enabled": True, "status": "skipped", "model": None,
+                              "files_sent": 0, "findings_count": 0, "error": "test_stub"}),
+    )
     sample = _sample_repo(tmp_path / "sample_repo2")
     project_id = client.post(
         "/api/v1/projects",
@@ -65,4 +75,4 @@ def test_scan_endpoint_threads_methods(client, tmp_path):
     assert result.status_code == 200
     meta = result.json()["meta"]
     assert meta["runners"] == ["ai"]
-    assert meta["ai"]["status"] == "skipped"  # no api key in the test env
+    assert meta["ai"]["status"] == "skipped"  # stubbed: no real AI in tests

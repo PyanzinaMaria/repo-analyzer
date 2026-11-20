@@ -21,13 +21,18 @@ from worker.rendering import _active_sections, render_report
 
 def test_format_plan_html_pdf_emits_report_and_doc_only():
     pipe = Pipeline(load_config())
-    assert pipe._format_plan(["html", "pdf"]) == [
+    plan = pipe._format_plan(["html", "pdf"])
+    # report/doc follow chosen formats; optional LLM docs (fstec/codedocs) may append.
+    assert [n for n in plan if n.startswith(("report.", "doc."))] == [
         "report.html",
         "report.pdf",
         "doc.html",
         "doc.pdf",
     ]
-    assert all(not n.startswith("dast_report") for n in pipe._format_plan(["md", "html", "pdf", "docx"]))
+    assert all(
+        not n.startswith("dast_report")
+        for n in pipe._format_plan(["md", "html", "pdf", "docx"])
+    )
 
 
 def test_report_sections_follow_meta_runners_only():

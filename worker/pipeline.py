@@ -94,10 +94,13 @@ class Pipeline:
                     runners.append(runner)
 
         # Formats come from reports.yaml defaults + shared report/doc formats.
-        formats = list(options.get("formats")
-                       or (self.cfg.reports.get("defaults") or {}).get("formats", []))
+        formats = list(
+            options.get("formats")
+            or (self.cfg.reports.get("defaults") or {}).get("formats", [])
+        )
         export_docs = [
-            doc for doc in self.cfg.reports.get("documents", [])
+            doc
+            for doc in self.cfg.reports.get("documents", [])
             if doc.get("id") in {"report", "doc"}
         ]
         if export_docs:
@@ -110,24 +113,42 @@ class Pipeline:
         unknown = [f for f in formats if f not in allowed]
         if unknown:
             raise ValueError(f"output formats not available: {unknown!r}")
-        return runners, formats
+        return runners, [f for f in formats if f in allowed] or list(
+            (self.cfg.reports.get("defaults") or {}).get("formats", [])
+        )
 
     def _format_plan(self, chosen_formats: list[str]) -> list[str]:
-        """Artifact names to produce: ``report.*`` and ``doc.*`` exactly for
-        the chosen formats. PDF/DOCX render HTML in memory when needed.
-        DAST is folded into the audit report — no separate dast_report.*."""
+        """Plan report/doc for chosen formats plus optional LLM docs (fstec/codedocs)."""
         names: list[str] = []
         for doc in self.cfg.reports.get("documents", []):
             doc_id = doc.get("id")
-            if doc_id not in {"report", "doc"}:
+            if self.cfg.is_ai_doc(doc_id):
+                if doc_id not in self.cfg.ai_documents or not self._ai_docs_configured():
+                    continue
+            elif doc_id not in {"report", "doc"}:
                 continue
             for fmt in doc.get("formats", []):
-                if fmt not in chosen_formats:
-                    continue
-                if self.cfg.formats_enabled and not self.cfg.formats_enabled.get(fmt, True):
+                if doc_id in {"report", "doc", "fstec"}:
+                    if fmt not in chosen_formats:
+                        continue
+                    if self.cfg.formats_enabled and not self.cfg.formats_enabled.get(fmt, True):
+                        continue
+                elif self.cfg.formats_enabled and not self.cfg.formats_enabled.get(fmt, True):
                     continue
                 names.append(f"{doc_id}.{fmt}")
         return names
+
+    def _ai_docs_ready(self) -> bool:
+        if not self.cfg.ai_documents_enabled:
+            return False
+        from app.ai.config import is_ai_enabled
+
+        return is_ai_enabled(True)
+
+    def _ai_docs_configured(self) -> bool:
+        """AI documents enabled in config (regardless of API key): the plan
+        includes them so a failed generation yields a placeholder doc."""
+        return self.cfg.ai_documents_enabled
 
     def _render_html(self, doc_id: str, result) -> str:
         if doc_id == "report":
@@ -135,6 +156,72 @@ class Pipeline:
         if doc_id == "doc":
             return render_doc(result, self.cfg)
         raise ValueError(f"no html renderer for document {doc_id!r}")
+
+    def _generate_ai_document(self, doc_id: str, result, reports_dir: Path) -> str:
+        """Generate one LLM document and persist its attached files
+        (docs kit parts, SBOM JSON) under ``reports_dir/docs``."""
+        from worker.ai_docs import generate_document, write_files
+
+        workspace_root: Path | None = None
+        try:
+            from app.services.store import ProjectStore
+
+            workspace = ProjectStore().workspace_dir(result.project_id)
+            if workspace.is_dir():
+                workspace_root = workspace
+            else:
+                logger.warning(
+                    "Workspace missing for %s; %s payload has no source files",
+                    result.project_id, doc_id,
+                )
+        except Exception:
+            logger.warning("Workspace unavailable; %s payload has no source files", doc_id)
+
+        combined, files = generate_document(doc_id, result, self.cfg, workspace_root=workspace_root)
+        if files:
+            attachments_dir = "docs" if doc_id == "codedocs" else doc_id
+            written = write_files(files, reports_dir / attachments_dir)
+            logger.info("Wrote %d/%d attached files for %s", len(written), len(files), doc_id)
+        return combined
+
+    def _placeholder_ai_document(self, doc_id: str, error: str) -> str:
+        """Placeholder markdown when AI generation fails (e.g. no API key):
+        keeps the artifact set stable and explains how to enable generation."""
+        if doc_id == "fstec":
+            title = "Протокол исследований ФСТЭК"
+            description = (
+                "Протокол исследований по выявлению уязвимостей и "
+                "недекларированных возможностей в соответствии с Методикой "
+                "ФСТЭК России."
+            )
+        elif doc_id == "codedocs":
+            title = "Документация к коду"
+            description = (
+                "Автоматически сгенерированная документация по структуре "
+                "и логике проекта."
+            )
+        else:
+            title = doc_id
+            description = "Документ недоступен."
+
+        return f"""# {title}
+
+> **Внимание:** Этот документ не был сгенерирован ИИ из-за ошибки: {error}
+
+{description}
+
+## Причина
+
+Для генерации данного документа требуется настроенное подключение к LLM.
+Проверьте настройки:
+
+- переменная окружения `AI_API_KEY` должна быть установлена;
+- `AI_BASE_URL` должен указывать на OpenAI-совместимый эндпоинт;
+- в `worker/config/worker.yaml` должен быть `ai_documents.enabled: true`.
+
+После настройки ключа и перезапуска воркера документ будет сгенерирован
+автоматически при следующем сканировании.
+"""
 
     def _analyze(self, scan_id: str, source: dict[str, Any], options: dict[str, Any]):
         """Run the analyzer library. Imports are deferred to here so the
@@ -194,7 +281,7 @@ class Pipeline:
         Returns the artifact names it produced."""
         reports_dir.mkdir(parents=True, exist_ok=True)
 
-        from worker.formats import HTML_CONVERTERS, render_document_markdown
+        from worker.formats import HTML_CONVERTERS, create_zip_artifact, markdown_to_html, render_document_markdown
         from worker.rendering import severity_counts
 
         _, chosen_formats = self._resolve_options(options)
@@ -202,13 +289,52 @@ class Pipeline:
 
         started = time.monotonic()
         html_by_doc: dict[str, str] = {}
+        # LLM documents: one generation per doc id, every format derives
+        # from the combined markdown; a failed doc generates a placeholder.
+        md_by_doc: dict[str, str] = {}
+        docs_status: dict[str, str] = {}
         produced: list[str] = []
         format_errors: list[str] = []
         for name in plan:
             doc_id, _, fmt = name.rpartition(".")
             target = reports_dir / name
             try:
-                if fmt == "html":
+                if self.cfg.is_ai_doc(doc_id):
+                    if doc_id not in md_by_doc:
+                        try:
+                            md_by_doc[doc_id] = self._generate_ai_document(
+                                doc_id, result, reports_dir
+                            )
+                            docs_status[doc_id] = "ok"
+                        except Exception as exc:
+                            logger.exception(
+                                "AI document generation failed for %s", doc_id
+                            )
+                            md_by_doc[doc_id] = self._placeholder_ai_document(
+                                doc_id, str(exc)
+                            )
+                            docs_status[doc_id] = "placeholder"
+                    combined = md_by_doc[doc_id]
+                    if fmt == "md":
+                        target.write_text(combined, encoding="utf-8")
+                    elif fmt == "html":
+                        html = markdown_to_html(combined)
+                        html_by_doc[doc_id] = html
+                        target.write_text(html, encoding="utf-8")
+                    elif fmt in HTML_CONVERTERS:
+                        html = html_by_doc.get(doc_id) or markdown_to_html(combined)
+                        html_by_doc[doc_id] = html
+                        target.write_bytes(HTML_CONVERTERS[fmt](html))
+                    elif fmt == "zip":
+                        docs_kit_dir = (
+                            reports_dir / "docs" if docs_status[doc_id] == "ok" else None
+                        )
+                        create_zip_artifact(
+                            docs_kit_dir, target, fallback_markdown=combined
+                        )
+                    else:
+                        raise ValueError(f"no handler for format {fmt!r}")
+                elif fmt == "html":
                     html = self._render_html(doc_id, result)
                     html_by_doc[doc_id] = html
                     target.write_text(html, encoding="utf-8")
@@ -247,6 +373,8 @@ class Pipeline:
             "timing": timing,
             "meta": {"scan_kind": scan_kind},
         }
+        if docs_status:
+            summary["documents"] = docs_status
         (reports_dir / "summary.json").write_text(
             json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
         )

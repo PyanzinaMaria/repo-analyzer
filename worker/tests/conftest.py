@@ -29,6 +29,10 @@ def cfg(tmp_path) -> WorkerConfig:
         analysis=base.analysis,
         reports=base.reports,
         formats_enabled=base.formats_enabled,
+        # Disable AI documents by default for offline tests; individual tests
+        # can enable via monkeypatch or by replacing the config.
+        ai_documents_enabled=False,
+        ai_documents=base.ai_documents,
     )
 
 
