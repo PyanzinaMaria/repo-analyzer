@@ -56,4 +56,7 @@
         <iframe class="viewer-frame report-frame" src="/api/scans/{{ status.id }}/artifacts/report.html" sandbox="allow-scripts" referrerpolicy="no-referrer" title="{{ t("artifacts.docs.report") }}"></iframe>
     </section>
     {% endif %}
+    {% if complete %}
+    <a class="button" href="/scan/{{ status.id }}/company">Подготовить шаблон для организации</a>
+    {% endif %}
 </div>

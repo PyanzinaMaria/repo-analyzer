@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import json
+import os
 from pathlib import Path
 
+import httpx
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from app.core.config import Settings, get_settings
@@ -115,6 +118,44 @@ def view_artifact(request: Request, scan_id: str, name: str) -> HTMLResponse:
         "back_label_key": "artifacts.back",
     })
     return templates.TemplateResponse(request, "pages/viewer.html", ctx)
+
+
+def _company_context(request: Request, scan_id: str) -> dict:
+    ctx = _scan_context(request, scan_id)
+    if not ctx["complete"]:
+        raise HTTPException(409, "Дождитесь завершения анализа")
+    config = ctx["settings"].root / "config" / "company_templates.json"
+    ctx.update(page_title="Шаблон для организации", choices=json.loads(config.read_text(encoding="utf-8")),
+               inn="", org="", selected=[])
+    return ctx
+
+
+@router.get("/scan/{scan_id}/company", response_class=HTMLResponse)
+def company_page(request: Request, scan_id: str) -> HTMLResponse:
+    return templates.TemplateResponse(request, "pages/company_form.html", _company_context(request, scan_id))
+
+
+@router.post("/scan/{scan_id}/company")
+async def download_company(request: Request, scan_id: str) -> Response:
+    ctx = _company_context(request, scan_id)
+    async with request.form() as form:
+        ctx.update(inn=str(form.get("inn", "")).strip(), org=str(form.get("org", "")).strip(),
+                   selected=form.getlist("sections"))
+    service_url = os.getenv("SIRIUS_COMPANY_REPORT_URL", "http://127.0.0.1:8001")
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            result = await client.post(f"{service_url.rstrip('/')}/reports", json={
+                "inn": ctx["inn"], "org": ctx["org"], "sections": ctx["selected"],
+            })
+    except httpx.RequestError:
+        result = None
+    if result is not None and result.status_code == 200:
+        return Response(result.content, media_type=result.headers["content-type"],
+                        headers={"Content-Disposition": 'attachment; filename="company-report.docx"'})
+    invalid = result is not None and result.status_code == 422
+    ctx["error"] = ("Укажите десятизначный ИНН, название организации и выберите хотя бы один раздел."
+                    if invalid else "Сервис подготовки документов временно недоступен. Попробуйте ещё раз.")
+    return templates.TemplateResponse(request, "pages/company_form.html", ctx, status_code=422 if invalid else 503)
 
 
 def run_cleanup(settings: Settings) -> None:

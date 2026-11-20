@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="/scan/{{ status.id }}">← К результатам анализа</a>
+<h1>{{ page_title }}</h1>
+<form method="post" class="card">
+    {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+    <div class="field"><label>ИНН
+        <input type="text" name="inn" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" required value="{{ inn }}">
+    </label></div>
+    <div class="field"><label>Название организации
+        <input type="text" name="org" maxlength="300" required value="{{ org }}">
+    </label></div>
+    <fieldset>
+        <legend>Разделы документа</legend>
+        {% for key, template in choices.items() %}
+        <p>
+            <label><input type="checkbox" name="sections" value="{{ key }}" {% if key in selected %}checked{% endif %}> {{ template.label }}</label>
+            <br>
+            {% for source in template.sources %}
+            <a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.label }}</a>{% if not loop.last %} · {% endif %}
+            {% endfor %}
+        </p>
+        {% endfor %}
+    </fieldset>
+    <p><button class="button">Скачать DOCX</button></p>
+</form>
+{% endblock %}
