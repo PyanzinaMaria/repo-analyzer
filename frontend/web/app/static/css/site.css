@@ -205,6 +205,7 @@ h2 { font-size: 1.2rem; }
 /* Results */
 .results-grid { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
 .artifact-actions { display: flex; flex-direction: column; gap: 10px; }
+.results-pending { color: var(--color-ink-soft); }
 .timing { color: var(--color-ink-soft); font-size: 0.9rem; margin: 12px 0 0; }
 
 /* Report viewer */

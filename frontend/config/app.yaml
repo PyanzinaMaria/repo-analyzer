@@ -6,7 +6,8 @@ base_url: http://127.0.0.1:8000
 
 # Storage layout: all runtime paths are resolved under data_dir unless
 # overridden by absolute env paths.
-data_dir: data
+# Shared with the worker (repo-root data/). Relative to frontend/ root.
+data_dir: ../data
 uploads_dir_name: uploads
 reports_dir_name: reports
 queue_dir_name: queue

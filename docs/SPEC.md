@@ -2,8 +2,8 @@
 
 Документ для передачи: что это за система, какие контракты нельзя ломать, как поднять окружение и как проверить, что всё работает. Смысл для пользователя — в [`process.md`](process.md); здесь — инженерная спецификация.
 
-**Актуальная ветка интеграции secaudit:** `feature/secaudit-integrate`  
-**Правило:** secaudit = реализация runners `static` / `ai` внутри уже существующего UI. Новые кнопки отчётов и отдельный UI под secaudit **не вводить**.
+**Базовая линия после интеграции:** `feature/secaudit-integrate` (+ влитый `feature/ai-final-docs`).  
+**Правило:** secaudit = реализация runners `static` / `ai` внутри уже существующего UI. Новые кнопки отчётов и отдельный UI под secaudit **не вводить**. Опциональные LLM-доки `fstec` / `codedocs` — только через `worker.yaml` / `WORKER_ENABLE_AI_DOCUMENTS`, не через новые кнопки методов.
 
 ---
 
@@ -39,7 +39,10 @@ data/reports/{id}/  ◀── manifest.json · summary.json · report.* · doc.*
 | Worker | `worker/` | Очередь, анализ, рендер отчётов |
 | Analyzer | `app/` | SAST / context / LLM / DAST / sandbox |
 
-Связь web↔worker — **только файлы** в общем `data/` (`SIRIUS_DATA_DIR` / `WORKER_DATA_DIR` должны указывать на один каталог). Прямого HTTP между ними нет.
+Связь web↔worker — **только файлы** в общем `data/`.  
+Конфиг фронта: `frontend/config/app.yaml` → `data_dir: ../data` (общий с воркером).  
+Переопределения: `SIRIUS_DATA_DIR` / `WORKER_DATA_DIR` — **обязательно один и тот же абсолютный путь**.  
+Если web пишет в `frontend/data/`, а worker читает `data/`, заявки «зависают» после intake. Прямого HTTP между сервисами нет.
 
 ---
 
@@ -63,13 +66,17 @@ data/reports/{id}/  ◀── manifest.json · summary.json · report.* · doc.*
 
 Источник: [`frontend/config/reports.yaml`](../frontend/config/reports.yaml)
 
-| Документ | Имена файлов |
-|---|---|
-| Отчёт аудита | `report.{html,md,pdf,docx}` |
-| Документация ФСТЭК | `doc.{html,md,pdf,docx}` |
+| Документ | Имена файлов | Примечание |
+|---|---|---|
+| Отчёт аудита | `report.{html,md,pdf}` | form formats; docx — legacy |
+| Документация ФСТЭК | `doc.{html,md,pdf}` | form formats; docx — legacy |
+| LLM-протокол ФСТЭК | `fstec.{html,md,pdf}` | только если `ai_documents.enabled` |
+| LLM codedocs | `codedocs.zip` | только если `ai_documents.enabled` |
 
-План файлов: `Pipeline._format_plan(formats)` → пересечение выбранных форматов с documents.  
+План файлов: `Pipeline._format_plan(formats)` → `report`/`doc` по выбранным форматам; `fstec`/`codedocs` — если включены AI-документы воркера.  
 В `manifest.artifacts` — только эти имена. **Не** добавлять `dast_report.*`, `audit_report.md`, сырой SARIF.
+
+**Очередь:** один worker = один скан. Долгая генерация AI-доков блокирует следующие заявки (UI будет показывать «Ожидание» на анализе). По умолчанию `worker/config/worker.yaml` → `ai_documents.enabled: false`.
 
 ### 3.3 Job options (очередь)
 
@@ -206,8 +213,9 @@ set SIRIUS_DATA_DIR=%cd%\data
 
 ```bat
 set WORKER_DATA_DIR=%cd%\data
-set SIRIUS_DATA_DIR=%cd%\data
 set WORKER_ENABLE_AI=true
+rem опционально долгие LLM-доки (по умолчанию выкл.):
+rem set WORKER_ENABLE_AI_DOCUMENTS=true
 .venv\Scripts\python -m worker
 ```
 
