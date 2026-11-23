@@ -147,16 +147,16 @@ def write_report(paths: Paths | None = None) -> Path:
     for group in [g for g in ("test", "post_cutoff", "dev") if g in metrics]:
         warn = " — ⚠️ dev split: for prompt iteration only, not final numbers" if group == "dev" else ""
         lines += [f"## Main results: {group}{warn}", ""]
-        header = ["config", "n"] + [f"R@{k}" for k in ks] + ["MRR", "PairAcc@10", "line R@10", "findings/KLOC", "CWE agree"]
+        header = ["config", "n"] + [f"R@{k}" for k in ks] + ["MRR", "pairs", "PairAcc@10", "line R@10", "findings/KLOC", "CWE agree"]
         rows = []
         for conf, m in sorted(metrics[group].items(), key=lambda kv: (kv[0].startswith("S-"), kv[0])):
             rows.append([conf, m["n"]] + [_f(m[f"recall@{k}"], True) + (_ci(m.get("recall@10_ci")) if k == 10 else "")
                                           for k in ks]
-                        + [_f(m["mrr"]) + _ci(m.get("mrr_ci")).replace("%", ""), _f(m["pair_acc@10"], True)
+                        + [_f(m["mrr"]) + _ci(m.get("mrr_ci")).replace("%", ""), m.get("n_paired", "–"), _f(m["pair_acc@10"], True)
                            + _ci(m.get("pair_acc@10_ci")), _f(m["line_recall@10"], True),
                            _f(m["findings_per_kloc"]), _f(m["cwe_agreement"], True)])
         lines += _table(header, rows) + [""]
-        for fam in ("python", "js"):
+        for fam in sorted(key.split("/")[1] for key in metrics if key.startswith(group + "/") and key.count("/") == 1):
             sub = metrics.get(f"{group}/{fam}")
             if sub:
                 lines += [f"**{group} / {fam}**: " + ", ".join(
@@ -164,6 +164,24 @@ def write_report(paths: Paths | None = None) -> Path:
                     if not c.startswith("S-")), ""]
         for img in _plots(metrics, group, ks, paths.results):
             lines += [f"![{img}]({img})", ""]
+
+    if coverage := res.get("scan_coverage"):
+        lines += ["## SAST execution (one observation per revision)", ""]
+        rows = []
+        for split, tools in coverage.items():
+            for tool, counts in sorted(tools.items()):
+                errors = sum(n for s, n in counts.items() if s not in
+                             {"ok", "not_applicable", "disabled", "applicable", "timeout", "seconds"})
+                rows.append([split, tool, counts.get("applicable", 0), counts.get("ok", 0),
+                             counts.get("not_applicable", 0), counts.get("disabled", 0),
+                             counts.get("timeout", 0), errors, _f(counts["seconds"])])
+        lines += _table(["split", "tool", "applicable", "ok", "N/A", "disabled", "timeouts", "errors", "seconds"], rows) + [""]
+    if pairs := res.get("paired_tools"):
+        k = res["eval_config"]["comparison_k"]
+        lines += [f"## Paired tool comparison on common items (hits at {k})", ""]
+        lines += _table(["split", "A", "B", "n", "A hits", "B hits", "p"],
+                        [[r["split"], r["a"], r["b"], r["n"], r["hits_a"], r["hits_b"], _f(r["p_value"])]
+                         for r in pairs]) + [""]
 
     sig = res.get("significance_vs_S", {})
     if sig:

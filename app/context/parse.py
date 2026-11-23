@@ -38,11 +38,21 @@ def _language(kind: str) -> Language:
         return Language(tsts.language_typescript())
     if kind == "tsx":
         return Language(tsts.language_tsx())
+    if kind == "java":
+        import tree_sitter_java
+        return Language(tree_sitter_java.language())
+    if kind == "csharp":
+        import tree_sitter_c_sharp
+        return Language(tree_sitter_c_sharp.language())
     raise ValueError(kind)
 
 
 def grammar_for_path(path: str) -> str | None:
     p = path.lower()
+    if p.endswith(".java"):
+        return "java"
+    if p.endswith(".cs"):
+        return "csharp"
     if p.endswith(".py"):
         return "python"
     if p.endswith((".ts", ".mts", ".cts")):
@@ -94,6 +104,10 @@ def functions_in_source(src: bytes, grammar: str) -> list[FunctionSpan]:
     is_py = grammar == "python"
     func_types = PY_FUNC if is_py else JS_FUNC
     scope_types = PY_SCOPE if is_py else JS_SCOPE
+    if grammar in ("java", "csharp"):
+        func_types = {"method_declaration", "constructor_declaration", "local_function_statement"}
+        scope_types = {"class_declaration", "interface_declaration", "struct_declaration", "record_declaration",
+                       "enum_declaration"}
     out: list[FunctionSpan] = []
 
     def walk(node: Node, scope: list[str]):

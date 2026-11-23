@@ -1,0 +1,7 @@
+# Stage E — evaluation
+comparison_k: 10
+line_tol: 5
+ks: [1, 5, 10, 20]
+bootstrap_resamples: 10000
+# Function hits on functions longer than this are reported separately (inflation guard).
+max_function_lines: 300

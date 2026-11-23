@@ -1,0 +1,26 @@
+# Shared, deliberately small engine-comparison profile.
+rules:
+  - id: weak-digest-python
+    languages: [python]
+    message: MD5 is unsuitable for integrity protection.
+    severity: WARNING
+    metadata: {cwe: [CWE-328]}
+    pattern: hashlib.md5(...)
+  - id: weak-digest-node
+    languages: [javascript, typescript]
+    message: MD5 is unsuitable for integrity protection.
+    severity: WARNING
+    metadata: {cwe: [CWE-328]}
+    pattern: $CRYPTO.createHash("md5")
+  - id: weak-digest-java
+    languages: [java]
+    message: MD5 is unsuitable for integrity protection.
+    severity: WARNING
+    metadata: {cwe: [CWE-328]}
+    pattern: java.security.MessageDigest.getInstance("MD5")
+  - id: weak-digest-csharp
+    languages: [csharp]
+    message: MD5 is unsuitable for integrity protection.
+    severity: WARNING
+    metadata: {cwe: [CWE-328]}
+    pattern: MD5.Create()

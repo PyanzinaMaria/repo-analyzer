@@ -3,6 +3,8 @@ locations used by scripts/setup.sh."""
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 import json
 import os
 import shutil
@@ -26,6 +28,7 @@ _overrides: dict[str, str] = {}
 
 
 def set_overrides(paths: dict[str, str]) -> None:
+    _overrides.clear()
     _overrides.update({k: os.path.expanduser(v) for k, v in paths.items()})
 
 
@@ -78,6 +81,19 @@ def _first_line(cmd: list[str]) -> str | None:
         return text[0].strip() if text else None
     except Exception:  # noqa: BLE001
         return None
+
+
+@lru_cache(maxsize=64)
+def _cached_version(path: str, mtime: int, args: tuple[str, ...]) -> str | None:
+    return _first_line([path, *args])
+
+
+def analyzer_version(tool, spec) -> str | None:
+    name = spec.executable or tool
+    path = which(name)
+    if not path or not spec.version_args:
+        return None
+    return _cached_version(path, Path(path).stat().st_mtime_ns, tuple(spec.version_args))
 
 
 def tool_versions() -> dict[str, str | None]:

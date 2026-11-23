@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_DIR = REPO_ROOT / "config"
 
-Language = Literal["python", "javascript", "typescript"]
+Language = Literal["python", "javascript", "typescript", "java", "csharp"]
 FAMILY = {"python": "python", "javascript": "javascript", "typescript": "javascript"}
 
 
@@ -26,6 +26,16 @@ FAMILY = {"python": "python", "javascript": "javascript", "typescript": "javascr
 
 
 class ToolConfig(BaseModel):
+    executable: str | None = None
+    languages: list[Language] | None = None
+    command: list[str] = Field(default_factory=list)
+    prepare: list[str] = Field(default_factory=list)
+    env: dict[str, str] = Field(default_factory=dict)
+    inputs: list[str] = Field(default_factory=list)
+    requires: list[str] = Field(default_factory=list)
+    ok_codes: list[int] = Field(default_factory=lambda: [0])
+    output: Literal["sarif", "graudit"] = "sarif"
+    version_args: list[str] = Field(default_factory=list)
     enabled: bool = True
     timeout_s: int = 1200
     args: dict[str, list[str]] = Field(default_factory=dict)  # per language
@@ -41,8 +51,8 @@ class SastConfig(BaseModel):
     source_extensions: dict[str, list[str]] = Field(default_factory=dict)
 
     def family_extensions(self, language: str) -> list[str]:
-        if FAMILY.get(language, language) == "python":
-            return self.source_extensions.get("python", [".py"])
+        if FAMILY.get(language, language) != "javascript":
+            return self.source_extensions.get(language, [])
         return self.source_extensions.get("javascript", []) + self.source_extensions.get("typescript", [])
 
 
@@ -85,7 +95,17 @@ def _load(path: Path | str, model: type[BaseModel]):
 
 
 def load_sast_config(path: Path | str = CONFIG_DIR / "sast.yaml") -> SastConfig:
-    return _load(path, SastConfig)
+    path = Path(path)
+    if not path.is_absolute() and not path.exists():
+        path = REPO_ROOT / path
+    with path.open(encoding="utf-8") as f:
+        settings = yaml.safe_load(f)
+    if base := settings.pop("extends", None):
+        parent = _load(path.parent / base, SastConfig).model_dump()
+        for name, overrides in settings.pop("tools", {}).items():
+            parent["tools"].setdefault(name, {}).update(overrides)
+        settings = {**parent, **settings}
+    return SastConfig.model_validate(settings)
 
 
 def load_models_config(path: Path | str = CONFIG_DIR / "models.yaml") -> ModelsConfig:

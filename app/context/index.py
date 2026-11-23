@@ -117,7 +117,7 @@ def analyze_source(path: str, src: bytes) -> FileInfo | None:
     grammar = grammar_for_path(path)
     if grammar is None:
         return None
-    lang = "python" if grammar == "python" else ("typescript" if grammar in ("typescript", "tsx") else "javascript")
+    lang = "typescript" if grammar == "tsx" else grammar
     try:
         spans = functions_in_source(src, grammar)
         tree = Parser(_language(grammar)).parse(src)

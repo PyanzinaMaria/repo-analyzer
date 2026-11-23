@@ -8,6 +8,7 @@ from pathlib import Path
 
 from app.core import io
 from bench.schemas import BenchmarkItem
+from bench.build import FAMILY
 from bench.config import Paths, load_benchmark_config
 
 SPLITS = ["dev", "test", "post_cutoff", "extra"]
@@ -50,14 +51,15 @@ def write_stats(paths: Paths | None = None, extra_out: Path | None = None) -> Pa
 
     lines += ["## Primary CWE x language x split", ""]
     cwes = [c for c in cfg.cwe_whitelist if any(it.cwe and it.cwe[0] == c for it in items)]
-    header = ["CWE"] + [f"{sp}/{'py' if lg == 'python' else lg[:2]}" for sp in SPLITS for lg in ("python", "js")]
+    families = sorted({FAMILY[it.language] for it in items})
+    header = ["CWE"] + [f"{sp}/{lg}" for sp in SPLITS for lg in families]
     rows = []
     for cwe in cwes:
         row = [cwe]
         for sp in SPLITS:
-            for fam in ("python", "js"):
+            for fam in families:
                 row.append(sum(1 for it in items if it.split == sp and it.cwe[0] == cwe
-                               and (it.language == "python") == (fam == "python")))
+                               and FAMILY[it.language] == fam))
         rows.append(row)
     lines += _md_table(header, rows) + [""]
     main = [it for it in items if it.split in ("dev", "test")]

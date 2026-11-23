@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import csv
-from collections import defaultdict
+from collections import Counter, defaultdict
+from itertools import combinations
 from functools import lru_cache
 from pathlib import Path
 
@@ -97,7 +98,7 @@ def collect_item_hits(cfg: EvalConfig, models: list[str], paths: Paths) -> list[
             fixed_list = ranks_f.get(key)
             row = {
                 "item": it["id"], "split": it["split"], "language": it["language"],
-                "family": "python" if it["language"] == "python" else "js", "cwe": it["cwe"][0],
+                "family": "js" if it["language"] in ("javascript", "typescript") else it["language"], "cwe": it["cwe"][0],
                 "loc": it["loc"], "config": key,
                 "func_rank": hi.func_rank, "line_rank": hi.line_rank, "long_fn": hi.func_hit_long_fn,
                 "cwe_agree": hi.cwe_agree, "n_findings": len(ranked),
@@ -134,6 +135,7 @@ def aggregate(rows: list[dict], cfg: EvalConfig) -> dict:
                 m[f"line_recall@{k}"] = recall_at_k(lr, k)
             m["mrr"] = mrr(fr)
             paired = [r for r in cr if r["has_fixed"]]
+            m["n_paired"] = len(paired)
             for tag in ("10", "all"):
                 m[f"pair_acc@{tag}"] = pair_acc([r[f"vuln_flag@{tag}"] for r in paired],
                                                 [r[f"fixed_flag@{tag}"] for r in paired])
@@ -252,6 +254,42 @@ def contamination(agg: dict, models: list[str], k: int = 10, threshold: float = 
     return out
 
 
+def scan_coverage(paths: Paths) -> dict:
+    totals = defaultdict(lambda: defaultdict(Counter))
+    for item in load_items(None, paths):
+        for side in ("vuln", "fixed"):
+            directory = paths.sast / item["id"] / side
+            manifest = directory / "runs.json"
+            runs = (io.read_json(manifest)["tools"].values() if manifest.exists() else
+                    (io.read_json(p) for p in directory.glob("*.status.json")))
+            for run in runs:
+                counts = totals[item["split"]][run["tool"]]
+                status = "ok" if run["ok"] else run.get("reason") or "error"
+                counts[status] += 1
+                counts["seconds"] += run.get("seconds", 0)
+                if status not in ("disabled", "not_applicable"):
+                    counts["applicable"] += 1
+    return totals
+
+
+def paired_tools(rows: list[dict], k: int) -> list[dict]:
+    hits = defaultdict(dict)
+    for row in rows:
+        if row["config"].startswith("S-"):
+            hits[row["split"], row["config"]][row["item"]] = bool(row["func_rank"] and row["func_rank"] <= k)
+    comparisons = []
+    for (split, a), (other, b) in combinations(sorted(hits), 2):
+        if split != other:
+            continue
+        left, right = hits[split, a], hits[split, b]
+        common = sorted(left.keys() & right.keys())
+        if common:
+            x, y = [left[i] for i in common], [right[i] for i in common]
+            comparisons.append(dict(split=split, a=a, b=b, n=len(common), hits_a=sum(x), hits_b=sum(y),
+                                    **mcnemar(x, y)))
+    return comparisons
+
+
 def run_eval(models: list[str] | None = None, paths: Paths | None = None) -> dict:
     paths = paths or Paths()
     cfg = load_eval_config()
@@ -260,6 +298,7 @@ def run_eval(models: list[str] | None = None, paths: Paths | None = None) -> dic
     io.write_jsonl(paths.results / "item_hits.jsonl", rows)
     agg = aggregate(rows, cfg)
     result = {"models": models, "metrics": agg, "significance_vs_S": significance(rows),
+              "scan_coverage": scan_coverage(paths), "paired_tools": paired_tools(rows, cfg.comparison_k),
               "triage": triage_quality(models, cfg, paths), "costs": costs(paths),
               "contamination": contamination(agg, models), "eval_config": cfg.model_dump()}
     io.write_json(paths.results / "metrics.json", result)

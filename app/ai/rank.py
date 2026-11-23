@@ -15,7 +15,6 @@ from __future__ import annotations
 from app.sast.cwe_map import cwe_overlap
 from app.sast.normalize import MergedFinding, rank_sast
 
-SAST_TOOLS = ["semgrep", "bandit", "eslint", "codeql"]
 MODEL_CONFIGS = ["L", "S+T", "S+D", "S+T+D"]
 
 

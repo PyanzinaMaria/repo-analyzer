@@ -1,0 +1,84 @@
+# Stage A — benchmark construction
+seed: 13
+
+# Earlier sources have better labels and win when the same (repo, fix commit) appears twice.
+sources:
+  patcheval:      # bytedance/PatchEval verified subset (manual vul_func labels + PoC)
+    enabled: true
+  secbenchjs:
+    enabled: true
+    repo_url: https://github.com/cristianstaicu/SecBench.js
+  pyvul:          # billquan/PyVul commit-level list + CWE map
+    enabled: true
+  osv:
+    enabled: true
+    ecosystems: [PyPI, npm, Maven, NuGet]
+    languages: {PyPI: python, npm: javascript, Maven: java, NuGet: csharp}
+    url_template: https://osv-vulnerabilities.storage.googleapis.com/{ecosystem}/all.zip
+    min_published: 2018-01-01
+
+# Normalized as "CWE-<n>". 862/863 are both accepted.
+cwe_whitelist:
+  - CWE-22    # path traversal
+  - CWE-78    # OS command injection
+  - CWE-79    # XSS
+  - CWE-89    # SQL injection
+  - CWE-94    # code injection
+  - CWE-95    # eval injection
+  - CWE-502   # unsafe deserialization
+  - CWE-611   # XXE
+  - CWE-918   # SSRF
+  - CWE-352   # CSRF
+  - CWE-287   # improper authentication
+  - CWE-862   # missing authorization
+  - CWE-863   # incorrect authorization
+  - CWE-1321  # prototype pollution
+  - CWE-1333  # ReDoS
+  - CWE-601   # open redirect
+
+# Closely related CWEs folded into a whitelisted class before filtering.
+cwe_aliases:
+  CWE-77: CWE-78
+  CWE-88: CWE-78
+  CWE-23: CWE-22
+  CWE-36: CWE-22
+  CWE-73: CWE-22
+  CWE-80: CWE-79
+  CWE-96: CWE-94
+  CWE-915: CWE-1321
+
+# [min, max] in-scope source LOC. JS/TS min is lower than the spec's 2k because most
+# npm advisories (SecBench.js) are small libraries — see README "Deviations".
+loc_bounds:
+  java: [100, 300000]
+  csharp: [100, 300000]
+  python: [2000, 300000]
+  javascript: [300, 300000]
+  typescript: [300, 300000]
+
+tangled:
+  max_files: 10
+  max_changed_lines: 300
+
+target:
+  main_items: 120          # dev + test
+  pilot_per_family: {java: 2, csharp: 2}
+  python_share: 0.5
+  max_cwe_share: 0.25
+  dev_size: 20
+  post_cutoff_items: 30
+  post_cutoff_max_cwe_share: 0.4
+  extra_items: 30
+  max_attempts_per_language: 400
+  max_items_per_repo: 1     # one vuln per project (IRIS design)
+  max_source_files: 5000    # pre-filter on the tree listing before checkout
+
+# Provisional: must be >= the newest training cutoff of the models compared in Stage D.
+# Re-check when models.yaml is frozen.
+post_cutoff_date: 2026-01-01
+
+# Regexes on repo-relative POSIX paths; matching files are not ground truth.
+# path_excludes and source_extensions (product-code scope) live in config/sast.yaml
+
+clone_timeout_s: 900
+workers: 12

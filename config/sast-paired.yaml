@@ -1,0 +1,7 @@
+extends: sast.yaml
+tools:
+  semgrep: &paired
+    languages: [python, javascript, typescript, java, csharp]
+    command: [scan, --config, '{config}/rules/paired.yaml', --no-git-ignore, --sarif, --output, '{report}', --jobs, '2', .]
+    ok_codes: [0]
+  opengrep: *paired

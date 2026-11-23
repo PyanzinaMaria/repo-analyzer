@@ -19,7 +19,6 @@ from app.sast.cwe_map import cwes_from_strings
 
 NAME = "osv"
 LICENSE = "CC-BY-4.0 (OSV data); GHSA content CC-BY-4.0"
-ECO_LANG = {"PyPI": "python", "npm": "javascript"}
 
 
 def fetch(raw_dir: Path, cfg: BenchmarkConfig, force: bool = False) -> dict:
@@ -107,7 +106,7 @@ def load(raw_dir: Path, cfg: BenchmarkConfig) -> list[RawItem]:
         cwes = cwes_from_strings((rec.get("database_specific") or {}).get("cwe_ids") or [])
         for repo, sha in commits:
             item = RawItem(source=NAME, cve=cve, ghsa=ghsa, repo_url=repo, fix_commit=sha, cwe=cwes,
-                           language=ECO_LANG[eco], published=pub,
+                           language=cfg.sources.osv.languages[eco], published=pub,
                            multi_commit=per_repo[repo_key(repo)] > 1,
                            extra={"osv_ids": [rec.get("id")], "summary": (rec.get("summary") or "")[:200]})
             k = item.key

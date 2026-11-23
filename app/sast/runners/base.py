@@ -17,6 +17,10 @@ class RunResult(BaseModel):
     tool: str
     ok: bool
     skipped: bool = False
+    reason: str | None = None
+    profile: str | None = None
+    version: str | None = None
+    prepare_seconds: float = 0.0
     sarif: str | None = None
     seconds: float = 0.0
     error: str | None = None
@@ -60,7 +64,7 @@ def execute(tool: str, cmd: list[str], cwd: Path, timeout: int, sarif: Path,
     try:
         rc, out, err = run_cmd(cmd, cwd, timeout, extra_env)
     except TimeoutError as e:
-        return RunResult(tool=tool, ok=False, error=str(e), cmd=cmd, seconds=time.monotonic() - t0)
+        return RunResult(tool=tool, ok=False, reason="timeout", error=str(e), cmd=cmd, seconds=time.monotonic() - t0)
     dt = time.monotonic() - t0
     if rc not in ok_codes or not sarif.exists():
         tail = (err or out or "").strip()[-2000:]

@@ -8,13 +8,74 @@ exclude_dirs: [node_modules, .git, .venv, venv, dist, build, coverage, vendor, _
 
 tools:
   semgrep:
+    version_args: [--version]
     enabled: true
     timeout_s: 1200
+    # --no-git-ignore: scans must be deterministic and independent of the target's git state
+    # (benchmark snapshots are plain checkouts, often outside any git repository).
     args:
-      python: [--config, p/python, --config, p/owasp-top-ten]
-      javascript: [--config, p/javascript, --config, p/typescript, --config, p/owasp-top-ten]
-      typescript: [--config, p/javascript, --config, p/typescript, --config, p/owasp-top-ten]
+      python: [--no-git-ignore, --config, p/python, --config, p/owasp-top-ten]
+      javascript: [--no-git-ignore, --config, p/javascript, --config, p/typescript, --config, p/owasp-top-ten]
+      typescript: [--no-git-ignore, --config, p/javascript, --config, p/typescript, --config, p/owasp-top-ten]
+  opengrep:
+    enabled: true
+    languages: [python, javascript, typescript, java, csharp]
+    timeout_s: 1200
+    version_args: [--version]
+    command: [scan, --config, '{config}/rules/paired.yaml', --no-git-ignore, --sarif, --output, '{report}', --jobs, '2', .]
+  devskim:
+    enabled: true
+    languages: [python, javascript, typescript, java, csharp]
+    timeout_s: 1200
+    version_args: [--version]
+    command: [analyze, --source-code, '{root}', --output-file, '{report}']
+  njsscan:
+    # Disabled: its semgrep engine (libsast) returns no results on Windows; enable on Linux hosts.
+    enabled: false
+    languages: [javascript]
+    requires: [package.json]
+    timeout_s: 1200
+    version_args: [--version]
+    ok_codes: [0, 1]
+    command: [., --sarif, --output, '{report}']
+  graudit:
+    enabled: true
+    languages: [python, javascript, typescript, java, csharp]
+    timeout_s: 1200
+    version_args: [-v]
+    output: graudit
+    ok_codes: [0, 1]
+    command: [-B, -z, -c, '0', -d, '{args}', .]
+    args: {python: [python], javascript: [js], typescript: [typescript], java: [java], csharp: [dotnet]}
+  joern:
+    enabled: true
+    languages: [java]
+    timeout_s: 1800
+    version_args: [--version]
+    prepare: [joern-parse, '{root}', --language, JAVASRC, --output, '{work}/cpg.bin']
+    # Paths go via env: the Windows launcher splits --param on "=".
+    env: {JOERN_CPG: '{work}/cpg.bin', JOERN_REPORT: '{report}'}
+    command: [--script, '{config}/rules/weak-digest.sc']
+  spotbugs:
+    enabled: true
+    languages: [java]
+    timeout_s: 1200
+    version_args: [-version]
+    inputs: ['**/*.java']
+    # Core SpotBugs has no crypto/security detectors; FindSecBugs (required, resolved
+    # via tool_paths as {findsecbugs-plugin}) provides them, findings map to source lines.
+    prepare: [javac, -proc:none, -g, -d, '{work}', '{inputs}']
+    command: [-textui, -pluginList, '{findsecbugs-plugin}', -sarif, -output, '{report}', -sourcepath, '{root}', '{work}']
+  security-code-scan:
+    enabled: true
+    executable: security-scan
+    languages: [csharp]
+    timeout_s: 1200
+    inputs: ['**/*.sln', '**/*.csproj']
+    prepare: [dotnet, restore, '{project}']
+    command: ['{project}', '--export={report}']
   bandit:
+    version_args: [--version]
     enabled: true
     timeout_s: 1200
   eslint:
@@ -45,6 +106,8 @@ path_excludes:
   - '\.d\.ts$'
 
 source_extensions:
+  java: [.java]
+  csharp: [.cs]
   python: [.py]
   javascript: [.js, .cjs, .mjs, .jsx]
   typescript: [.ts, .tsx, .mts, .cts]

@@ -58,6 +58,9 @@ def rel_path(uri: str, root: Path | None, base_ids: dict[str, str] | None = None
             if base.startswith("file:"):
                 base = unquote(urlparse(base).path)
             path = str(PurePosixPath(base) / path)
+        # SpotBugs emits Windows drive paths as /D:/x
+        if len(path) > 2 and path[0] == "/" and path[2] == ":":
+            path = path[1:]
     path = path.replace("\\", "/")
     if root is not None:
         root_s = str(root).replace("\\", "/").rstrip("/") + "/"
@@ -130,17 +133,22 @@ def _location(loc: dict, root: Path | None, base_ids: dict) -> tuple[str, int, i
     return rel_path(uri, root, base_ids, art.get("uriBaseId")), start, max(start, end), snippet
 
 
-def parse_sarif(path_or_obj, root: Path | None = None) -> list[RawFinding]:
+def parse_sarif(path_or_obj, root: Path | None = None, tool_id: str | None = None) -> list[RawFinding]:
     """Parse a SARIF file (or already-loaded dict). `root` strips absolute prefixes."""
     if isinstance(path_or_obj, (str, Path)):
-        with open(path_or_obj, encoding="utf-8") as fh:
+        with open(path_or_obj, encoding="utf-8-sig") as fh:
             sarif = json.load(fh)
     else:
         sarif = path_or_obj
     out: list[RawFinding] = []
-    for run in sarif.get("runs") or []:
+    runs = sarif.get("runs")
+    if not isinstance(runs, list) or not runs:
+        raise ValueError("SARIF contains no runs")
+    for run in runs:
+        if any(i.get("executionSuccessful") is False for i in run.get("invocations", [])):
+            raise ValueError("SARIF records an unsuccessful invocation")
         driver = (run.get("tool") or {}).get("driver") or {}
-        tool = _tool_key(driver.get("name", "unknown"))
+        tool = tool_id or _tool_key(driver.get("name", "unknown"))
         rules = driver.get("rules") or []
         rules_by_id = {r.get("id"): r for r in rules}
         # CodeQL puts rules in extensions (packs)

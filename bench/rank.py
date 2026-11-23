@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.ai.rank import SAST_TOOLS, rank_L, rank_S, rank_ST, rrf
+from app.ai.rank import rank_L, rank_S, rank_ST, rrf
 from app.core import io
 from app.core.yaml_configs import in_product_code
-from app.sast.normalize import MergedFinding
+from app.sast.normalize import Finding, MergedFinding, merge
 from bench.config import Paths
 from bench.llm import out_dir
 
@@ -30,13 +30,30 @@ def build_rankings(item_id: str, side: str, models: list[str], paths: Paths | No
     paths = paths or Paths()
     out: dict[str, list[dict]] = {}
     merged = load_merged(item_id, side, paths)
-    S = rank_S(merged) if merged is not None else None
+    directory = paths.sast / item_id / side
+    manifest = directory / "runs.json"
+    S = None
+    if merged is not None:
+        if manifest.exists():
+            run = io.read_json(manifest)
+            successful = [t for t, status in run["tools"].items() if status["ok"]]
+            raw = [Finding.model_validate(r) for r in io.read_jsonl(directory / "findings.jsonl")
+                   if in_product_code(r["file"])]
+            for tool in successful:
+                own = [f for f in raw if f.tool == tool]
+                out[f"S-{tool}"] = rank_S(merge(own, run["merge_line_tol"]))
+            if successful:
+                S = rank_S(merged)
+        else:
+            # Historical snapshots may only have merged.jsonl and individual status files.
+            statuses = [io.read_json(p) for p in directory.glob("*.status.json")]
+            successful = {s["tool"] for s in statuses if s["ok"]} | {t for m in merged for t in m.tools}
+            for tool in successful:
+                out[f"S-{tool}"] = rank_S(merged, tool)
+            if successful or not statuses:
+                S = rank_S(merged)
     if S is not None:
         out["S"] = S
-        for t in SAST_TOOLS:
-            st = rank_S(merged, t)
-            if st or any(t in m.tools for m in merged):
-                out[f"S-{t}"] = st
     for model in models:
         tri = _read(out_dir(model, "triage", paths) / item_id / f"{side}.jsonl")
         disc = _read(out_dir(model, "discovery", paths) / item_id / f"{side}.jsonl")

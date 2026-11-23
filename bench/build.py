@@ -26,15 +26,15 @@ from app.core.runlog import RunSummary, log
 from app.sast.cwe_map import norm_cwe
 
 SOURCE_RANK = {name: i for i, name in enumerate(ADAPTERS)}
-FAMILY = {"python": "python", "javascript": "js", "typescript": "js"}
+FAMILY = {"python": "python", "javascript": "js", "typescript": "js", "java": "java", "csharp": "csharp"}
 
 
 # ----------------------------------------------------------------------------- helpers
 
 
 def family_extensions(cfg: BenchmarkConfig, language: str) -> list[str]:
-    if FAMILY[language] == "python":
-        return cfg.source_extensions["python"]
+    if FAMILY[language] != "js":
+        return cfg.source_extensions[language]
     return cfg.source_extensions["javascript"] + cfg.source_extensions["typescript"]
 
 
@@ -179,7 +179,7 @@ def build_pool(raw: dict[str, list[RawItem]], cfg: BenchmarkConfig) -> list[dict
 def assign_ids(pool: list[dict]) -> None:
     seen: Counter = Counter()
     for e in pool:
-        prefix = "py" if FAMILY[e["language"]] == "python" else "js"
+        prefix = "py" if e["language"] == "python" else FAMILY[e["language"]]
         if e["cve"]:
             base = f"{prefix}-{e['cve']}"
         elif e["ghsa"]:
@@ -439,6 +439,14 @@ def build(config_path: Path, limit: int | None = None, force: bool = False,
                          t.max_attempts_per_language // 2)
             selected[f"post-{fam}"] = sel.accepted
 
+    # Additional language pilots go in dev and have independent quotas.
+    for fam, q in t.pilot_per_family.items():
+        if not limit and q:
+            sel = Selector([c for c in pool if eligible(c, False, fam)], q, q, seed,
+                           t.max_items_per_repo, used_repos)
+            run_selector(sel, cfg, paths, force, summary, fam, log_rows, [], t.max_attempts_per_language)
+            selected[f"pilot-{fam}"] = sel.accepted
+
     # splits
     rng = random.Random(seed)
     items: list[BenchmarkItem] = []
@@ -453,6 +461,8 @@ def build(config_path: Path, limit: int | None = None, force: bool = False,
         dev_ids = {c["id"] for c, _ in main_py + main_js}  # smoke runs: everything is dev
     for c, res in main_py + main_js:
         items.append(to_item(c, res, "dev" if c["id"] in dev_ids else "test"))
+    for fam in t.pilot_per_family:
+        items.extend(to_item(c, res, "dev") for c, res in selected.get(f"pilot-{fam}", []))
     for key in ("post-python", "post-js"):
         for c, res in selected.get(key, []):
             items.append(to_item(c, res, "post_cutoff"))

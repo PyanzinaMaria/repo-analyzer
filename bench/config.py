@@ -84,6 +84,7 @@ class SecBenchJsSource(BaseModel):
 
 class OsvSource(BaseModel):
     enabled: bool = True
+    languages: dict[str, Language] = Field(default_factory=lambda: {"PyPI": "python", "npm": "javascript"})
     ecosystems: list[str] = ["PyPI", "npm"]
     url_template: str = "https://osv-vulnerabilities.storage.googleapis.com/{ecosystem}/all.zip"
     min_published: date = date(2018, 1, 1)
@@ -108,6 +109,7 @@ class TangledRule(BaseModel):
 class Target(BaseModel):
     main_items: int = 120
     python_share: float = 0.5
+    pilot_per_family: dict[Language, int] = Field(default_factory=dict)
     max_cwe_share: float = 0.25
     dev_size: int = 20
     post_cutoff_items: int = 30
@@ -139,6 +141,7 @@ class BenchmarkConfig(BaseModel):
 
 
 class EvalConfig(BaseModel):
+    comparison_k: int = Field(default=10, gt=0)
     line_tol: int = 5
     ks: list[int] = [1, 5, 10, 20]
     bootstrap_resamples: int = 10000

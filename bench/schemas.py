@@ -8,7 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-Language = Literal["python", "javascript", "typescript"]
+from app.core.yaml_configs import Language
+
 Split = Literal["dev", "test", "post_cutoff", "extra"]
 
 _GH_RE = re.compile(r"github\.com[/:]([^/\s]+)/([^/\s#?]+)", re.IGNORECASE)

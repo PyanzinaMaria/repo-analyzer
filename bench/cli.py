@@ -24,8 +24,6 @@ for name, sub in [("bench", bench_app), ("sast", sast_app), ("context", context_
                   ("llm", llm_app), ("eval", eval_app), ("audit", audit_app)]:
     cli.add_typer(sub, name=name)
 
-ALL_TOOLS = "semgrep,bandit,eslint,codeql"
-
 
 @cli.callback()
 def _main(verbose: bool = typer.Option(False, "--verbose", "-v")):
@@ -106,7 +104,7 @@ def bench_mark_checked(
 
 @sast_app.command("run")
 def sast_run(
-    tools: str = typer.Option(ALL_TOOLS, help="Comma-separated subset of tools"),
+    tools: Optional[str] = typer.Option(None, help="Comma-separated subset of tools"),
     split: Optional[str] = typer.Option(None, help="Benchmark split to run on"),
     path: Optional[Path] = typer.Option(None, help="Ad-hoc directory instead of benchmark items"),
     language: Optional[str] = typer.Option(None, help="Language for --path (auto-detected)"),
@@ -121,12 +119,15 @@ def sast_run(
 
     cfg = load_sast_config(config)
     toolmod.set_overrides(cfg.tool_paths)
-    tool_list = [t.strip() for t in tools.split(",") if t.strip()]
+    tool_list = ([t.strip() for t in tools.split(",") if t.strip()] if tools is not None
+                 else [name for name, spec in cfg.tools.items() if spec.enabled])
+    if unknown := set(tool_list).difference(cfg.tools):
+        raise typer.BadParameter(f"Unknown tools: {', '.join(sorted(unknown))}")
     paths = Paths()
     record_env(paths.results / "env.json")
     with RunSummary("sast run") as s:
         if path is not None:
-            lang = language or detect_language(path)
+            lang = language or detect_language(path, cfg)
             out_dir = out or paths.sast / "adhoc" / path.resolve().name
             res = run_tools_isolated(path, lang, out_dir, tool_list, cfg, item_id=path.resolve().name,
                                      side="adhoc", force=force)
@@ -152,7 +153,9 @@ def sast_run(
 def _sast_summary(s: RunSummary, label: str, res: dict) -> None:
     s.inc("snapshots")
     for tool, r in res.items():
-        if r.skipped:
+        if r.reason in {'disabled', 'not_applicable'}:
+            s.inc(f'{tool} {r.reason}')
+        elif r.skipped:
             s.inc(f"{tool} cached")
         elif r.ok:
             s.inc(f"{tool} ok")
