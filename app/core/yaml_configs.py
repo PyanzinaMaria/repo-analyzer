@@ -131,6 +131,15 @@ def _default_excludes() -> tuple[re.Pattern, ...]:
     return tuple(compile_excludes(load_sast_config().path_excludes))
 
 
+_scope_all_files = False
+
+
+def set_product_scope(all_files: bool) -> None:
+    """External benchmark corpora (OWASP, SecLens, RealVuln) are entirely in scope."""
+    global _scope_all_files
+    _scope_all_files = all_files
+
+
 def in_product_code(path: str) -> bool:
     """False for tests, benchmarks, examples, docs, vendored/minified code."""
-    return not any(rx.search(path.replace("\\", "/")) for rx in _default_excludes())
+    return _scope_all_files or not any(rx.search(path.replace("\\", "/")) for rx in _default_excludes())

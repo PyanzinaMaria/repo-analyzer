@@ -66,6 +66,30 @@ def bench_checkout(
         checkout_all(split=split, limit=limit, force=force, summary=s)
 
 
+@bench_app.command("external")
+def bench_external(
+    action: str = typer.Argument("build", help="build|scan"),
+    kind: str = typer.Argument(..., help="owasp-java|owasp-python|seclens|realvuln"),
+    tools: Optional[str] = typer.Option(None, help="scan: comma-separated subset of tools"),
+    sast_config: Path = typer.Option(CONFIG_DIR / "sast.yaml", "--sast-config"),
+    config: Path = typer.Option(CONFIG_DIR / "external.yaml", "--config"),
+    force: bool = typer.Option(False),
+):
+    """Build an external benchmark corpus or scan its snapshot groups (findings are
+    attributed to every item sharing the same repo+commit)."""
+    from bench import external
+
+    cfgx = external.load_config(config)
+    with RunSummary(f"external {action} {kind}") as s:
+        if action == "build":
+            s.inc("items", len(external.build(kind, cfgx, force=force)))
+        elif action == "scan":
+            external.scan(kind, cfgx, [t.strip() for t in tools.split(",") if t.strip()] if tools else None,
+                          sast_config, force=force, summary=s)
+        else:
+            raise typer.BadParameter("action must be build or scan")
+
+
 @bench_app.command("stats")
 def bench_stats(out: Optional[Path] = typer.Option(None, help="Also write the stats to this file (e.g. docs/BENCHMARK.md)")):
     """Write results/benchmark_stats.md (counts, LOC, ground truth, linked item list)."""
@@ -243,10 +267,14 @@ def llm_import(file: Path = typer.Argument(..., help="responses.jsonl from scrip
 
 
 @eval_app.command("run")
-def eval_run(models: Optional[str] = typer.Option(None, help="Comma-separated model ids (default: models.yaml)")):
+def eval_run(models: Optional[str] = typer.Option(None, help="Comma-separated model ids (default: models.yaml)"),
+             all_scope: bool = typer.Option(False, "--all-scope",
+                                           help="Treat every file as product code (external corpora)")):
     """Match all outputs to ground truth and compute metrics -> results/metrics.json."""
     from bench.eval.metrics import run_eval
+    from app.core.yaml_configs import set_product_scope
 
+    set_product_scope(all_scope)
     with RunSummary("eval run") as s:
         res = run_eval([m for m in models.split(",") if m] if models else None)
         for split, confs in res["metrics"].items():

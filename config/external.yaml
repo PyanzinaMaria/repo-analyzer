@@ -1,0 +1,22 @@
+# External benchmark corpora, built by `python -m bench bench external build|scan`.
+# Each corpus lives in its own data dir (SECBENCH_DATA); refs are pinned commits.
+owasp_java:
+  repo: https://github.com/OWASP-Benchmark/BenchmarkJava
+  ref: 10dfcc54ad02dcfcb358b0ba4a0fef8c919a6d17   # master 2026-11-19; no 1.2 release tag exists yet
+  csv: expectedresults-1.2.csv
+  testcode: src/main/java/org/owasp/benchmark/testcode
+  extension: .java
+  language: java
+owasp_python:
+  repo: https://github.com/OWASP-Benchmark/BenchmarkPython
+  ref: f1291485808b66e20ddb6b01b10dc71b3df8c8ba   # main 2026-05-19; v0.1 preliminary release
+  csv: expectedresults-0.1.csv
+  testcode: testcode
+  extension: .py
+  language: python
+seclens:
+  dataset: enginesec/SecLens
+  quota: null        # null = all tasks in languages we support
+realvuln:
+  labels_repo: https://github.com/kolega-ai/Real-Vuln-Benchmark
+  quota_per_language: {python: 8, javascript: 4, typescript: 4, java: 4}   # pilot caps; null = no cap

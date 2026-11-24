@@ -17,12 +17,12 @@ def git_clone_shallow(url: str, dest: Path, force: bool = False) -> str:
                           capture_output=True, text=True).stdout.strip()
 
 
-def download(url: str, dest: Path, force: bool = False) -> Path:
+def download(url: str, dest: Path, force: bool = False, headers: dict | None = None) -> Path:
     if dest.exists() and not force:
         return dest
     dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_suffix(dest.suffix + ".part")
-    with httpx.stream("GET", url, follow_redirects=True, timeout=300) as r:
+    with httpx.stream("GET", url, follow_redirects=True, timeout=300, headers=headers) as r:
         r.raise_for_status()
         with open(tmp, "wb") as fh:
             for chunk in r.iter_bytes(1 << 20):

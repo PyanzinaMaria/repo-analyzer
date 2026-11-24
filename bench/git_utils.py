@@ -31,7 +31,8 @@ def _lock(path: Path) -> threading.Lock:
 
 def git(args: list[str], cwd: Path | None = None, git_dir: Path | None = None, timeout: int = 600,
         check: bool = True, text: bool = True) -> subprocess.CompletedProcess:
-    cmd = ["git", "-c", "core.quotepath=off", "-c", "advice.detachedHead=false"]
+    cmd = ["git", "-c", "core.quotepath=off", "-c", "advice.detachedHead=false",
+           "-c", "core.longpaths=true"]
     if git_dir is not None:
         cmd += ["--git-dir", str(git_dir)]
     cmd += args
