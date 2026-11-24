@@ -37,24 +37,24 @@ ai_documents:
 # retheme the frontend, update the colors here too.
 theme:
   colors:
-    bg: "#12101E"
-    surface: "#1A1730"
-    surface-raised: "#252042"
-    accent: "#6C5CE7"
-    accent-strong: "#8F7BFF"
-    ink: "#EDEBFA"
-    ink-soft: "#A49FD1"
-    ok: "#5FBF77"
-    warn: "#E0A34E"
-    fail: "#E05B6C"
-    border: "#37315C"
+    bg: "#0B0C10"
+    surface: "#14161C"
+    surface-raised: "#1C1F28"
+    accent: "#8B5CF6"
+    accent-strong: "#A78BFA"
+    ink: "#F3EEE4"
+    ink-soft: "#9B958A"
+    ok: "#3DCF8E"
+    warn: "#C4A1FF"
+    fail: "#F07178"
+    border: "#2C303C"
   # severity -> resolved hex (frontend maps severity -> token -> hex).
   severity_colors:
-    critical: "#E05B6C"
-    high: "#E0A34E"
-    medium: "#8F7BFF"
-    low: "#6C5CE7"
-    info: "#A49FD1"
+    critical: "#F07178"
+    high: "#C4A1FF"
+    medium: "#A78BFA"
+    low: "#221A38"
+    info: "#9B958A"
 
 doc:
   disclaimer: >-
