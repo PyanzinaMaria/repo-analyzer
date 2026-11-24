@@ -12,6 +12,7 @@ images are kept after `down` (they cost a one-off maven build); sandbox images a
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import time
@@ -205,13 +206,43 @@ def _realvuln_worktrees(paths: Paths) -> dict[str, Path]:
     return out
 
 
-def _up_realvuln(cfg: DastBenchConfig, paths: Paths, state: dict,
-                 force: bool, summary: RunSummary | None) -> None:
+def _boot_one(root_str: str, network: str, out_file: str) -> None:
+    """Child-process entry: boot one sandbox app and dump the record as JSON."""
+    import json as _json
+
     from app.sandbox.config import SandboxConfig
     from app.sandbox.runner import start_sandbox
 
+    try:
+        session = start_sandbox(Path(root_str), cfg=SandboxConfig(network=network))
+        plan = session.plan
+        teardown = {"method": plan.method, "container": session.container_name,
+                    "image": session.meta.get("image")}
+        if plan.method == "compose":
+            teardown.update(compose_file=str(session.meta.get("compose_file") or plan.compose_file),
+                            project=str(session.meta.get("project") or ""))
+        rec = {"ok": True, "host_url": session.host_url, "scan_url": session.network_url,
+               "network": session.network, "container": session.container_name,
+               "teardown": teardown}
+    except BaseException as exc:  # noqa: BLE001 - the child reports any failure as data
+        rec = {"ok": False, "reason": str(exc)[:500]}
+    Path(out_file).write_text(_json.dumps(rec, ensure_ascii=False), encoding="utf-8")
+
+
+def _up_realvuln(cfg: DastBenchConfig, paths: Paths, state: dict,
+                 force: bool, summary: RunSummary | None) -> None:
+    """One app per bounded child process: a stuck npm/compose boot must not block
+    the other 19 (the product sandbox has no build timeout, and old vulnerable
+    apps routinely hang)."""
+    import json as _json
+    import multiprocessing
+    import time
+
+    boot_timeout = 600  # hard cap per item
     worktrees = _realvuln_worktrees(paths)
     summary = summary or RunSummary("dast up realvuln")
+    boot_dir = paths.dast / "_boot"
+    boot_dir.mkdir(parents=True, exist_ok=True)
     for tid, root in sorted(worktrees.items()):
         rec = state.get(tid) or {}
         if rec.get("status") == "up" and not force:
@@ -223,26 +254,34 @@ def _up_realvuln(cfg: DastBenchConfig, paths: Paths, state: dict,
             _write(paths, state)
             summary.fail(f"{tid}: worktree missing")
             continue
-        try:
-            session = start_sandbox(root, cfg=SandboxConfig(network=cfg.network))
-        except Exception as exc:  # noqa: BLE001 - soft-fail per item, keep going
-            state[tid] = {"kind": "realvuln", "status": "boot_failed", "reason": str(exc)[:500]}
+        out = boot_dir / f"{tid}.json"
+        out.unlink(missing_ok=True)
+        proc = multiprocessing.Process(target=_boot_one, args=(str(root), cfg.network, str(out)),
+                                       daemon=True)
+        started = time.monotonic()
+        proc.start()
+        proc.join(boot_timeout)
+        if proc.is_alive():
+            proc.kill()
+            proc.join(10)
+            result = {"ok": False, "reason": f"boot exceeded {boot_timeout}s (killed)"}
+        else:
+            result = _json.loads(out.read_text(encoding="utf-8")) if out.is_file() else \
+                {"ok": False, "reason": "boot child produced no result"}
+        if not result.get("ok"):
+            state[tid] = {"kind": "realvuln", "status": "boot_failed",
+                          "reason": result.get("reason", "?")}
             _write(paths, state)
-            summary.fail(f"{tid}: {str(exc)[:100]}")
+            summary.fail(f"{tid}: {result.get('reason', '?')[:90]}")
             continue
-        plan = session.plan
-        teardown = {"method": plan.method, "container": session.container_name,
-                    "image": session.meta.get("image")}
-        if plan.method == "compose":
-            teardown.update(compose_file=str(session.meta.get("compose_file") or plan.compose_file),
-                            project=str(session.meta.get("project") or ""))
-        state[tid] = {"kind": "realvuln", "status": "up", "host_url": session.host_url,
-                      "scan_url": session.network_url, "network": session.network,
-                      "spec_path": None, "container": session.container_name,
-                      "teardown": teardown}
+        state[tid] = {"kind": "realvuln", "status": "up", "host_url": result["host_url"],
+                      "scan_url": result["scan_url"], "network": result["network"],
+                      "spec_path": None, "container": result["container"],
+                      "boot_seconds": round(time.monotonic() - started, 1),
+                      "teardown": result["teardown"]}
         _write(paths, state)
         summary.inc("targets up")
-        log.info("%s: %s (%s)", tid, session.host_url, plan.method)
+        log.info("%s: %s (%s)", tid, result["host_url"], result["teardown"].get("method"))
 
 
 # --------------------------------------------------------------------------- commands
@@ -258,6 +297,19 @@ def up(kind: str, cfg: DastBenchConfig, paths: Paths | None = None,
         _up_owasp(kind, cfg, paths, state, force, summary)
     else:
         raise SystemExit(f"unknown kind {kind!r} (owasp-java|owasp-python|realvuln)")
+
+
+def _sweep_orphan_sandboxes(docker: str, summary: RunSummary) -> None:
+    """Compose projects left over by killed boots (sandbox projects are named ra<token>)."""
+    listed = subprocess.run([docker, "ps", "-a", "--format",
+                             "{{.Label \"com.docker.compose.project\"}}"],
+                            capture_output=True, text=True, timeout=60)
+    projects = {line.strip() for line in (listed.stdout or "").splitlines()
+                if re.fullmatch(r"ra[0-9a-f]{10}", line.strip())}
+    for project in sorted(projects):
+        subprocess.run([docker, "compose", "-p", project, "down", "-v", "--remove-orphans"],
+                       capture_output=True, timeout=120)
+        summary.inc("orphan compose swept")
 
 
 def down(kind: str, paths: Paths | None = None, summary: RunSummary | None = None) -> None:
@@ -282,4 +334,6 @@ def down(kind: str, paths: Paths | None = None, summary: RunSummary | None = Non
                 subprocess.run([docker, "rmi", "-f", image], capture_output=True, timeout=60)
         rec["status"] = "down"
         summary.inc("targets down")
+    if kind == "realvuln":
+        _sweep_orphan_sandboxes(docker, summary)
     _write(paths, state)
