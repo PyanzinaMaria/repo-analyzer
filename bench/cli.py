@@ -20,8 +20,9 @@ context_app = typer.Typer(no_args_is_help=True, help="Stage C: code context")
 llm_app = typer.Typer(no_args_is_help=True, help="Stage D: LLM triage/discovery")
 eval_app = typer.Typer(no_args_is_help=True, help="Stage E: evaluation")
 audit_app = typer.Typer(no_args_is_help=True, help="Per-repository audit report (terminal / SVG / Markdown)")
+dast_app = typer.Typer(no_args_is_help=True, help="Stage F: DAST benchmark (live scanners on the same corpora)")
 for name, sub in [("bench", bench_app), ("sast", sast_app), ("context", context_app),
-                  ("llm", llm_app), ("eval", eval_app), ("audit", audit_app)]:
+                  ("llm", llm_app), ("eval", eval_app), ("audit", audit_app), ("dast", dast_app)]:
     cli.add_typer(sub, name=name)
 
 
@@ -335,6 +336,77 @@ def audit_show(
         md.parent.mkdir(parents=True, exist_ok=True)
         md.write_text(render_markdown(data, top=top, details=max(details, 5), reveal=reveal_gt), encoding="utf-8")
         console.print(f"saved {md}")
+
+
+# ----------------------------------------------------------------------------- Stage F
+
+
+@dast_app.command("up")
+def dast_up(
+    kind: str = typer.Argument(..., help="owasp-java|owasp-python|realvuln"),
+    force: bool = typer.Option(False, help="Rebuild images / reboot already-running targets"),
+    config: Path = typer.Option(CONFIG_DIR / "dast.yaml", "--config"),
+):
+    """Build and start the live web targets (docker); write dast/targets.json."""
+    from bench.dast.config import load_dast_config
+    from bench.dast.targets import up
+
+    with RunSummary(f"dast up {kind}") as s:
+        up(kind, load_dast_config(config), force=force, summary=s)
+
+
+@dast_app.command("scan")
+def dast_scan(
+    kind: str = typer.Argument(..., help="owasp-java|owasp-python|realvuln"),
+    tools: Optional[str] = typer.Option(None, help="Comma-separated subset of zap,wapiti,nuclei,offat,nikto"),
+    force: bool = typer.Option(False, help="Re-run cached tool results"),
+    config: Path = typer.Option(CONFIG_DIR / "dast.yaml", "--config"),
+):
+    """Run DAST tools against the live targets; write raw reports + findings.jsonl."""
+    from bench.dast.config import load_dast_config
+    from bench.dast.scan import scan
+
+    tool_list = [t.strip() for t in tools.split(",") if t.strip()] if tools else None
+    with RunSummary(f"dast scan {kind}") as s:
+        scan(kind, tool_list, load_dast_config(config), force=force, summary=s)
+
+
+@dast_app.command("eval")
+def dast_eval(
+    kind: str = typer.Argument(..., help="owasp-java|owasp-python|realvuln"),
+    config: Path = typer.Option(CONFIG_DIR / "dast.yaml", "--config"),
+):
+    """Join findings with ground truth -> results/dast_metrics.json + results/dast_report.md."""
+    from bench.dast.config import load_dast_config
+    from bench.dast.eval import evaluate
+
+    with RunSummary(f"dast eval {kind}") as s:
+        report = evaluate(kind, cfg=load_dast_config(config))
+        s.notes.append(f"wrote {report}")
+
+
+@dast_app.command("down")
+def dast_down(
+    kind: str = typer.Argument(..., help="owasp-java|owasp-python|realvuln"),
+):
+    """Stop and remove the live targets (OWASP images are kept cached)."""
+    from bench.dast.targets import down
+
+    with RunSummary(f"dast down {kind}") as s:
+        down(kind, summary=s)
+
+
+@dast_app.command("compare")
+def dast_compare(
+    dirs: list[Path] = typer.Argument(None, help="Corpus data dirs containing results/dast_metrics.json"),
+    out: Path = typer.Option(Path("docs") / "DAST-BENCHMARK-COMPARISON.md", "--out"),
+):
+    """Render cross-corpus DAST comparison into one markdown file."""
+    from bench.dast.compare import compare
+
+    with RunSummary("dast compare") as s:
+        path = compare([d for d in dirs if d], out, summary=s)
+        s.notes.append(f"wrote {path}")
 
 
 if __name__ == "__main__":

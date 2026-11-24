@@ -1,0 +1,36 @@
+# DAST benchmark: live web targets + per-tool scan runs (`python -m bench dast up|scan|eval|down|compare`).
+# Ground truth comes from the SAST corpora already built under data/bench (OWASP Benchmark
+# expectedresults CSVs, RealVuln hand labels); this config only describes the live side.
+
+scan_timeout_s: 1800          # per tool per target (30 min)
+boot_timeout_s: 600           # per target container readiness wait
+network: repo-analyzer-dast   # shared docker network for dockerized tools and targets
+
+owasp_java:
+  scheme: https
+  port: 8443
+  container: dast-bench-owasp-java-app
+  image: dast-bench:owasp-java
+
+owasp_python:
+  scheme: http
+  port: 5000
+  container: dast-bench-owasp-python-app
+  image: dast-bench:owasp-python
+
+tools:
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    time_limit_m: 30          # zap-full-scan -T (spider+active scan budget, minutes)
+  wapiti:
+    executable: wapiti        # pip install wapiti (into the bench venv)
+    modules: common           # attack modules; excludes nikto/wapp fingerprint extras
+    level: 2                  # --level 2: aggressive parameter fuzzing
+  nuclei:
+    executable: nuclei        # pinned binary on PATH (see docs/DAST-BENCHMARK.md)
+    templates_dir: null       # null = user default; run `nuclei -update-templates` once
+    severity: low,medium,high,critical   # info/tech-detection templates pollute FP counts
+  offat:
+    executable: offat         # pip install offat (OWASP API Fuzzing Tool)
+  nikto:
+    image: sullo/nikto:latest # Perl tool: official docker image, no native Windows setup

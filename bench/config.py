@@ -58,6 +58,10 @@ class Paths:
         return self.root / "sast"
 
     @cached_property
+    def dast(self) -> Path:
+        return self.root / "dast"
+
+    @cached_property
     def context(self) -> Path:
         return self.root / "context"
 

@@ -5,6 +5,9 @@ tree-sitter-c-sharp>=0.23
 numpy>=1.26
 scipy>=1.12
 matplotlib>=3.8
+# DAST benchmark stage (`bench dast scan`): native scanners; ZAP/Nikto run via docker images
+wapiti>=3.2
+offat>=2.0
 # docs assets (scripts/record_demo.py, scripts/cast2gif.py)
 pyte>=0.8
 Pillow>=10
