@@ -12,6 +12,7 @@ out_dir/<tool>.json; the orchestrator persists status and normalized findings.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -26,7 +27,27 @@ def which_docker() -> str | None:
 
 
 def run_cmd(cmd: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
+    """subprocess.run with a timeout that reliably kills the process tree.
+
+    On Windows a plain kill() of docker.exe leaves the pipes open (the container keeps
+    running daemon-side and the docker CLI's console handles survive), which hangs the
+    follow-up communicate() forever. taskkill /T /F takes down the whole tree instead.
+    """
+    if os.name != "nt":
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                            encoding="utf-8", errors="replace",
+                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    try:
+        out, err = proc.communicate(timeout=timeout)
+        return subprocess.CompletedProcess(cmd, proc.returncode, out, err)
+    except subprocess.TimeoutExpired:
+        subprocess.run(["taskkill", "/PID", str(proc.pid), "/F", "/T"], capture_output=True)
+        try:
+            out, err = proc.communicate(timeout=120)
+        except (subprocess.TimeoutExpired, ValueError):
+            out, err = "", ""
+        return subprocess.CompletedProcess(cmd, 124, out, err)
 
 
 def out_path(out_dir: Path, tool: str) -> Path:

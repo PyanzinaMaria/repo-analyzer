@@ -98,7 +98,7 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
     raw = out_path(out_dir, tool)
     cmd = [exe, "-u", target.host_url, "-o", str(raw), "-f", "json",
            "-m", spec.modules, "-l", str(spec.level), "--flush-session",
-           "--max-scan-time", f"{max(1, cfg.scan_timeout_s // 60)}m", "-v", "1"]
+           "--max-scan-time", str(max(60, cfg.scan_timeout_s)), "-v", "1"]
     try:
         completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 120)
     except subprocess.TimeoutExpired as exc:

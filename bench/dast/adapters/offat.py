@@ -108,8 +108,10 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
 
     raw = out_path(out_dir, tool)
     report = out_dir / "offat-report.json"
-    cmd = [exe, "-f", str(spec_path), "-o", "json", "-r", str(report),
-           "--disable-ssl-verification"]
+    # OFFAT skips SSL verification by default (-s enables it); --server points the
+    # generated spec (relative servers url) at the live host.
+    cmd = [exe, "-f", str(spec_path), "-o", str(report), "-of", "json",
+           "--server", target.host_url]
     try:
         completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 120)
     except subprocess.TimeoutExpired as exc:

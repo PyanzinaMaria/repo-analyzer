@@ -33,4 +33,4 @@ tools:
   offat:
     executable: offat         # pip install offat (OWASP API Fuzzing Tool)
   nikto:
-    image: sullo/nikto:latest # Perl tool: official docker image, no native Windows setup
+    image: ghcr.io/sullo/nikto:latest # Perl tool: official image (ghcr; Docker Hub sullo/nikto is gone)

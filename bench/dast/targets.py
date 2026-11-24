@@ -54,17 +54,19 @@ _SERVER_XML = """<?xml version="1.0" encoding="UTF-8"?>
 JAVA_DOCKERFILE = """FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /src
 COPY . /src
-RUN mvn -q -B clean package -DskipTests
+# spotless needs a git repo, which the build context (a detached worktree) is not
+RUN mvn -q -B clean package -DskipTests -Dspotless.skip=true
 
 FROM tomcat:9.0-jdk17-temurin
 COPY --from=build /src/target/benchmark.war /usr/local/tomcat/webapps/ROOT.war
 COPY --from=build /src/.keystore /usr/local/tomcat/conf/.keystore
-COPY server.xml /usr/local/tomcat/conf/server.xml
+# bench = second build context (paths.work/dast/owasp-java, see --build-context below)
+COPY --from=bench server.xml /usr/local/tomcat/conf/server.xml
 EXPOSE {port}
 CMD ["catalina.sh", "run"]
 """
 
-PYTHON_DOCKERFILE = """FROM python:3.11-slim
+PYTHON_DOCKERFILE = """FROM python:3.12-slim
 WORKDIR /app
 COPY . /app
 RUN pip install --no-cache-dir flask==3.1.0 ldap3
@@ -141,6 +143,7 @@ def _build_owasp(kind: str, spec, worktree: Path, paths: Paths, docker: str, for
                                capture_output=True).returncode != 0:
         log.info("building %s from %s (one-off; the java image takes ~20-40 min)", spec.image, worktree)
         r = subprocess.run([docker, "build", "-f", str(build_dir / "Dockerfile"),
+                            "--build-context", f"bench={build_dir}",
                             "-t", spec.image, str(worktree)], timeout=7200)
         if r.returncode != 0:
             raise SystemExit(f"{kind}: docker build failed (rc={r.returncode})")
