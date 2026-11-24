@@ -53,15 +53,24 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
         return result(tool, target, findings, started=started, cmd=[], error="", meta=meta).model_copy(
             update={"ok": False, "skipped": True, "reason": meta["reason"]}), findings
     raw = out_path(out_dir, tool)
+    # zap-full-scan flags: -m caps the SPIDER (unbounded by default!), -T caps only the
+    # post-scan passive wait, and the active scan cap is a ZAP config option via -z.
+    # All three together keep the run inside the wall-clock budget so ZAP can write its
+    # report itself (the report is only produced at the end; killing it loses everything).
+    budget_m = max(5, cfg.scan_timeout_s // 60)
+    spider_m = min(spec.time_limit_m, max(2, budget_m // 6))
+    passive_m = 5
+    active_m = max(5, budget_m - spider_m - passive_m)
     cmd = [docker, "run", "--rm", "--network", target.network,
            "-v", f"{out_dir.resolve()}:/zap/wrk:rw", spec.image,
            "zap-full-scan.py", "-t", target.scan_url, "-J", raw.name, "-I",
-           "-T", str(spec.time_limit_m)]
+           "-m", str(spider_m), "-T", str(passive_m),
+           "-z", f"-config activescan.maxScanDurationInMins={active_m}"]
     try:
-        completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 300)
+        completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 900)
     except subprocess.TimeoutExpired as exc:
         return result(tool, target, findings, started=started, cmd=cmd,
-                      error=f"zap timed out after {cfg.scan_timeout_s + 300}s ({exc})"), findings
+                      error=f"zap timed out after {cfg.scan_timeout_s + 900}s ({exc})"), findings
     if not raw.is_file():
         return result(tool, target, findings, started=started, cmd=cmd, completed=completed,
                       error="zap JSON report not produced"), findings

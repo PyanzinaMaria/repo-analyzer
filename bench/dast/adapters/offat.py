@@ -113,7 +113,7 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
     cmd = [exe, "-f", str(spec_path), "-o", str(report), "-of", "json",
            "--server", target.host_url]
     try:
-        completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 120)
+        completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 600)
     except subprocess.TimeoutExpired as exc:
         return result(tool, target, findings, started=started, cmd=cmd,
                       error=f"offat timed out ({exc})"), findings

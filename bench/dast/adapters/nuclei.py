@@ -56,7 +56,7 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
     if spec.templates_dir:
         cmd += ["-t", str(spec.templates_dir)]
     try:
-        completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 120)
+        completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 600)
     except subprocess.TimeoutExpired as exc:
         return result(tool, target, findings, started=started, cmd=cmd,
                       error=f"nuclei timed out ({exc})"), findings

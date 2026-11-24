@@ -71,7 +71,7 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
     if target.scan_url.startswith("https"):
         cmd.append("-ssl")
     try:
-        completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 120)
+        completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 600)
     except subprocess.TimeoutExpired as exc:
         return result(tool, target, findings, started=started, cmd=cmd,
                       error=f"nikto timed out ({exc})"), findings

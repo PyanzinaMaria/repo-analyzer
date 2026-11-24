@@ -105,7 +105,7 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
            "--store-session", str(session_dir), "--flush-session",
            "--max-scan-time", str(max(60, cfg.scan_timeout_s)), "-v", "1"]
     try:
-        completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 120)
+        completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 600)
     except subprocess.TimeoutExpired as exc:
         return result(tool, target, findings, started=started, cmd=cmd,
                       error=f"wapiti timed out ({exc})"), findings
