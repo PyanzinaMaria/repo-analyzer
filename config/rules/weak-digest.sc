@@ -4,7 +4,9 @@ import java.nio.file.{Files, Paths}
 
 val graph = sys.env("JOERN_CPG")
 val report = sys.env("JOERN_REPORT")
-importCpg(graph)
+// enhance=false: the query only needs parser-level properties (call name/args/line);
+// the default overlay passes crash on large CPGs and are slow.
+importCpg(graph, enhance = false)
 val results = cpg.call.nameExact("getInstance")
   .filter(_.methodFullName.startsWith("java.security.MessageDigest.getInstance"))
   .filter(call => Set("\"MD5\"", "\"SHA-1\"").contains(call.argument(1).code))

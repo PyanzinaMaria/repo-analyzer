@@ -1,0 +1,61 @@
+# Java/C# pilot build: OSV Maven/NuGet only, no python/js selection.
+# Produces `pilot_per_family` items into the dev split; loc bounds mirror the main corpus.
+seed: 13
+
+sources:
+  patcheval: {enabled: false}
+  secbenchjs: {enabled: false}
+  pyvul: {enabled: false}
+  osv:
+    enabled: true
+    ecosystems: [Maven, NuGet]
+    languages: {Maven: java, NuGet: csharp}
+    url_template: https://osv-vulnerabilities.storage.googleapis.com/{ecosystem}/all.zip
+    min_published: 2018-01-01
+
+cwe_whitelist:
+  - CWE-22
+  - CWE-78
+  - CWE-79
+  - CWE-94
+  - CWE-95
+  - CWE-502
+  - CWE-611
+  - CWE-918
+  - CWE-352
+  - CWE-287
+  - CWE-862
+  - CWE-863
+  - CWE-1333
+  - CWE-601
+
+cwe_aliases:
+  CWE-77: CWE-78
+  CWE-88: CWE-78
+  CWE-23: CWE-22
+  CWE-36: CWE-22
+  CWE-73: CWE-22
+  CWE-96: CWE-94
+
+loc_bounds:
+  java: [100, 300000]
+  csharp: [100, 300000]
+
+tangled:
+  max_files: 10
+  max_changed_lines: 300
+
+target:
+  main_items: 0
+  post_cutoff_items: 0
+  extra_items: 0
+  dev_size: 0
+  pilot_per_family: {java: 5, csharp: 5}
+  max_attempts_per_language: 300
+  max_items_per_repo: 1
+  max_source_files: 5000
+
+post_cutoff_date: 2026-01-01
+
+clone_timeout_s: 900
+workers: 12

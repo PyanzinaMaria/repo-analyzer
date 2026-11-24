@@ -20,13 +20,15 @@ def _executable(name: str) -> str:
 
 
 def _graudit(text: str, database: str) -> dict:
+    """Parse graudit's `file:line:message` lines; drop pipeline artifacts (banners, separators,
+    "Binary file ... matches", chunks of multi-megabyte lines split by graudit's sed)."""
     results = []
     for line in text.splitlines():
         if not line or set(line) == {"#"}:
             continue
         match = re.fullmatch(r"(.+?):(\d+):(.*)", line)
         if not match:
-            raise ValueError(f"unexpected graudit output: {line[:120]}")
+            continue
         file, number, message = match.groups()
         results.append({"ruleId": database, "message": {"text": message.strip()},
                         "locations": [{"physicalLocation": {"artifactLocation": {"uri": file},
@@ -60,10 +62,16 @@ def run(tool: str, target: Path, language: str, sarif: Path, cfg: SastConfig) ->
             for t in tokens:
                 if t == "{inputs}":
                     out.extend(inputs)
+                elif t == "{argfile:inputs}":
+                    # Windows command lines are limited to ~32k chars; javac and friends take @file lists.
+                    # Forward slashes: javac argfiles treat "\r" in "D:\repo" as an escape.
+                    f = Path(tmp) / "inputs.txt"
+                    f.write_text("\n".join(f'"{Path(i).as_posix()}"' for i in inputs), encoding="utf-8")
+                    out.append("@" + str(f))
                 elif t == "{project}":
-                    if len(inputs) != 1:
-                        raise ValueError("Select one solution or project via the tool's inputs setting")
-                    out.append(inputs[0])
+                    # Several project files: prefer the top-most one deterministically.
+                    pick = min(inputs, key=lambda p: (len(Path(p).parts), p))
+                    out.append(pick)
                 elif t == "{args}":
                     out.extend(a.format_map(values) for a in args)
                 else:

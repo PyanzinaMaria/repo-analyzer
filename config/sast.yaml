@@ -45,14 +45,16 @@ tools:
     version_args: [-v]
     output: graudit
     ok_codes: [0, 1]
-    command: [-B, -z, -c, '0', -d, '{args}', .]
+    # -x keeps common binary files out of the grep sweep (graudit has no -I flag)
+    command: [-B, -z, -c, '0', -x, 'exe,dll,pdb,jar,zip,png,jpg,jpeg,gif,ico,bin,so,class,woff,woff2', -d, '{args}', .]
     args: {python: [python], javascript: [js], typescript: [typescript], java: [java], csharp: [dotnet]}
   joern:
     enabled: true
     languages: [java]
     timeout_s: 1800
     version_args: [--version]
-    prepare: [joern-parse, '{root}', --language, JAVASRC, --output, '{work}/cpg.bin']
+    # --nooverlays: the query only needs parser-level properties; overlay passes crash on large CPGs.
+    prepare: [joern-parse, '{root}', --language, JAVASRC, --nooverlays, --output, '{work}/cpg.bin']
     # Paths go via env: the Windows launcher splits --param on "=".
     env: {JOERN_CPG: '{work}/cpg.bin', JOERN_REPORT: '{report}'}
     command: [--script, '{config}/rules/weak-digest.sc']
@@ -64,14 +66,15 @@ tools:
     inputs: ['**/*.java']
     # Core SpotBugs has no crypto/security detectors; FindSecBugs (required, resolved
     # via tool_paths as {findsecbugs-plugin}) provides them, findings map to source lines.
-    prepare: [javac, -proc:none, -g, -d, '{work}', '{inputs}']
+    prepare: [javac, -proc:none, -g, -d, '{work}', '{argfile:inputs}']
     command: [-textui, -pluginList, '{findsecbugs-plugin}', -sarif, -output, '{report}', -sourcepath, '{root}', '{work}']
   security-code-scan:
     enabled: true
     executable: security-scan
     languages: [csharp]
     timeout_s: 1200
-    inputs: ['**/*.sln', '**/*.csproj']
+    # Ordered preference: solution first, then the canonical src/ project, then any project file.
+    inputs: ['**/*.sln', 'src/**/*.csproj', '**/*.csproj']
     prepare: [dotnet, restore, '{project}']
     command: ['{project}', '--export={report}']
   bandit:
