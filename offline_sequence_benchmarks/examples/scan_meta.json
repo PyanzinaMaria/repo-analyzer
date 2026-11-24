@@ -1,0 +1,4 @@
+{
+  "runners": ["static", "dynamic"],
+  "dast": {"status": "completed"}
+}
