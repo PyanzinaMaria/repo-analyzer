@@ -96,8 +96,13 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
                      meta={"reason": f"{spec.executable} not found on PATH (pip install wapiti)"})
         return res.model_copy(update={"ok": False, "skipped": True, "reason": res.meta["reason"]}), findings
     raw = out_path(out_dir, tool)
+    # Per-target session dir: wapiti locks its scan DB in ~/.wapiti, so concurrent
+    # runs on the same target collide with PermissionError (WinError 32).
+    session_dir = out_dir / "_wapiti-session"
+    session_dir.mkdir(parents=True, exist_ok=True)
     cmd = [exe, "-u", target.host_url, "-o", str(raw), "-f", "json",
-           "-m", spec.modules, "-l", str(spec.level), "--flush-session",
+           "-m", spec.modules, "-l", str(spec.level),
+           "--store-session", str(session_dir), "--flush-session",
            "--max-scan-time", str(max(60, cfg.scan_timeout_s)), "-v", "1"]
     try:
         completed = run_cmd(cmd, timeout=cfg.scan_timeout_s + 120)
