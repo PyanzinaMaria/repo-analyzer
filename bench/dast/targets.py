@@ -151,13 +151,18 @@ def _build_owasp(kind: str, spec, worktree: Path, paths: Paths, docker: str, for
     return spec.image
 
 
+def _containers_up(docker: str) -> set[str]:
+    r = subprocess.run([docker, "ps", "--format", "{{.Names}}"], capture_output=True, text=True, timeout=60)
+    return set((r.stdout or "").split())
+
+
 def _up_owasp(kind: str, cfg: DastBenchConfig, paths: Paths, state: dict,
               force: bool, summary: RunSummary | None) -> None:
     docker = _docker()
     spec = target_spec(cfg, kind)
     tid = f"{kind}-app"
     rec = state.get(tid) or {}
-    if rec.get("status") == "up" and not force:
+    if rec.get("status") == "up" and not force and spec.container in _containers_up(docker):
         log.info("%s: already up at %s", tid, rec.get("host_url"))
         return
     worktree = owasp_worktree(paths, kind)
@@ -238,6 +243,7 @@ def _up_realvuln(cfg: DastBenchConfig, paths: Paths, state: dict,
     import multiprocessing
     import time
 
+    docker = _docker()
     boot_timeout = 600  # hard cap per item
     worktrees = _realvuln_worktrees(paths)
     summary = summary or RunSummary("dast up realvuln")
@@ -245,7 +251,8 @@ def _up_realvuln(cfg: DastBenchConfig, paths: Paths, state: dict,
     boot_dir.mkdir(parents=True, exist_ok=True)
     for tid, root in sorted(worktrees.items()):
         rec = state.get(tid) or {}
-        if rec.get("status") == "up" and not force:
+        if rec.get("status") == "up" and not force \
+                and rec.get("container") in _containers_up(docker):
             log.info("%s: already up at %s", tid, rec.get("host_url"))
             continue
         if not root.is_dir():
