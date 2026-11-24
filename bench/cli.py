@@ -90,6 +90,19 @@ def bench_external(
             raise typer.BadParameter("action must be build or scan")
 
 
+@bench_app.command("compare")
+def bench_compare(
+    dirs: list[Path] = typer.Argument(None, help="Corpus data dirs containing results/metrics.json"),
+    out: Path = typer.Option(Path("docs") / "BENCHMARK-COMPARISON.md", "--out"),
+):
+    """Render cross-corpus metric comparison into one markdown file."""
+    from bench.compare import compare
+
+    with RunSummary("bench compare") as s:
+        path = compare([d for d in dirs if d], out, summary=s)
+        s.notes.append(f"wrote {path}")
+
+
 @bench_app.command("stats")
 def bench_stats(out: Optional[Path] = typer.Option(None, help="Also write the stats to this file (e.g. docs/BENCHMARK.md)")):
     """Write results/benchmark_stats.md (counts, LOC, ground truth, linked item list)."""
