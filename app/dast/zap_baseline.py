@@ -65,6 +65,10 @@ def run_zap_baseline(
         "image": cfg.zap_image,
         "status": "skipped",
     }
+    if not getattr(cfg, "zap_enabled", True):
+        meta["reason"] = "zap disabled in config (dast.zap_enabled=false)"
+        logger.info("ZAP baseline skipped: %s", meta["reason"])
+        return [], meta
     docker = shutil.which("docker")
     if not docker:
         meta["reason"] = "docker not found on PATH"

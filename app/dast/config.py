@@ -25,12 +25,21 @@ class DastConfig:
     # because a -v path from a containerized worker resolves on the daemon
     # host filesystem, not inside the worker container.
     docker_volume: str = ""
+    # Passive ZAP baseline can be disabled when the image is not available;
+    # the active pentest agent below does not need it.
+    zap_enabled: bool = True
+    # Active pentest agent on top of the passive baseline.
+    pentest_enabled: bool = True
+    pentest_use_llm: bool = True
+    pentest_max_steps: int = 12
+    pentest_max_seconds: int = 120
 
 
 def get_dast_config() -> DastConfig:
     settings = get_settings()
     yaml_cfg = load_yaml_settings(settings.settings_path)
     raw: dict[str, Any] = dict(yaml_cfg.get("dast") or {})
+    pentest = dict(raw.get("pentest") or {})
     schemes = raw.get("allowed_schemes") or ["http", "https"]
     return DastConfig(
         enabled=bool(raw.get("enabled", True)),
@@ -43,4 +52,9 @@ def get_dast_config() -> DastConfig:
         docker_volume=os.environ.get(
             "ZAP_DOCKER_VOLUME", str(raw.get("docker_volume", ""))
         ).strip(),
+        zap_enabled=bool(raw.get("zap_enabled", True)),
+        pentest_enabled=bool(pentest.get("enabled", True)),
+        pentest_use_llm=bool(pentest.get("llm_enabled", True)),
+        pentest_max_steps=int(pentest.get("max_steps", 12)),
+        pentest_max_seconds=int(pentest.get("max_seconds", 120)),
     )

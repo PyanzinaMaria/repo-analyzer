@@ -62,6 +62,28 @@ def merge_dast_via_sandbox(
             except Exception as exc:  # noqa: BLE001
                 logger.exception("DAST after sandbox boot failed")
                 meta["dast"] = {"status": "failed", "reason": str(exc)}
+
+            # Verify code-review hypotheses against the booted application.
+            # host_url works when the analyzer runs on the host; otherwise retry
+            # through the container network URL.
+            try:
+                raw_hypotheses = meta.get("security_hypotheses") or []
+                if raw_hypotheses:
+                    from app.security.config import load_security_config
+                    from app.security.models import VulnHypothesis
+                    from app.security.pipeline import verify_only
+
+                    sec_cfg = load_security_config({"verify_allow_private": True})
+                    hypotheses = [VulnHypothesis(**h) for h in raw_hypotheses]
+                    verified = verify_only(hypotheses, session.host_url, cfg=sec_cfg)
+                    stats = verified.get("meta") or {}
+                    if stats.get("status") != "ok" or not stats.get("ok_responses"):
+                        verified = verify_only(hypotheses, session.network_url, cfg=sec_cfg)
+                    findings.extend(verified.get("findings") or [])
+                    meta["security_verify"] = verified.get("meta") or {}
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("hypothesis verification after sandbox boot failed")
+                meta["security_verify"] = {"status": "failed", "error": str(exc)}
     except SandboxError as exc:
         logger.warning("Sandbox boot skipped: %s", exc)
         meta["sandbox"] = {"status": "skipped", "reason": str(exc)}
@@ -97,6 +119,10 @@ def _with_merged(
                 for f in findings
                 if str(f.source).startswith("dast") or f.source == "zap-baseline"
             ),
+            "review_findings": sum(
+                1 for f in findings if f.source in {"llm-review", "review-agent"}
+            ),
+            "pentest_findings": sum(1 for f in findings if f.source == "pentest"),
         }
     )
     # Prefer sast+dast label whenever we attempted the combined pipeline
