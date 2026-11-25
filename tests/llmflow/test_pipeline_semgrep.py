@@ -128,6 +128,53 @@ def test_tool_dispatch_reaching_shell(tmp_path):
     assert any(h.role == "tool" for h in tool_flows[0].hops)
 
 
+def test_repl_confirmation_across_loop_iterations(tmp_path):
+    """shell_gpt shape: the wrapper shares its name with the overriding method, and the answer from one
+    iteration is executed in the next one only after the user confirms."""
+    root = write(tmp_path / "repo", {"repl.py": """\
+        import os
+        from openai import OpenAI
+        client = OpenAI()
+
+
+        class Base:
+            def handle(self, prompt):
+                r = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": prompt}])
+                return r.choices[0].message.content
+
+
+        class Repl(Base):
+            def handle(self, init_prompt):
+                answer = ""
+                while True:
+                    prompt = input(">>> ")
+                    if prompt == "e":
+                        os.system(answer)
+                    elif prompt == "d":
+                        Base().handle(answer)
+                    else:
+                        answer = super().handle(prompt)
+
+
+        class UnsafeRepl(Base):
+            def handle(self, init_prompt):
+                answer = ""
+                while True:
+                    os.system(answer)
+                    answer = super().handle(init_prompt)
+        """})
+    res = scan(root, tmp_path)
+    by_func = {f.sink.func_name: f for f in res.flows if f.sink_class == "shell"}
+    safe, unsafe = by_func["Repl.handle"], by_func["UnsafeRepl.handle"]
+    # the LLM output enters at the `super().handle(...)` line, never at `def handle(`
+    assert all(not h.code.lstrip().startswith("def ") for f in (safe, unsafe) for h in f.hops if h.role == "call")
+    # …and at the call whose result is assigned to the tainted variable, not the `[d]escribe` call
+    entry = [h for h in safe.hops if h.role == "call" and h.func_name == "Repl.handle"][0]
+    assert entry.code.startswith("answer = super().handle(")
+    assert safe.gated and {g.gate for g in safe.gates} == {"human-confirm"}
+    assert not unsafe.gated and unsafe.priority > safe.priority
+
+
 def test_no_llm_no_flows(tmp_path):
     root = write(tmp_path / "repo", {"x.py": "import subprocess\n\ndef f(c):\n    subprocess.run(c, shell=True)\n"})
     res = scan(root, tmp_path)

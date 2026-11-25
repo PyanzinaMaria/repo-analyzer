@@ -20,8 +20,8 @@ flowchart LR
     end
     subgraph K["💥 dangerous sinks"]
         sk0[\"🧨 code_eval<br/><small>src/vanna/base/base.py:1998</small>"/]:::sink
-        sk1[\"🗄 sql<br/><small>src/vanna/base/base.py:995</small>"/]:::sink
-        sk2[\"🗄 sql<br/><small>src/vanna/base/base.py:1459</small>"/]:::sink
+        sk1[\"🗄 sql<br/><small>src/vanna/base/base.py:1079</small>"/]:::sink
+        sk2[\"🗄 sql<br/><small>src/vanna/base/base.py:1355</small>"/]:::sink
         sk3[\"🗄 sql<br/><small>src/vanna/base/base.py:1555</small>"/]:::sink
     end
     src0 --> cs0
@@ -119,7 +119,7 @@ flowchart LR
     h5("↩ submit_prompt() returns LLM output<br/><small>ZhipuAI_Chat.submit_prompt · src/vanna/ZhipuAI/ZhipuAI_Chat.py:233</small>"):::wrapper
     h6["⇢ submit_prompt(…) returns LLM output<br/><small>VannaBase.generate_sql · src/vanna/base/base.py:135</small>"]:::call
     h7["⇢ → run_sql(sql=…)<br/><small>VannaBase.generate_sql · src/vanna/base/base.py:147</small>"]:::call
-    h8[\"💥 sql: sql<br/><small>VannaBase.connect_to_mysql.ru… · src/vanna/base/base.py:995</small>"/]:::sink
+    h8[\"💥 sql: sql<br/><small>VannaBase.connect_to_clickhou… · src/vanna/base/base.py:1079</small>"/]:::sink
     h0 -.-> h1
     h1 -.-> h2
     h2 --> h3
@@ -148,7 +148,7 @@ flowchart LR
 | 6 | ↩ wrapper | `src/vanna/ZhipuAI/ZhipuAI_Chat.py:233` | `ZhipuAI_Chat.submit_prompt` | submit_prompt() returns LLM output |
 | 7 | ⇢ call | `src/vanna/base/base.py:135` | `VannaBase.generate_sql` | submit_prompt(…) returns LLM output (≈) |
 | 8 | ⇢ call | `src/vanna/base/base.py:147` | `VannaBase.generate_sql` | → run_sql(sql=…) (≈) |
-| 9 | 💥 sink | `src/vanna/base/base.py:995` | `VannaBase.connect_to_mysql.run_sql_mysql` | sql: sql |
+| 9 | 💥 sink | `src/vanna/base/base.py:1079` | `VannaBase.connect_to_clickhouse.run_sql_clickhouse` | sql: sql |
 
 ## LF003 · SQL execution (CWE-89) · priority 0.450
 
@@ -164,7 +164,7 @@ flowchart LR
     h5("↩ submit_prompt() returns LLM output<br/><small>ZhipuAI_Chat.submit_prompt · src/vanna/ZhipuAI/ZhipuAI_Chat.py:233</small>"):::wrapper
     h6["⇢ submit_prompt(…) returns LLM output<br/><small>VannaBase.generate_sql · src/vanna/base/base.py:135</small>"]:::call
     h7["⇢ → run_sql(sql=…)<br/><small>VannaBase.generate_sql · src/vanna/base/base.py:147</small>"]:::call
-    h8[\"💥 sql: sql<br/><small>VannaBase.connect_to_presto.r… · src/vanna/base/base.py:1459</small>"/]:::sink
+    h8[\"💥 sql: sa.text(sql)<br/><small>VannaBase.connect_to_mssql.ru… · src/vanna/base/base.py:1355</small>"/]:::sink
     h0 -.-> h1
     h1 -.-> h2
     h2 --> h3
@@ -193,7 +193,7 @@ flowchart LR
 | 6 | ↩ wrapper | `src/vanna/ZhipuAI/ZhipuAI_Chat.py:233` | `ZhipuAI_Chat.submit_prompt` | submit_prompt() returns LLM output |
 | 7 | ⇢ call | `src/vanna/base/base.py:135` | `VannaBase.generate_sql` | submit_prompt(…) returns LLM output (≈) |
 | 8 | ⇢ call | `src/vanna/base/base.py:147` | `VannaBase.generate_sql` | → run_sql(sql=…) (≈) |
-| 9 | 💥 sink | `src/vanna/base/base.py:1459` | `VannaBase.connect_to_presto.run_sql_presto` | sql: sql |
+| 9 | 💥 sink | `src/vanna/base/base.py:1355` | `VannaBase.connect_to_mssql.run_sql_mssql` | sql: sa.text(sql) |
 
 ## LF004 · SQL execution (CWE-89) · priority 0.450
 

@@ -80,6 +80,20 @@ class SourceCache:
                 return named[0]
         return cands[0] if cands else None
 
+    def enclosing_loop(self, rel: str, a: int, b: int) -> tuple[int, int] | None:
+        """(first, last) line of the innermost for/while loop whose body contains both lines, or None."""
+        t = self.tree(rel)
+        if t is None:
+            return None
+        lo, hi = min(a, b), max(a, b)
+        best = None
+        for n in ast.walk(t):
+            if isinstance(n, (ast.For, ast.AsyncFor, ast.While)) and n.body:
+                start, end = n.body[0].lineno, n.body[-1].end_lineno or n.body[-1].lineno
+                if start <= lo and hi <= end and (best is None or end - start < best[1] - best[0]):
+                    best = (start, end)
+        return best
+
     def function_def(self, rel: str, name: str, near_line: int | None = None) -> AnyFunc | None:
         t = self.tree(rel)
         if t is None:

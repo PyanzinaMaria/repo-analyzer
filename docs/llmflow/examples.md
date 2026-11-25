@@ -75,7 +75,9 @@ shell_gpt turns a request into a shell command and runs it after asking `[E]xecu
 | CLI prompt → `Handler.handle` → `get_completion` → LLM → `run_command` → `os.system` | `typer.prompt("[E]xecute…")` | 0.5 × 0.3 = 0.15 | 0.075 |
 | REPL input → same → `run_command` | REPL `prompt == "e"` | 0.15 | 0.075 |
 
-Two things were needed here:
+The REPL path is a **loop-carried** flow. Iteration N stores the answer (`full_completion = super().handle(...)`, line 66). Iteration N+1 asks `>>>` (line 48) and runs the stored answer only if the user typed `e` (line 58). In source order the check comes *before* the LLM call, but at run time it sits between the answer and its execution. llmflow treats a gate in the loop body as being on that path (see the gate rule in [catalog.md](catalog.md#gates-gatesyaml)).
+
+Two more things were needed here:
 - **SDK alias.** shell_gpt never calls `client.chat.completions.create(...)` directly: it binds `completion = client.chat.completions.create` at module level. The inventory finds the alias and adds `completion(...)` as a call site.
 - **Generator.** `get_completion` streams with `yield delta.content`, and llmflow counts `yield` as returning LLM output.
 

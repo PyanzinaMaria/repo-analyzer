@@ -7,6 +7,8 @@ binds $V, mentions an identifier of the tainted value at that hop.
 
 from __future__ import annotations
 
+from typing import Callable
+
 from app.context.index import SnapshotIndex
 from app.llmflow.catalog import Catalog
 from app.llmflow.models import GateHit, Hop, Match
@@ -38,10 +40,28 @@ def _hop_value(h: Hop) -> str:
     return h.code
 
 
-def gates_on_path(cat: Catalog, hops: list[Hop], sink_class: str, gates: list[GateHit]) -> list[GateHit]:
+LoopLookup = Callable[[str, int, int], "tuple[int, int] | None"]
+
+
+def _in_window(g_line: int, entry: int, exit_: int, loop: tuple[int, int] | None) -> bool:
+    """Does a gate at g_line run after the LLM output enters the function (entry) and before it leaves (exit_)?
+
+    Straight-line code: entry ≤ gate ≤ exit. When the output enters *after* the exit line inside a loop
+    (produced in one iteration, used in the next — a REPL that asks before running the previous answer),
+    the path is entry → end of loop body → loop start → exit."""
+    if entry <= exit_:
+        return entry <= g_line <= exit_
+    if loop is None:
+        return False
+    start, end = loop
+    return entry <= g_line <= end or start <= g_line <= exit_
+
+
+def gates_on_path(cat: Catalog, hops: list[Hop], sink_class: str, gates: list[GateHit],
+                  loops: LoopLookup | None = None) -> list[GateHit]:
     by_id = {g.id: g for g in cat.gates.gates}
     llm_i = next((i for i, h in enumerate(hops) if h.role in ("llm", "tool")), 0)
-    # the LLM call line bounds gates in the function that holds it (checks before the call don't count)
+    # the line where LLM output enters each function bounds the gates there (checks before it don't count)
     after: dict[str | None, int] = {}
     for h in hops[llm_i:]:
         after.setdefault(h.func, h.line)
@@ -50,11 +70,13 @@ def gates_on_path(cat: Catalog, hops: list[Hop], sink_class: str, gates: list[Ga
         if h.func is None:
             continue
         value = _hop_value(h)
+        entry = after.get(h.func, 0)
+        loop = loops(h.file, h.line, entry) if loops and entry > h.line else None
         for g in gates:
             spec = by_id.get(g.gate)
             if spec is None or g.func != h.func or not spec.applies(sink_class):
                 continue
-            if not (after.get(h.func, 0) <= g.line <= h.line):
+            if not _in_window(g.line, entry, h.line, loop):
                 continue
             if spec.kind != "confirmation" and not gate_overlap(g.var, value):
                 continue

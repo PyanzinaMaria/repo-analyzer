@@ -172,13 +172,13 @@ class Stitcher:
 
     def s_facts(self, name: str, param: str | None) -> list[SFact]:
         out = list(self.facts.S.get((name, param), []))
-        for real in self.aliases.get(name, ()):
+        for real in sorted(self.aliases.get(name, ())):
             out += self.facts.S.get((real, param), [])
         return out
 
     def i_facts(self, name: str, param: str | None) -> list[IFact]:
         out = list(self.facts.I.get((name, param), []))
-        for real in self.aliases.get(name, ()):
+        for real in sorted(self.aliases.get(name, ())):
             out += self.facts.I.get((real, param), [])
         return out
 
@@ -206,14 +206,35 @@ class Stitcher:
         label = f"{cs.sdk} · {cs.model.name or 'model?'}"
         return self.hop(cs.file, cs.line, "llm", label)
 
-    def call_line(self, file: str, fn: FuncInfo | None, name: str, upto: int) -> int:
-        """Line in fn (≤ upto) where `name(` is called: wrapper calls have no trace, find them by text."""
+    def call_line(self, file: str, fn: FuncInfo | None, name: str, upto: int, value: str = "") -> int:
+        """Line in fn where `name(` is called: wrapper calls have no trace, so find them by text.
+
+        The nearest call at or before `upto` wins; if there is none, the nearest one after it (a value produced
+        later in a loop body and used in the next iteration, e.g. a REPL). Calls whose result is assigned to a
+        variable of the tainted `value` are preferred over other calls of the same name; `def name(` lines
+        never count.
+        """
         if fn is None:
             return upto
         rx = re.compile(rf"\b{re.escape(name)}\s*\(")
-        for n in range(upto, fn.start - 1, -1):
-            if rx.search(self.src.line(file, n)):
-                return n
+        defn = re.compile(rf"^\s*(async\s+)?def\s+{re.escape(name)}\s*\(")
+        wanted = _idents(value)
+        assign = re.compile(r"^\s*([A-Za-z_][\w.,\s\[\]]*?)\s*(?::[^=]+)?=(?!=)")
+
+        def is_call(n: int, assigned: bool) -> bool:
+            text = self.src.line(file, n)
+            if not rx.search(text) or defn.match(text):
+                return False
+            if not assigned:
+                return True
+            m = assign.match(text)
+            return bool(m and _idents(m.group(1)) & wanted)
+
+        order = list(range(upto, fn.start - 1, -1)) + list(range(upto + 1, fn.end + 1))
+        for assigned in ([True, False] if wanted else [False]):
+            for n in order:
+                if is_call(n, assigned):
+                    return n
         return upto
 
     def param_info(self, file: str, fname: str, line: int, raw: str) -> tuple[str, int | None]:
@@ -238,7 +259,7 @@ class Stitcher:
         for rf in facts[:8]:
             if here is not None and rf.func == here.id:
                 continue                                    # recursion
-            line = self.call_line(m.file, here, fn_name, m.line)
+            line = self.call_line(m.file, here, fn_name, m.line, m.fields.get("X") or "")
             h = self.hop(m.file, line, "call", f"{fn_name}(…) returns LLM output", approx=approx)
             out.append((rf.chain + [h], rf.callsite, rf.channel))
         return out

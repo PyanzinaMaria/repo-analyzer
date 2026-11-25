@@ -96,7 +96,7 @@ flowchart LR
     h5("↩ get_completion() returns LLM output<br/><small>Handler.get_completion · sgpt/handlers/handler.py:133</small>"):::wrapper
     h6["⇢ get_completion(…) returns LLM output<br/><small>Handler.handle · sgpt/handlers/handler.py:149</small>"]:::call
     h7("↩ handle() returns LLM output<br/><small>Handler.handle · sgpt/handlers/handler.py:158</small>"):::wrapper
-    h8["⇢ handle(…) returns LLM output<br/><small>ReplHandler.handle · sgpt/handlers/repl_handler.py:24</small>"]:::call
+    h8["⇢ handle(…) returns LLM output<br/><small>ReplHandler.handle · sgpt/handlers/repl_handler.py:66</small>"]:::call
     h9["⇢ → run_command(command=…)<br/><small>ReplHandler.handle · sgpt/handlers/repl_handler.py:58</small>"]:::call
     h10[\"💥 shell: full_command<br/><small>run_command · sgpt/utils.py:53</small>"/]:::sink
     h0 -.-> h1
@@ -131,6 +131,6 @@ flowchart LR
 | 6 | ↩ wrapper | `sgpt/handlers/handler.py:133` | `Handler.get_completion` | get_completion() returns LLM output |
 | 7 | ⇢ call | `sgpt/handlers/handler.py:149` | `Handler.handle` | get_completion(…) returns LLM output (≈) |
 | 8 | ↩ wrapper | `sgpt/handlers/handler.py:158` | `Handler.handle` | handle() returns LLM output |
-| 9 | ⇢ call | `sgpt/handlers/repl_handler.py:24` | `ReplHandler.handle` | handle(…) returns LLM output (≈) |
+| 9 | ⇢ call | `sgpt/handlers/repl_handler.py:66` | `ReplHandler.handle` | handle(…) returns LLM output (≈) |
 | 10 | ⇢ call | `sgpt/handlers/repl_handler.py:58` | `ReplHandler.handle` | → run_command(command=…) |
 | 11 | 💥 sink | `sgpt/utils.py:53` | `run_command` | shell: full_command |

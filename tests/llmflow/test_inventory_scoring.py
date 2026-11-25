@@ -156,6 +156,37 @@ def test_gate_must_be_after_llm_and_mention_the_value(cat):
     assert exposure(0.5, []) == 0.5
 
 
+def test_loop_carried_gate_counts_only_inside_the_loop(cat):
+    """REPL shape: the answer arrives at line 66, the next iteration asks at 48 and runs it at 58."""
+    repl = "m::Repl.handle@24"
+    hops = [_hop("llm", 5, func="m::Base.handle@3"),
+            _hop("call", 66, func=repl, code="answer = super().handle(prompt)"),
+            _hop("call", 58, func=repl, label="", code="run_command(answer)"),
+            _hop("sink", 90, func="m::run_command@88", label="shell: cmd", code="os.system(cmd)")]
+    ask = GateHit("human-confirm", "confirmation", "confirm", 0.3, "m.py", 48, repl)
+    before_loop = GateHit("human-confirm", "confirmation", "confirm", 0.3, "m.py", 40, repl)
+    loops = lambda file, a, b: (47, 66)                   # noqa: E731 — loop body spans lines 47..66
+    assert gates_on_path(cat, hops, "shell", [ask, before_loop], loops=loops) == [ask]
+    assert gates_on_path(cat, hops, "shell", [ask, before_loop]) == []            # no loop info: no window
+    assert gates_on_path(cat, hops, "shell", [ask], loops=lambda f, a, b: None) == []
+
+
+def test_enclosing_loop(tmp_path):
+    (tmp_path / "r.py").write_text(textwrap.dedent("""\
+        def f():
+            x = 1
+            while True:
+                a = input()
+                for i in range(3):
+                    print(i)
+                b = a
+        """), encoding="utf-8")
+    src = SourceCache(tmp_path)
+    assert src.enclosing_loop("r.py", 4, 7) == (4, 7)
+    assert src.enclosing_loop("r.py", 6, 6) == (6, 6)
+    assert src.enclosing_loop("r.py", 2, 4) is None
+
+
 def test_rank_by_priority_and_by_s():
     def flow(S, E, R, cls):
         f = Flow(id="", sink_class=cls, sink_title=cls, cwe="", channel="chat", hops=[_hop("sink", 1)],

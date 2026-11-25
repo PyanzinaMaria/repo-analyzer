@@ -163,7 +163,7 @@ def build_flows(cat: Catalog, st: Stitcher, gates: list[GateHit]) -> list[Flow]:
                  source_title=exp.title if exp else "unknown prompt provenance")
         f.S = sc.S
         f.E_base = exp.E if exp else d.unknown
-        f.gates = gates_on_path(cat, hops, rf.sink_class, gates)
+        f.gates = gates_on_path(cat, hops, rf.sink_class, gates, loops=st.src.enclosing_loop)
         f.E = round(exposure(f.E_base, f.gates), 4)
         f.R, _ = r_value(cat.kb, f.model, rf.channel)
         f.approx = any(h.approx for h in hops)

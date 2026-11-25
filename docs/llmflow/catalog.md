@@ -122,7 +122,7 @@ gates:
 
 A gate counts for a flow only if **all** of these hold:
 - it sits in a function on the flow's path;
-- it comes after the LLM call (when in the same function) and at or before the line where the path leaves that function;
+- it comes after the LLM output enters that function and at or before the line where the path leaves it. When the output enters *after* that line inside a loop (produced in one iteration, used in the next, as in a REPL), the window is the loop body from the entry line to the end, then from the loop start to the exit line;
 - it applies to the flow's sink class;
 - if it binds `$V`, it mentions an identifier of the tainted value.
 
