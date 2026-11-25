@@ -277,8 +277,10 @@ def test_scan_page_shows_results_when_ready(client, demo_scan):
     r = c.get(f"/scan/{demo_scan}")
     assert r.status_code == 200
     assert "Документация ФСТЭК" in r.text
-    assert "Документация ФСТЭК · PDF" in r.text
-    assert "Документация ФСТЭК · MD" not in r.text  # md left the FSTEC doc formats
+    assert "Документация ФСТЭК · PDF" not in r.text  # formats are separate chips now
+    assert "artifact-row" in r.text
+    assert "format-chip" in r.text
+    assert ">PDF</a>" in r.text
     assert "Отчёт аудита · MD" not in r.text  # demo fixture publishes report.html only
     assert 'id="donut"' not in r.text  # the only donut lives inside the embedded report
     assert "/artifacts/report.html" in r.text  # audit report embedded on the page

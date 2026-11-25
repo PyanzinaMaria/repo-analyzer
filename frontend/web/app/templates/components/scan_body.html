@@ -34,16 +34,23 @@
         <h2>{{ t("results.title") }}</h2>
         {% if status.artifacts %}
         <p class="disclaimer disclaimer--compact">{{ t("disclaimer.scan") }}</p>
-        <div class="results-grid">
-            <div class="artifact-actions">
-                {% for name in status.artifacts %}
-                {% set spec = artifact_specs[name] %}
-                {% if spec.download %}
-                <a class="button button--secondary" href="/api/scans/{{ status.id }}/artifacts/{{ name }}" download>{{ t(spec.label_key) }}{% if spec.format %} · {{ spec.format | upper }}{% endif %}</a>
-                {% endif %}
-                {% endfor %}
+        <div class="artifact-list" role="list">
+            {% for group in artifact_groups %}
+            <div class="artifact-row" role="listitem">
+                <div class="artifact-row__label">{{ t(group.label_key) }}</div>
+                <div class="artifact-row__formats">
+                    {% for item in group.formats %}
+                    <a class="format-chip" href="/api/scans/{{ status.id }}/artifacts/{{ item.name }}" download>{{ item.format }}</a>
+                    {% endfor %}
+                </div>
             </div>
+            {% endfor %}
         </div>
+        {% if complete %}
+        <p class="artifact-extra">
+            <a class="artifact-extra__link" href="/scan/{{ status.id }}/company">Подготовить шаблон для организации</a>
+        </p>
+        {% endif %}
         {% else %}
         <p class="results-pending">{{ t("results.pending") }}</p>
         {% endif %}

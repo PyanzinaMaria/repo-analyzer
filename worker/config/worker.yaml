@@ -21,10 +21,9 @@ formats:
 # LLM-generated final documents. Each spec maps a document id from
 # frontend/config/reports.yaml to its system prompt (system_prompts/) and a
 # per-call timeout. WORKER_ENABLE_AI_DOCUMENTS overrides `enabled`.
-# Off by default: each doc can take many minutes on free LLM and blocks the
-# single worker. Enable with WORKER_ENABLE_AI_DOCUMENTS=true when needed.
+# Each doc can take many minutes on free LLM and blocks the single worker.
 ai_documents:
-  enabled: false
+  enabled: true
   fstec:
     prompt: system_prompts/FSTEC.md
     timeout_seconds: 900

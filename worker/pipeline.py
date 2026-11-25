@@ -281,7 +281,13 @@ class Pipeline:
         Returns the artifact names it produced."""
         reports_dir.mkdir(parents=True, exist_ok=True)
 
-        from worker.formats import HTML_CONVERTERS, create_zip_artifact, markdown_to_html, render_document_markdown
+        from worker.formats import (
+            HTML_CONVERTERS,
+            create_zip_artifact,
+            markdown_to_html,
+            markdown_without_attached_files,
+            render_document_markdown,
+        )
         from worker.rendering import severity_counts
 
         _, chosen_formats = self._resolve_options(options)
@@ -321,6 +327,11 @@ class Pipeline:
                         html = markdown_to_html(combined)
                         html_by_doc[doc_id] = html
                         target.write_text(html, encoding="utf-8")
+                    elif fmt == "pdf":
+                        # Protocol only: inlined JSON attachments become Courier
+                        # tofu for Cyrillic; files already live under fstec/.
+                        pdf_html = markdown_to_html(markdown_without_attached_files(combined))
+                        target.write_bytes(HTML_CONVERTERS[fmt](pdf_html))
                     elif fmt in HTML_CONVERTERS:
                         html = html_by_doc.get(doc_id) or markdown_to_html(combined)
                         html_by_doc[doc_id] = html

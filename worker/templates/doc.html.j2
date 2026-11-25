@@ -25,7 +25,8 @@
   h1 { margin: 0 0 6px; font-size: 24px; }
   h2 { margin: 0 0 14px; font-size: 20px; }
   .sub { color: var(--ink-soft); font-size: 14px; margin: 0; }
-  table { width: 100%; border-collapse: collapse; background: var(--raised); border-radius: 10px; overflow: hidden; }
+  /* No overflow:hidden — xhtml2pdf clips table body rows when it is set. */
+  table { width: 100%; border-collapse: collapse; background: var(--raised); border-radius: 10px; }
   th, td { padding: 10px 12px; text-align: left; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
   th { background: var(--accent-soft, var(--surface)); font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em; }
   tr:last-child td { border-bottom: none; }
