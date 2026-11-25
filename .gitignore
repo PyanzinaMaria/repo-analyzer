@@ -20,6 +20,7 @@ data/test*
 data/_tmp*
 data/*.md
 data/*.json
+data/llmflow/
 *.log
 .DS_Store
 Thumbs.db

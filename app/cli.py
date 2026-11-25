@@ -5,6 +5,7 @@
                   the reports (security_report.md/json, fstec_draft.md, audit_report.md)
   serve           run the analyzer HTTP API (FastAPI, Swagger at /docs)
   env             analyzer and tool versions
+  llmflow ...     LLM-integrated code: untrusted input -> prompt -> LLM -> dangerous sink (docs/llmflow/)
 """
 
 from __future__ import annotations
@@ -17,6 +18,15 @@ from typing import Optional
 import typer
 
 cli = typer.Typer(no_args_is_help=True, add_completion=False, help=__doc__)
+
+
+def _mount_subcommands() -> None:
+    from app.llmflow.cli import app as llmflow_app
+
+    cli.add_typer(llmflow_app, name="llmflow")
+
+
+_mount_subcommands()
 
 
 @cli.command("scan")

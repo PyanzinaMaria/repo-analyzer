@@ -1,0 +1,77 @@
+# Untrusted inputs that can reach a prompt (WP5 exposure). E = base exposure of the source kind.
+# Patterns are Semgrep taint sources (the matched expression is tainted).
+# Route handler parameters are added automatically from app/context/entrypoints.py (kind `route_param`,
+# or `route_param_auth` when the decorators mention login/auth/admin).
+kinds:
+  web_request:
+    E: 1.0
+    title: HTTP request data
+    patterns:
+      - pattern: flask.request.$A
+      - pattern: django.http.HttpRequest.$A
+      - pattern: $REQ.GET
+      - pattern: $REQ.POST
+      - pattern: $REQ.query_params
+      - pattern: bottle.request.$A
+  web_content:
+    E: 1.0
+    title: Fetched web page / remote content
+    patterns:
+      - pattern: requests.$FN(...)
+        regex: {$FN: '^(get|post|request)$'}
+      - pattern: httpx.$FN(...)
+        regex: {$FN: '^(get|post|request)$'}
+      - pattern: $S.get(...).text
+      - pattern: urllib.request.urlopen(...)
+      - pattern: bs4.BeautifulSoup(...)
+      - pattern: trafilatura.fetch_url(...)
+  retrieved_doc:
+    E: 1.0
+    title: Retrieved document (RAG)
+    patterns:
+      - pattern: $VS.similarity_search(...)
+      - pattern: $VS.similarity_search_with_score(...)
+      - pattern: $VS.max_marginal_relevance_search(...)
+      - pattern: $R.get_relevant_documents(...)
+      - pattern: $R.retrieve(...)
+      - pattern: $COL.query(..., query_texts=$_, ...)
+      - pattern: $IDX.search(...)
+        regex: {$IDX: '(?i)(index|pinecone|qdrant|weaviate|faiss|store)'}
+  ui_input:
+    E: 1.0
+    title: Web UI input widget
+    patterns:
+      - pattern: streamlit.text_input(...)
+      - pattern: streamlit.text_area(...)
+      - pattern: streamlit.chat_input(...)
+  email_or_file_upload:
+    E: 1.0
+    title: Uploaded file / inbound message
+    patterns:
+      - pattern: $F.files[$K]
+      - pattern: email.message_from_string(...)
+      - pattern: email.message_from_bytes(...)
+  local_file:
+    E: 0.5
+    title: Local file content
+    patterns:
+      - pattern: open(...).read(...)
+      - pattern: $P.read_text(...)
+      - pattern: $FH.readlines(...)
+  cli:
+    E: 0.5
+    title: CLI / terminal input
+    patterns:
+      - pattern: input(...)
+      - pattern: sys.argv
+      - pattern: sys.stdin.read(...)
+      - pattern: $P.parse_args(...)
+      - pattern: click.prompt(...)
+      - pattern: typer.prompt(...)
+
+# Base exposure for flows whose prompt provenance is not found, and for route handler parameters.
+defaults:
+  unknown: 0.5
+  route_param: 1.0
+  route_param_auth: 0.3
+  auth_markers: '(?i)(login_required|auth|admin|permission|staff|superuser|requires_)'
