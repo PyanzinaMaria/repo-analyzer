@@ -8,19 +8,21 @@
 
 ## Pentest-агент (security pipeline)
 
-В ветке `feature/security-pentest-agent` добавлен активный этап: ревью кода
-строит гипотезы уязвимостей (SAST + LLM + задел под RL), а агент проверяет их
-на живом приложении в песочнице — с плагинами, стратегиями, LLM-judge и отчётом.
+В ветке `feature/pentest-agent-ui` (поверх `feature/security-pentest-agent`)
+галочка **«Пентест»** в форме включает runner `manual`: ревью кода строит
+гипотезы, агент проверяет их на живом приложении в песочнице (плагины,
+стратегии, LLM-judge) и пишет секцию **«Пентест»** в единый отчёт.
 
 ![Схема pentest-агента](docs/images/pentest-agent-flow.png)
 
 Кратко: репозиторий → контекст (tree-sitter, граф вызовов, точки входа, sinks) →
 гипотезы → приоритизация → плагины × стратегии → HTTP-проверки → детекторы +
-judge → `Finding` в `security_report`, SARIF и черновик ФСТЭК.
+judge → `Finding` (`source=pentest|llm-review`) в отчёте / SARIF / ФСТЭК.
 
 Подробности: [docs/PENTEST_AGENT_OVERVIEW.md](docs/PENTEST_AGENT_OVERVIEW.md) ·
 [docs/SECURITY_PIPELINE.md](docs/SECURITY_PIPELINE.md) ·
-[docs/LLM_PROVIDERS.md](docs/LLM_PROVIDERS.md).
+[docs/LLM_PROVIDERS.md](docs/LLM_PROVIDERS.md) ·
+[docs/process.md](docs/process.md) (галочки UI и артефакты).
 
 ```
 Браузер ──HTTP──▶ WEB :8000 ──пишет──▶ data/uploads/{id}/  +  data/queue/{id}.json
@@ -162,17 +164,14 @@ Post-scan review отобранных файлов через OpenAI-compatible 
 Выбор клиента живёт в двух контрактных конфигах — их читают и форма, и воркер:
 
 - [`frontend/config/analysis.yaml`](frontend/config/analysis.yaml) — методы анализа
-  (`sast`, `llm_agentic`, `dast`, `pentest`) с признаком `available` (невыполненные
-  видны в форме отключёнными с плашкой «запланировано» и отклоняются API).
-  `defaults.methods` — наследуемые значения: скан, не переопределивший выбор,
-  получает их. Параметры метода мержатся поверх общих `defaults.params`
-  (base → method). Воркер мапит id метода на ключ раннера (`static`, `ai`, …)
-  и передаёт всё в `ScanOrchestrator`. Модель ИИ в выборе клиента не участвует.
+  (`sast`, `llm_agentic`, `dast`, `pentest`; у `pentest` сейчас `available: true`,
+  runner `manual`). Методы с `available: false` видны отключёнными («запланировано»)
+  и отклоняются API. Воркер мапит id → runners (`static` / `ai` / `dynamic` /
+  `manual`) и передаёт список в `ScanOrchestrator`. Модель ИИ клиенту не выбирается.
 - [`frontend/config/reports.yaml`](frontend/config/reports.yaml) задаёт форматы
-  артефактов. Отчёт аудита всегда публикуется как `report.html`. Для документов
-  ФСТЭК (`doc` и `fstec`) в форме можно выбрать HTML, Markdown и PDF.
-  По умолчанию используется HTML. При включённой генерации LLM-документации
-  кодовая документация публикуется как `codedocs.zip`.
+  артефактов. Отчёт аудита (`report.*`) и `doc.*` публикуются **сразу** после
+  анализа; LLM-документы `fstec.*` и `codedocs.zip` дописываются после (лимиты
+  промпта и таймауты — в `worker/config/worker.yaml` → `ai_documents`).
 
 Движки форматов включаются в `worker/config/worker.yaml` (`formats:`). PDF —
 WeasyPrint, DOCX — python-docx + htmldocx; зависимости импортируются лениво,

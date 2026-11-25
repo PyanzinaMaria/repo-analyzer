@@ -1,83 +1,47 @@
-# Совместимость с repo-analyzer (ветка `feature/security-pentest-agent`)
+# Совместимость: ветка `feature/pentest-agent-ui`
 
-Ветка создана от `origin/master` (`2ed8522`, 25.11.2026) — то есть уже **после**
-интеграции `secaudit` в master (SAST + контекст + LLM-триаж + CLI). Поэтому
-`app/context`, `app/sast`, `app/ai`, `app/cli.py` берутся из master как есть,
-а ветка добавляет только новый слой.
+Интеграционная ветка: merge `feature/security-pentest-agent` в актуальный
+`master` + UI-связка галочки **«Пентест»** и стабилизация отчётов/AI-доков.
 
-## Что добавлено
+База: `origin/master` (после secaudit + ui-design). Слой агента не дублирует
+`app/context` / `app/sast` / `app/ai` — берёт их из master.
+
+## Состав
 
 | Путь | Назначение |
 |---|---|
-| `app/security/*` | единый security pipeline: гипотезы → плагины × стратегии → проверка → judge → отчёты |
-| `app/dast/agent/*` | активный pentest-агент (crawl, probes, LLM-планировщик, MCP-сервер, CLI) |
-| `config/security.yaml` | конфиг-как-код: провайдер LLM, режим ревью, плагины, стратегии, бюджеты, auth |
-| `docs/PENTEST_AGENT_OVERVIEW.md` + `docs/images/*` | объяснение и схема |
-| `docs/PENTEST_AGENT.md`, `docs/PENTEST_AGENT_RUN.md` | устройство агента и инструкция по запуску |
-| `docs/SECURITY_PIPELINE.md` | гипотезы, верификация, judge, SARIF |
-| `docs/LLM_PROVIDERS.md` | Groq / GigaChat / OpenRouter / Gemini / Ollama, ключи и лимиты |
-| `docs/RUN_SCENARIOS_PVR.md` | проверка на реальном уязвимом репозитории |
-| `tests/test_security_pipeline.py`, `tests/test_llm_providers.py`, `tests/test_pentest_agent.py` | тесты |
-| `tests/fixtures/vuln_web_app.py`, `tests/fixtures/repo_demo/` | стенды для тестов |
+| `app/security/*` | security pipeline: гипотезы → плагины × стратегии → verify → judge |
+| `app/dast/agent/*` | активный pentest-агент (crawl, probes, LLM planner, MCP, CLI) |
+| `config/security.yaml` | LLM, плагины, стратегии, бюджеты |
+| `frontend/config/analysis.yaml` | `pentest` → runner `manual`, `available: true` |
+| `docs/*` | overview, run, pipeline, providers, process/SPEC (UI) |
+| `tests/test_security_pipeline.py`, `test_pentest_agent.py`, … | тесты агента и гейтинга UI |
 
-## Интеграционные точки (изменены минимально)
+## Как включается из UI
 
-1. `app/services/scan/orchestrator.py`
-   - после SAST + LLM-стадии запускается `run_security_scan(root, None, findings=..., use_llm=run_ai)`;
-   - новые findings (`source=llm-review|review-agent`) добавляются в общий список;
-   - гипотезы сохраняются в `meta.security_hypotheses`, счётчики — в `meta.security`
-     и `summary.security_hypotheses/review_findings`;
-   - review не запускается для чисто динамических сканов (`methods=["dynamic"]`).
+1. Форма: `methods` включает `pentest` → воркер мапит в runner **`manual`**.
+2. `ScanOrchestrator`: security review только при `manual` (form jobs); legacy
+   `methods=None` по-прежнему может идти по `config/security.yaml`.
+3. Песочница: при `manual` и/или `dynamic`. ZAP — только если выбран DAST;
+   активный агент — если выбран Пентест (или legacy + `dast.pentest.enabled`).
+4. Отчёт: секция **«Пентест»**; `scan_kind` вида `sast+pentest` (не `sast+dast`).
+5. Страница заявки показывает тип проверки по `options.methods`.
 
-2. `app/services/scan/dast_merge.py`
-   - после поднятия песочницы вызывается `verify_only(...)` для гипотез
-     (сначала `host_url`, при неудаче — `network_url`);
-   - подтверждённые находки (`source=pentest`) добавляются в результат,
-     мета — в `meta.security_verify`, счётчики — в `summary.pentest_findings`.
+## Отчёты и AI-документы
 
-3. `app/dast/orchestrator.py`, `app/dast/config.py`, `app/dast/zap_baseline.py`
-   - активный pentest-агент запускается после пассивного ZAP baseline;
-   - добавлены `dast.zap_enabled` и `dast.pentest.*` (при этом сохранены
-     upstream-настройки `work_dir`/`docker_volume` для контейнерного воркера).
+- Core `report`/`doc` публикуются первыми → `manifest.stages.report=ok`.
+- Затем `fstec` / `codedocs.zip`; манифест обновляется после каждого документа.
+- Промпт LLM-доков ограничен (`select_files` + top findings, ≤ ~80k chars,
+  timeout ~120 s) — см. `worker/ai_docs.py`, `worker/config/worker.yaml`.
+- Ошибка LLM → placeholder, `codedocs.zip` всё равно появляется.
 
-4. `config/settings.yaml`
-   - добавлена секция `dast.pentest` и `dast.zap_enabled` (значения по умолчанию
-     не меняют поведение master, кроме появления активного этапа).
+## Связанные ветки
 
-## Ветки master, которые стоит знать
+- `origin/master` — SAST + контекст + LLM-триаж + DAST + UI.
+- `origin/feature/security-pentest-agent` — исходный слой агента без UI-гейта.
+- `origin/feature/live-sequence-runner` — будущий источник `Source.rl`.
 
-- `origin/master` — актуальная интеграция: SAST + контекст + LLM-триаж/review +
-  DAST-песочница + отчёты; в нём уже есть `app/context` и `app/sast`.
-- `origin/secaudit` — исследовательская линия (бенчмарк, discovery/triage);
-  в master вошла частично.
-- `origin/feature/live-sequence-runner` (m11yrr) — live HTTP-раннер с GA и
-  Q-learning: это будущий источник RL-гипотез. В нашем пайплайне для него уже
-  есть `Source.rl` и адаптер `VulnHypothesis`.
-- `origin/input-test-gen` (ankmlva) — генерация DAST-тестов (RL + GA) на
-  синтетических HTML-фикстурах.
-- `origin/codex/fstec-company-report` — настраиваемый отчёт для компании.
+## Что сознательно не делали
 
-## Тесты
-
-`pytest tests worker/tests` на этой ветке: **119 passed, 1 skipped, 2 failed**.
-Оба падения **воспроизводятся на чистом `origin/master`** (проверено в отдельном
-worktree) и не связаны с агентом:
-
-- `tests/test_ai_analysis.py::test_scan_endpoint_accepts_enable_ai_body` —
-  ожидает `test_stub`, получает `missing_api_key` (приоритет ошибок в
-  `ai_meta` не учитывает stub `run_ai_analysis`);
-- `worker/tests/test_dast_pipeline.py::test_dast_result_folds_into_unified_report` —
-  тест манифеста PDF-артефактов зависит от наличия PDF-движка: без него нет
-  `doc.pdf`, с `xhtml2pdf` появляется лишний `report.pdf`.
-
-Наши тесты (`test_security_pipeline`, `test_llm_providers`, `test_pentest_agent`)
-проходят полностью.
-
-## Что не сделано намеренно
-
-- Не менялись другие ветки и `master`.
-- Не дублировались `app/context`/`app/sast` — используются версии master
-  (файлы побайтово совпадают с тем, что мы портировали ранее).
-- UI-страница для гипотез/подтверждений не добавлялась: отчёты и мета уже
-  попадают в `security_report.json`, `meta.security*`; отображение — задача
-  интеграции в master, которую делает отдельный человек.
+- Отдельный «дашборд гипотез» в UI: findings уже в секции Пентест / meta.
+- Смена провайдера LLM по умолчанию (остаётся конфиг / env пользователя).
