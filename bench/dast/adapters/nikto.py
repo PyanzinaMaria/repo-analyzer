@@ -89,8 +89,12 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
         return result(tool, target, findings, started=started, cmd=cmd, completed=completed,
                       error="nikto JSON report not produced"), findings
     findings = []
-    for payload in iter_json_objects(raw.read_text(encoding="utf-8", errors="replace")):
-        findings.extend(f for f in parse(payload) if f.url)
+    text = raw.read_text(encoding="utf-8", errors="replace")
+    try:  # nikto 2.5 writes one JSON array of host records
+        findings.extend(f for f in parse(json.loads(text)) if f.url)
+    except json.JSONDecodeError:  # fallback: concatenated objects / log noise
+        for payload in iter_json_objects(text):
+            findings.extend(f for f in parse(payload) if f.url)
     res = result(tool, target, findings, started=started, cmd=cmd, completed=completed,
                  meta={"image": spec.image})
     return res, findings
