@@ -77,7 +77,7 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
     cmd = [docker, "run", "--rm", "--network", target.network,
            "-v", f"{out_dir.resolve()}:/output", spec.image,
            "-h", target.scan_url, "-o", f"/output/{raw.name}", "-Format", "json",
-           "-ask+", "-maxtime", f"{max(1, cfg.scan_timeout_s // 60)}m"]
+           "-ask", "+", "-maxtime", f"{max(1, cfg.scan_timeout_s // 60)}m"]
     if target.scan_url.startswith("https"):
         cmd.append("-ssl")
     try:
