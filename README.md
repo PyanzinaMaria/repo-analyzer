@@ -101,6 +101,7 @@ docker compose up --build
 - [`docs/SPEC.md`](docs/SPEC.md) — **инженерная спецификация / handoff**: контракты, запуск, чеклист приёмки, что нельзя ломать.
 - [`docs/process.md`](docs/process.md) — смысл процесса для пользователя (методы, форматы, что в отчёте).
 - [`docs/REPORT.md`](docs/REPORT.md) / [`docs/BENCHMARK.md`](docs/BENCHMARK.md) — research-контур secaudit / bench (не UI).
+- [`docs/LIVE_SEQUENCE_RUNNER.md`](docs/LIVE_SEQUENCE_RUNNER.md) — live HTTP-обход + GA/Q-learning (lab, не UI).
 
 ## Содержание
 

@@ -1,0 +1,1 @@
+"""HTTP booklet target application."""

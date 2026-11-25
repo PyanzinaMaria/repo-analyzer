@@ -1,0 +1,25 @@
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile.webapp
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  runner:
+    build:
+      context: ..
+      dockerfile: live_test_runner/Dockerfile.runner
+    environment:
+      TARGET_URL: http://webapp:8080
+      RUNNER_PROFILE: ${RUNNER_PROFILE:-smoke}
+    volumes:
+      - ./output:/workspace/live_test_runner/output
+    depends_on:
+      webapp:
+        condition: service_healthy

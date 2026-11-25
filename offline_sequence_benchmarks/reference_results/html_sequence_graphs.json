@@ -1,0 +1,6482 @@
+{
+  "seed": 8,
+  "fixture_reference": {
+    "states": 93,
+    "transitions": 273,
+    "proof_min_steps": {
+      "/text-proof": 8,
+      "/screen-proof": 11,
+      "/print-proof": 11
+    }
+  },
+  "methods": {
+    "Random": {
+      "checkpoints": [
+        {
+          "step": 0,
+          "states": 1,
+          "discovered_actions": 4,
+          "transitions": 0
+        },
+        {
+          "step": 150,
+          "states": 30,
+          "discovered_actions": 101,
+          "transitions": 60
+        },
+        {
+          "step": 300,
+          "states": 44,
+          "discovered_actions": 145,
+          "transitions": 103
+        },
+        {
+          "step": 450,
+          "states": 53,
+          "discovered_actions": 166,
+          "transitions": 125
+        },
+        {
+          "step": 600,
+          "states": 58,
+          "discovered_actions": 186,
+          "transitions": 137
+        }
+      ],
+      "nodes": [
+        {
+          "id": "hub",
+          "path": "/",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 0,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "3911f7b54263dec5",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 1,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "0f6e0f1e409eb0f7",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 2,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "fd190465d44e46c4",
+          "path": "/",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 3,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "185b9ba5ab9daecb",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 5,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "66b4c5a8b73e7752",
+          "path": "/",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 11,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "028c0493b1e095b2",
+          "path": "/text",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 12,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "7ada6ab98e63d4b1",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 14,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "43bc5c1fad6adf58",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 25,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "f369263e60837a81",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 29,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "d3750c8ca8a24968",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 30,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "649b67cecaa62132",
+          "path": "/text",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 35,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "cc4e5a6fc5681293",
+          "path": "/text",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 36,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "7e4789f39a02d0a4",
+          "path": "/text",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 37,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "858bc73ff319b3d9",
+          "path": "/",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 91,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "55a931ee1371a5d0",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 92,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "f630f2e0fd5cc0a5",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 93,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "52974239801a14fc",
+          "path": "/",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 94,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "74351cf87146975a",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 95,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "5f2f5cd3275b5a5c",
+          "path": "/",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 107,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "19dd57f165ceb4c9",
+          "path": "/palette",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 108,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "a8edc53e7f1d668e",
+          "path": "/palette",
+          "text": "draft",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 110,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "f96693ee59acd4e0",
+          "path": "/palette",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 113,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "8abd409396c6a1ee",
+          "path": "/",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 114,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "cddb0bd472120afc",
+          "path": "/text",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 115,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "3cb210fc8e7e209d",
+          "path": "/text",
+          "text": "final",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 116,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "c0b821a08c7a2f88",
+          "path": "/text",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 120,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "ed934be8e15e1641",
+          "path": "/",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 128,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "6a97916fbb52d400",
+          "path": "/preview",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 129,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "f019c23c9bee74f1",
+          "path": "/preview",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 135,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "663f5e48a597810c",
+          "path": "/palette",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 165,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "8c8ab47809d5e03a",
+          "path": "/palette",
+          "text": "final",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 167,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "9ad44f6fe9083778",
+          "path": "/cover",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 176,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "9daaafcd6f6368f2",
+          "path": "/cover",
+          "text": "final",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 181,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "008bbe560a4a6e0f",
+          "path": "/",
+          "text": "final",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 188,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "ee3349da9fabcaab",
+          "path": "/preview",
+          "text": "final",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 189,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "6cc64650b2666715",
+          "path": "/palette",
+          "text": "final",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 212,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "6a29a952e4d4b25a",
+          "path": "/",
+          "text": "final",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 214,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "52462fc75b4a1c03",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 234,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "28954e8e9bd987f1",
+          "path": "/",
+          "text": "final",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 260,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "4bf5c7ab7443086c",
+          "path": "/text",
+          "text": "draft",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 282,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "a4c671b16f2a6195",
+          "path": "/text",
+          "text": "final",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 285,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "1fc96c025dc3e212",
+          "path": "/",
+          "text": "draft",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 287,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "96a69739e42674b4",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 294,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "6b33d769aaea3d3e",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 307,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "8a6b0647059d790e",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 308,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "cf09451bacdfc87a",
+          "path": "/",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 309,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "7e18b9c5c1bd26d9",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 310,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "2969c67b16eb6967",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 312,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "794b14881bd9db7b",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 347,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "c198feea13343d2e",
+          "path": "/cover",
+          "text": "final",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 355,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "c20c33b8f4241c05",
+          "path": "/cover",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 391,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "12a4296ea8e90089",
+          "path": "/cover",
+          "text": "draft",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 392,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "c48456d6bd66de94",
+          "path": "/text",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 498,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "322a054c8baa20d4",
+          "path": "/text",
+          "text": "draft",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 499,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "aea6b24bed8761b6",
+          "path": "/text",
+          "text": "final",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 522,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "236f44dbdde36c9a",
+          "path": "/palette",
+          "text": "final",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 526,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "feef8a5cff5a42db",
+          "path": "/palette",
+          "text": "final",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 528,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "source": "hub",
+          "action": 1,
+          "target": "3911f7b54263dec5",
+          "first_used_at": 1
+        },
+        {
+          "source": "3911f7b54263dec5",
+          "action": 2,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 2
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 3,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 3
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 1,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 4
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 5
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 0,
+          "target": "3911f7b54263dec5",
+          "first_used_at": 6
+        },
+        {
+          "source": "3911f7b54263dec5",
+          "action": 0,
+          "target": "3911f7b54263dec5",
+          "first_used_at": 7
+        },
+        {
+          "source": "3911f7b54263dec5",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 8
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 9
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 3,
+          "target": "66b4c5a8b73e7752",
+          "first_used_at": 11
+        },
+        {
+          "source": "66b4c5a8b73e7752",
+          "action": 0,
+          "target": "028c0493b1e095b2",
+          "first_used_at": 12
+        },
+        {
+          "source": "028c0493b1e095b2",
+          "action": 3,
+          "target": "66b4c5a8b73e7752",
+          "first_used_at": 13
+        },
+        {
+          "source": "66b4c5a8b73e7752",
+          "action": 3,
+          "target": "7ada6ab98e63d4b1",
+          "first_used_at": 14
+        },
+        {
+          "source": "7ada6ab98e63d4b1",
+          "action": 0,
+          "target": "66b4c5a8b73e7752",
+          "first_used_at": 15
+        },
+        {
+          "source": "66b4c5a8b73e7752",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 18
+        },
+        {
+          "source": "hub",
+          "action": 3,
+          "target": "43bc5c1fad6adf58",
+          "first_used_at": 25
+        },
+        {
+          "source": "43bc5c1fad6adf58",
+          "action": 0,
+          "target": "hub",
+          "first_used_at": 26
+        },
+        {
+          "source": "hub",
+          "action": 2,
+          "target": "f369263e60837a81",
+          "first_used_at": 29
+        },
+        {
+          "source": "f369263e60837a81",
+          "action": 0,
+          "target": "d3750c8ca8a24968",
+          "first_used_at": 30
+        },
+        {
+          "source": "d3750c8ca8a24968",
+          "action": 0,
+          "target": "f369263e60837a81",
+          "first_used_at": 31
+        },
+        {
+          "source": "f369263e60837a81",
+          "action": 1,
+          "target": "hub",
+          "first_used_at": 32
+        },
+        {
+          "source": "hub",
+          "action": 0,
+          "target": "649b67cecaa62132",
+          "first_used_at": 35
+        },
+        {
+          "source": "649b67cecaa62132",
+          "action": 2,
+          "target": "cc4e5a6fc5681293",
+          "first_used_at": 36
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 1,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 37
+        },
+        {
+          "source": "7e4789f39a02d0a4",
+          "action": 0,
+          "target": "649b67cecaa62132",
+          "first_used_at": 38
+        },
+        {
+          "source": "649b67cecaa62132",
+          "action": 3,
+          "target": "hub",
+          "first_used_at": 39
+        },
+        {
+          "source": "3911f7b54263dec5",
+          "action": 3,
+          "target": "hub",
+          "first_used_at": 44
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 2,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 56
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 2,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 61
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 0,
+          "target": "3911f7b54263dec5",
+          "first_used_at": 63
+        },
+        {
+          "source": "d3750c8ca8a24968",
+          "action": 1,
+          "target": "858bc73ff319b3d9",
+          "first_used_at": 91
+        },
+        {
+          "source": "858bc73ff319b3d9",
+          "action": 1,
+          "target": "55a931ee1371a5d0",
+          "first_used_at": 92
+        },
+        {
+          "source": "55a931ee1371a5d0",
+          "action": 1,
+          "target": "f630f2e0fd5cc0a5",
+          "first_used_at": 93
+        },
+        {
+          "source": "f630f2e0fd5cc0a5",
+          "action": 3,
+          "target": "52974239801a14fc",
+          "first_used_at": 94
+        },
+        {
+          "source": "52974239801a14fc",
+          "action": 3,
+          "target": "74351cf87146975a",
+          "first_used_at": 95
+        },
+        {
+          "source": "74351cf87146975a",
+          "action": 0,
+          "target": "52974239801a14fc",
+          "first_used_at": 96
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 0,
+          "target": "649b67cecaa62132",
+          "first_used_at": 101
+        },
+        {
+          "source": "649b67cecaa62132",
+          "action": 0,
+          "target": "649b67cecaa62132",
+          "first_used_at": 102
+        },
+        {
+          "source": "7e4789f39a02d0a4",
+          "action": 3,
+          "target": "5f2f5cd3275b5a5c",
+          "first_used_at": 107
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 1,
+          "target": "19dd57f165ceb4c9",
+          "first_used_at": 108
+        },
+        {
+          "source": "19dd57f165ceb4c9",
+          "action": 0,
+          "target": "19dd57f165ceb4c9",
+          "first_used_at": 109
+        },
+        {
+          "source": "19dd57f165ceb4c9",
+          "action": 1,
+          "target": "a8edc53e7f1d668e",
+          "first_used_at": 110
+        },
+        {
+          "source": "a8edc53e7f1d668e",
+          "action": 0,
+          "target": "19dd57f165ceb4c9",
+          "first_used_at": 111
+        },
+        {
+          "source": "a8edc53e7f1d668e",
+          "action": 2,
+          "target": "f96693ee59acd4e0",
+          "first_used_at": 113
+        },
+        {
+          "source": "f96693ee59acd4e0",
+          "action": 3,
+          "target": "8abd409396c6a1ee",
+          "first_used_at": 114
+        },
+        {
+          "source": "8abd409396c6a1ee",
+          "action": 0,
+          "target": "cddb0bd472120afc",
+          "first_used_at": 115
+        },
+        {
+          "source": "cddb0bd472120afc",
+          "action": 2,
+          "target": "3cb210fc8e7e209d",
+          "first_used_at": 116
+        },
+        {
+          "source": "3cb210fc8e7e209d",
+          "action": 2,
+          "target": "3cb210fc8e7e209d",
+          "first_used_at": 117
+        },
+        {
+          "source": "3cb210fc8e7e209d",
+          "action": 0,
+          "target": "c0b821a08c7a2f88",
+          "first_used_at": 120
+        },
+        {
+          "source": "649b67cecaa62132",
+          "action": 1,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 125
+        },
+        {
+          "source": "7e4789f39a02d0a4",
+          "action": 1,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 126
+        },
+        {
+          "source": "7e4789f39a02d0a4",
+          "action": 2,
+          "target": "cc4e5a6fc5681293",
+          "first_used_at": 127
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 3,
+          "target": "ed934be8e15e1641",
+          "first_used_at": 128
+        },
+        {
+          "source": "ed934be8e15e1641",
+          "action": 3,
+          "target": "6a97916fbb52d400",
+          "first_used_at": 129
+        },
+        {
+          "source": "6a97916fbb52d400",
+          "action": 0,
+          "target": "ed934be8e15e1641",
+          "first_used_at": 130
+        },
+        {
+          "source": "ed934be8e15e1641",
+          "action": 0,
+          "target": "cc4e5a6fc5681293",
+          "first_used_at": 131
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 3,
+          "target": "f019c23c9bee74f1",
+          "first_used_at": 135
+        },
+        {
+          "source": "f019c23c9bee74f1",
+          "action": 0,
+          "target": "5f2f5cd3275b5a5c",
+          "first_used_at": 136
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 0,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 139
+        },
+        {
+          "source": "19dd57f165ceb4c9",
+          "action": 3,
+          "target": "5f2f5cd3275b5a5c",
+          "first_used_at": 142
+        },
+        {
+          "source": "ed934be8e15e1641",
+          "action": 1,
+          "target": "663f5e48a597810c",
+          "first_used_at": 165
+        },
+        {
+          "source": "663f5e48a597810c",
+          "action": 0,
+          "target": "663f5e48a597810c",
+          "first_used_at": 166
+        },
+        {
+          "source": "663f5e48a597810c",
+          "action": 2,
+          "target": "8c8ab47809d5e03a",
+          "first_used_at": 167
+        },
+        {
+          "source": "8c8ab47809d5e03a",
+          "action": 2,
+          "target": "8c8ab47809d5e03a",
+          "first_used_at": 168
+        },
+        {
+          "source": "8c8ab47809d5e03a",
+          "action": 0,
+          "target": "663f5e48a597810c",
+          "first_used_at": 174
+        },
+        {
+          "source": "663f5e48a597810c",
+          "action": 3,
+          "target": "ed934be8e15e1641",
+          "first_used_at": 175
+        },
+        {
+          "source": "ed934be8e15e1641",
+          "action": 2,
+          "target": "9ad44f6fe9083778",
+          "first_used_at": 176
+        },
+        {
+          "source": "9ad44f6fe9083778",
+          "action": 1,
+          "target": "ed934be8e15e1641",
+          "first_used_at": 177
+        },
+        {
+          "source": "9ad44f6fe9083778",
+          "action": 0,
+          "target": "9daaafcd6f6368f2",
+          "first_used_at": 181
+        },
+        {
+          "source": "9daaafcd6f6368f2",
+          "action": 0,
+          "target": "9ad44f6fe9083778",
+          "first_used_at": 182
+        },
+        {
+          "source": "9daaafcd6f6368f2",
+          "action": 1,
+          "target": "008bbe560a4a6e0f",
+          "first_used_at": 188
+        },
+        {
+          "source": "008bbe560a4a6e0f",
+          "action": 3,
+          "target": "ee3349da9fabcaab",
+          "first_used_at": 189
+        },
+        {
+          "source": "ee3349da9fabcaab",
+          "action": 0,
+          "target": "008bbe560a4a6e0f",
+          "first_used_at": 190
+        },
+        {
+          "source": "008bbe560a4a6e0f",
+          "action": 2,
+          "target": "9daaafcd6f6368f2",
+          "first_used_at": 191
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 2,
+          "target": "cc4e5a6fc5681293",
+          "first_used_at": 205
+        },
+        {
+          "source": "8c8ab47809d5e03a",
+          "action": 1,
+          "target": "6cc64650b2666715",
+          "first_used_at": 212
+        },
+        {
+          "source": "6cc64650b2666715",
+          "action": 1,
+          "target": "6cc64650b2666715",
+          "first_used_at": 213
+        },
+        {
+          "source": "6cc64650b2666715",
+          "action": 3,
+          "target": "6a29a952e4d4b25a",
+          "first_used_at": 214
+        },
+        {
+          "source": "6a29a952e4d4b25a",
+          "action": 1,
+          "target": "6cc64650b2666715",
+          "first_used_at": 215
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 0,
+          "target": "c0b821a08c7a2f88",
+          "first_used_at": 220
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 0,
+          "target": "c0b821a08c7a2f88",
+          "first_used_at": 221
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 3,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 222
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 1,
+          "target": "cddb0bd472120afc",
+          "first_used_at": 224
+        },
+        {
+          "source": "cddb0bd472120afc",
+          "action": 3,
+          "target": "8abd409396c6a1ee",
+          "first_used_at": 225
+        },
+        {
+          "source": "cddb0bd472120afc",
+          "action": 1,
+          "target": "cddb0bd472120afc",
+          "first_used_at": 227
+        },
+        {
+          "source": "cddb0bd472120afc",
+          "action": 0,
+          "target": "c0b821a08c7a2f88",
+          "first_used_at": 228
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 3,
+          "target": "52462fc75b4a1c03",
+          "first_used_at": 234
+        },
+        {
+          "source": "52462fc75b4a1c03",
+          "action": 0,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 235
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 2,
+          "target": "3cb210fc8e7e209d",
+          "first_used_at": 240
+        },
+        {
+          "source": "663f5e48a597810c",
+          "action": 1,
+          "target": "6cc64650b2666715",
+          "first_used_at": 258
+        },
+        {
+          "source": "6cc64650b2666715",
+          "action": 2,
+          "target": "8c8ab47809d5e03a",
+          "first_used_at": 259
+        },
+        {
+          "source": "8c8ab47809d5e03a",
+          "action": 3,
+          "target": "28954e8e9bd987f1",
+          "first_used_at": 260
+        },
+        {
+          "source": "28954e8e9bd987f1",
+          "action": 1,
+          "target": "8c8ab47809d5e03a",
+          "first_used_at": 261
+        },
+        {
+          "source": "28954e8e9bd987f1",
+          "action": 0,
+          "target": "3cb210fc8e7e209d",
+          "first_used_at": 263
+        },
+        {
+          "source": "028c0493b1e095b2",
+          "action": 0,
+          "target": "028c0493b1e095b2",
+          "first_used_at": 281
+        },
+        {
+          "source": "028c0493b1e095b2",
+          "action": 1,
+          "target": "4bf5c7ab7443086c",
+          "first_used_at": 282
+        },
+        {
+          "source": "4bf5c7ab7443086c",
+          "action": 1,
+          "target": "4bf5c7ab7443086c",
+          "first_used_at": 283
+        },
+        {
+          "source": "4bf5c7ab7443086c",
+          "action": 2,
+          "target": "a4c671b16f2a6195",
+          "first_used_at": 285
+        },
+        {
+          "source": "a4c671b16f2a6195",
+          "action": 1,
+          "target": "4bf5c7ab7443086c",
+          "first_used_at": 286
+        },
+        {
+          "source": "4bf5c7ab7443086c",
+          "action": 3,
+          "target": "1fc96c025dc3e212",
+          "first_used_at": 287
+        },
+        {
+          "source": "1fc96c025dc3e212",
+          "action": 1,
+          "target": "a8edc53e7f1d668e",
+          "first_used_at": 288
+        },
+        {
+          "source": "66b4c5a8b73e7752",
+          "action": 2,
+          "target": "96a69739e42674b4",
+          "first_used_at": 294
+        },
+        {
+          "source": "96a69739e42674b4",
+          "action": 1,
+          "target": "66b4c5a8b73e7752",
+          "first_used_at": 295
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 2,
+          "target": "6b33d769aaea3d3e",
+          "first_used_at": 307
+        },
+        {
+          "source": "6b33d769aaea3d3e",
+          "action": 0,
+          "target": "8a6b0647059d790e",
+          "first_used_at": 308
+        },
+        {
+          "source": "8a6b0647059d790e",
+          "action": 1,
+          "target": "cf09451bacdfc87a",
+          "first_used_at": 309
+        },
+        {
+          "source": "cf09451bacdfc87a",
+          "action": 1,
+          "target": "7e18b9c5c1bd26d9",
+          "first_used_at": 310
+        },
+        {
+          "source": "7e18b9c5c1bd26d9",
+          "action": 3,
+          "target": "cf09451bacdfc87a",
+          "first_used_at": 311
+        },
+        {
+          "source": "cf09451bacdfc87a",
+          "action": 3,
+          "target": "2969c67b16eb6967",
+          "first_used_at": 312
+        },
+        {
+          "source": "96a69739e42674b4",
+          "action": 0,
+          "target": "794b14881bd9db7b",
+          "first_used_at": 347
+        },
+        {
+          "source": "794b14881bd9db7b",
+          "action": 0,
+          "target": "96a69739e42674b4",
+          "first_used_at": 348
+        },
+        {
+          "source": "a4c671b16f2a6195",
+          "action": 3,
+          "target": "6a29a952e4d4b25a",
+          "first_used_at": 354
+        },
+        {
+          "source": "6a29a952e4d4b25a",
+          "action": 2,
+          "target": "c198feea13343d2e",
+          "first_used_at": 355
+        },
+        {
+          "source": "c198feea13343d2e",
+          "action": 1,
+          "target": "6a29a952e4d4b25a",
+          "first_used_at": 356
+        },
+        {
+          "source": "6b33d769aaea3d3e",
+          "action": 1,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 380
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 2,
+          "target": "c20c33b8f4241c05",
+          "first_used_at": 391
+        },
+        {
+          "source": "c20c33b8f4241c05",
+          "action": 0,
+          "target": "12a4296ea8e90089",
+          "first_used_at": 392
+        },
+        {
+          "source": "12a4296ea8e90089",
+          "action": 0,
+          "target": "c20c33b8f4241c05",
+          "first_used_at": 393
+        },
+        {
+          "source": "c20c33b8f4241c05",
+          "action": 1,
+          "target": "5f2f5cd3275b5a5c",
+          "first_used_at": 396
+        },
+        {
+          "source": "19dd57f165ceb4c9",
+          "action": 2,
+          "target": "f96693ee59acd4e0",
+          "first_used_at": 398
+        },
+        {
+          "source": "f96693ee59acd4e0",
+          "action": 2,
+          "target": "f96693ee59acd4e0",
+          "first_used_at": 399
+        },
+        {
+          "source": "f96693ee59acd4e0",
+          "action": 0,
+          "target": "19dd57f165ceb4c9",
+          "first_used_at": 400
+        },
+        {
+          "source": "6a29a952e4d4b25a",
+          "action": 0,
+          "target": "a4c671b16f2a6195",
+          "first_used_at": 426
+        },
+        {
+          "source": "a4c671b16f2a6195",
+          "action": 2,
+          "target": "a4c671b16f2a6195",
+          "first_used_at": 427
+        },
+        {
+          "source": "6cc64650b2666715",
+          "action": 0,
+          "target": "663f5e48a597810c",
+          "first_used_at": 430
+        },
+        {
+          "source": "f96693ee59acd4e0",
+          "action": 1,
+          "target": "a8edc53e7f1d668e",
+          "first_used_at": 471
+        },
+        {
+          "source": "858bc73ff319b3d9",
+          "action": 2,
+          "target": "d3750c8ca8a24968",
+          "first_used_at": 496
+        },
+        {
+          "source": "858bc73ff319b3d9",
+          "action": 0,
+          "target": "c48456d6bd66de94",
+          "first_used_at": 498
+        },
+        {
+          "source": "c48456d6bd66de94",
+          "action": 1,
+          "target": "322a054c8baa20d4",
+          "first_used_at": 499
+        },
+        {
+          "source": "322a054c8baa20d4",
+          "action": 0,
+          "target": "c48456d6bd66de94",
+          "first_used_at": 500
+        },
+        {
+          "source": "c48456d6bd66de94",
+          "action": 0,
+          "target": "c48456d6bd66de94",
+          "first_used_at": 501
+        },
+        {
+          "source": "c48456d6bd66de94",
+          "action": 3,
+          "target": "858bc73ff319b3d9",
+          "first_used_at": 502
+        },
+        {
+          "source": "008bbe560a4a6e0f",
+          "action": 0,
+          "target": "aea6b24bed8761b6",
+          "first_used_at": 522
+        },
+        {
+          "source": "aea6b24bed8761b6",
+          "action": 3,
+          "target": "008bbe560a4a6e0f",
+          "first_used_at": 523
+        },
+        {
+          "source": "008bbe560a4a6e0f",
+          "action": 1,
+          "target": "236f44dbdde36c9a",
+          "first_used_at": 526
+        },
+        {
+          "source": "236f44dbdde36c9a",
+          "action": 0,
+          "target": "236f44dbdde36c9a",
+          "first_used_at": 527
+        },
+        {
+          "source": "236f44dbdde36c9a",
+          "action": 1,
+          "target": "feef8a5cff5a42db",
+          "first_used_at": 528
+        }
+      ],
+      "proof_sequences": {}
+    },
+    "Q-learning": {
+      "checkpoints": [
+        {
+          "step": 0,
+          "states": 1,
+          "discovered_actions": 4,
+          "transitions": 0
+        },
+        {
+          "step": 150,
+          "states": 33,
+          "discovered_actions": 109,
+          "transitions": 63
+        },
+        {
+          "step": 300,
+          "states": 47,
+          "discovered_actions": 147,
+          "transitions": 86
+        },
+        {
+          "step": 450,
+          "states": 49,
+          "discovered_actions": 151,
+          "transitions": 97
+        },
+        {
+          "step": 600,
+          "states": 60,
+          "discovered_actions": 188,
+          "transitions": 111
+        }
+      ],
+      "nodes": [
+        {
+          "id": "hub",
+          "path": "/",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 0,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "43bc5c1fad6adf58",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 1,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "3911f7b54263dec5",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 3,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "185b9ba5ab9daecb",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 4,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "0f6e0f1e409eb0f7",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 10,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "fd190465d44e46c4",
+          "path": "/",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 11,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "52462fc75b4a1c03",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 12,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "c0b821a08c7a2f88",
+          "path": "/text",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 14,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "cddb0bd472120afc",
+          "path": "/text",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 18,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "8abd409396c6a1ee",
+          "path": "/",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 22,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "2cb98d6a8ed50d38",
+          "path": "/preview",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 23,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            },
+            {
+              "index": 1,
+              "name": "Open text proof [GET /text-proof]"
+            }
+          ]
+        },
+        {
+          "id": "02d7e433c07edbab",
+          "path": "/text-proof",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 24,
+          "actions": []
+        },
+        {
+          "id": "66b4c5a8b73e7752",
+          "path": "/",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 45,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "028c0493b1e095b2",
+          "path": "/text",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 46,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "a4c671b16f2a6195",
+          "path": "/text",
+          "text": "final",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 47,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "649b67cecaa62132",
+          "path": "/text",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 49,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "cc4e5a6fc5681293",
+          "path": "/text",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 50,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "ed934be8e15e1641",
+          "path": "/",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 51,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "7e4789f39a02d0a4",
+          "path": "/text",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 53,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "5f2f5cd3275b5a5c",
+          "path": "/",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 60,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "f019c23c9bee74f1",
+          "path": "/preview",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 64,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "19dd57f165ceb4c9",
+          "path": "/palette",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 72,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "6b33d769aaea3d3e",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 81,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "3cb210fc8e7e209d",
+          "path": "/text",
+          "text": "final",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 88,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "28954e8e9bd987f1",
+          "path": "/",
+          "text": "final",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 90,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "cf95741036107388",
+          "path": "/cover",
+          "text": "final",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 91,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "8c8ab47809d5e03a",
+          "path": "/palette",
+          "text": "final",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 93,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "663f5e48a597810c",
+          "path": "/palette",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 94,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "f369263e60837a81",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 113,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "d3750c8ca8a24968",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 114,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "858bc73ff319b3d9",
+          "path": "/",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 115,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "c48456d6bd66de94",
+          "path": "/text",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 116,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "aea6b24bed8761b6",
+          "path": "/text",
+          "text": "final",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 119,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "a75c5c9ee28e4511",
+          "path": "/cover",
+          "text": "final",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 210,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "ab658c6b2b5106d7",
+          "path": "/",
+          "text": "final",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 211,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "0954614d11e78ca5",
+          "path": "/preview",
+          "text": "final",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 212,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            },
+            {
+              "index": 1,
+              "name": "Open print proof [GET /print-proof]"
+            }
+          ]
+        },
+        {
+          "id": "971b4ddd89e5ca1b",
+          "path": "/print-proof",
+          "text": "final",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 215,
+          "actions": []
+        },
+        {
+          "id": "55a931ee1371a5d0",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 227,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "f630f2e0fd5cc0a5",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 228,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "7e18b9c5c1bd26d9",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 231,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "52974239801a14fc",
+          "path": "/",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 234,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "794b14881bd9db7b",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 235,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "74351cf87146975a",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 237,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "0c225d7eac5a6f94",
+          "path": "/text",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 239,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "8a6b0647059d790e",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 283,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "cf09451bacdfc87a",
+          "path": "/",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 284,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "2969c67b16eb6967",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 285,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "c20c33b8f4241c05",
+          "path": "/cover",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 301,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "12a4296ea8e90089",
+          "path": "/cover",
+          "text": "draft",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 376,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "6a29a952e4d4b25a",
+          "path": "/",
+          "text": "final",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 503,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "6172f10588009f38",
+          "path": "/palette",
+          "text": "final",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 549,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "feef8a5cff5a42db",
+          "path": "/palette",
+          "text": "final",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 550,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "f9121dfd53fb5171",
+          "path": "/cover",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 592,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "3eaffc355e7e3505",
+          "path": "/cover",
+          "text": "draft",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 593,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "bc935b5bf139380c",
+          "path": "/",
+          "text": "draft",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 594,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "9106155fa51f3d79",
+          "path": "/palette",
+          "text": "draft",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 595,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "0edda2bac608ab4f",
+          "path": "/palette",
+          "text": "draft",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 596,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "8f400d4c93c72b9c",
+          "path": "/palette",
+          "text": "draft",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 597,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "c53904331eeebf96",
+          "path": "/",
+          "text": "draft",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 598,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "558f7627504d29ee",
+          "path": "/preview",
+          "text": "draft",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 599,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "source": "hub",
+          "action": 3,
+          "target": "43bc5c1fad6adf58",
+          "first_used_at": 1
+        },
+        {
+          "source": "43bc5c1fad6adf58",
+          "action": 0,
+          "target": "hub",
+          "first_used_at": 2
+        },
+        {
+          "source": "hub",
+          "action": 1,
+          "target": "3911f7b54263dec5",
+          "first_used_at": 3
+        },
+        {
+          "source": "3911f7b54263dec5",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 4
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 0,
+          "target": "3911f7b54263dec5",
+          "first_used_at": 5
+        },
+        {
+          "source": "3911f7b54263dec5",
+          "action": 3,
+          "target": "hub",
+          "first_used_at": 6
+        },
+        {
+          "source": "3911f7b54263dec5",
+          "action": 2,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 10
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 3,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 11
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 3,
+          "target": "52462fc75b4a1c03",
+          "first_used_at": 12
+        },
+        {
+          "source": "52462fc75b4a1c03",
+          "action": 0,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 13
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 0,
+          "target": "c0b821a08c7a2f88",
+          "first_used_at": 14
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 3,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 15
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 0,
+          "target": "c0b821a08c7a2f88",
+          "first_used_at": 17
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 1,
+          "target": "cddb0bd472120afc",
+          "first_used_at": 18
+        },
+        {
+          "source": "cddb0bd472120afc",
+          "action": 1,
+          "target": "cddb0bd472120afc",
+          "first_used_at": 19
+        },
+        {
+          "source": "cddb0bd472120afc",
+          "action": 0,
+          "target": "c0b821a08c7a2f88",
+          "first_used_at": 20
+        },
+        {
+          "source": "cddb0bd472120afc",
+          "action": 3,
+          "target": "8abd409396c6a1ee",
+          "first_used_at": 22
+        },
+        {
+          "source": "8abd409396c6a1ee",
+          "action": 3,
+          "target": "2cb98d6a8ed50d38",
+          "first_used_at": 23
+        },
+        {
+          "source": "2cb98d6a8ed50d38",
+          "action": 1,
+          "target": "02d7e433c07edbab",
+          "first_used_at": 24
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 1,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 40
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 0,
+          "target": "3911f7b54263dec5",
+          "first_used_at": 41
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 3,
+          "target": "66b4c5a8b73e7752",
+          "first_used_at": 45
+        },
+        {
+          "source": "66b4c5a8b73e7752",
+          "action": 0,
+          "target": "028c0493b1e095b2",
+          "first_used_at": 46
+        },
+        {
+          "source": "028c0493b1e095b2",
+          "action": 2,
+          "target": "a4c671b16f2a6195",
+          "first_used_at": 47
+        },
+        {
+          "source": "a4c671b16f2a6195",
+          "action": 0,
+          "target": "028c0493b1e095b2",
+          "first_used_at": 48
+        },
+        {
+          "source": "hub",
+          "action": 0,
+          "target": "649b67cecaa62132",
+          "first_used_at": 49
+        },
+        {
+          "source": "649b67cecaa62132",
+          "action": 2,
+          "target": "cc4e5a6fc5681293",
+          "first_used_at": 50
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 3,
+          "target": "ed934be8e15e1641",
+          "first_used_at": 51
+        },
+        {
+          "source": "ed934be8e15e1641",
+          "action": 0,
+          "target": "cc4e5a6fc5681293",
+          "first_used_at": 52
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 1,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 53
+        },
+        {
+          "source": "7e4789f39a02d0a4",
+          "action": 0,
+          "target": "649b67cecaa62132",
+          "first_used_at": 54
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 2,
+          "target": "cc4e5a6fc5681293",
+          "first_used_at": 56
+        },
+        {
+          "source": "7e4789f39a02d0a4",
+          "action": 3,
+          "target": "5f2f5cd3275b5a5c",
+          "first_used_at": 60
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 0,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 61
+        },
+        {
+          "source": "7e4789f39a02d0a4",
+          "action": 1,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 62
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 3,
+          "target": "f019c23c9bee74f1",
+          "first_used_at": 64
+        },
+        {
+          "source": "f019c23c9bee74f1",
+          "action": 0,
+          "target": "5f2f5cd3275b5a5c",
+          "first_used_at": 65
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 1,
+          "target": "19dd57f165ceb4c9",
+          "first_used_at": 72
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 2,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 79
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 2,
+          "target": "6b33d769aaea3d3e",
+          "first_used_at": 81
+        },
+        {
+          "source": "6b33d769aaea3d3e",
+          "action": 1,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 82
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 2,
+          "target": "3cb210fc8e7e209d",
+          "first_used_at": 88
+        },
+        {
+          "source": "3cb210fc8e7e209d",
+          "action": 2,
+          "target": "3cb210fc8e7e209d",
+          "first_used_at": 89
+        },
+        {
+          "source": "3cb210fc8e7e209d",
+          "action": 3,
+          "target": "28954e8e9bd987f1",
+          "first_used_at": 90
+        },
+        {
+          "source": "28954e8e9bd987f1",
+          "action": 2,
+          "target": "cf95741036107388",
+          "first_used_at": 91
+        },
+        {
+          "source": "cf95741036107388",
+          "action": 1,
+          "target": "28954e8e9bd987f1",
+          "first_used_at": 92
+        },
+        {
+          "source": "28954e8e9bd987f1",
+          "action": 1,
+          "target": "8c8ab47809d5e03a",
+          "first_used_at": 93
+        },
+        {
+          "source": "8c8ab47809d5e03a",
+          "action": 0,
+          "target": "663f5e48a597810c",
+          "first_used_at": 94
+        },
+        {
+          "source": "663f5e48a597810c",
+          "action": 0,
+          "target": "663f5e48a597810c",
+          "first_used_at": 95
+        },
+        {
+          "source": "663f5e48a597810c",
+          "action": 2,
+          "target": "8c8ab47809d5e03a",
+          "first_used_at": 96
+        },
+        {
+          "source": "66b4c5a8b73e7752",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 104
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 107
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 110
+        },
+        {
+          "source": "hub",
+          "action": 2,
+          "target": "f369263e60837a81",
+          "first_used_at": 113
+        },
+        {
+          "source": "f369263e60837a81",
+          "action": 0,
+          "target": "d3750c8ca8a24968",
+          "first_used_at": 114
+        },
+        {
+          "source": "d3750c8ca8a24968",
+          "action": 1,
+          "target": "858bc73ff319b3d9",
+          "first_used_at": 115
+        },
+        {
+          "source": "858bc73ff319b3d9",
+          "action": 0,
+          "target": "c48456d6bd66de94",
+          "first_used_at": 116
+        },
+        {
+          "source": "c48456d6bd66de94",
+          "action": 0,
+          "target": "c48456d6bd66de94",
+          "first_used_at": 117
+        },
+        {
+          "source": "c48456d6bd66de94",
+          "action": 2,
+          "target": "aea6b24bed8761b6",
+          "first_used_at": 119
+        },
+        {
+          "source": "aea6b24bed8761b6",
+          "action": 0,
+          "target": "c48456d6bd66de94",
+          "first_used_at": 120
+        },
+        {
+          "source": "d3750c8ca8a24968",
+          "action": 0,
+          "target": "f369263e60837a81",
+          "first_used_at": 125
+        },
+        {
+          "source": "f369263e60837a81",
+          "action": 1,
+          "target": "hub",
+          "first_used_at": 126
+        },
+        {
+          "source": "649b67cecaa62132",
+          "action": 1,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 130
+        },
+        {
+          "source": "cf95741036107388",
+          "action": 0,
+          "target": "a75c5c9ee28e4511",
+          "first_used_at": 210
+        },
+        {
+          "source": "a75c5c9ee28e4511",
+          "action": 1,
+          "target": "ab658c6b2b5106d7",
+          "first_used_at": 211
+        },
+        {
+          "source": "ab658c6b2b5106d7",
+          "action": 3,
+          "target": "0954614d11e78ca5",
+          "first_used_at": 212
+        },
+        {
+          "source": "0954614d11e78ca5",
+          "action": 0,
+          "target": "ab658c6b2b5106d7",
+          "first_used_at": 213
+        },
+        {
+          "source": "0954614d11e78ca5",
+          "action": 1,
+          "target": "971b4ddd89e5ca1b",
+          "first_used_at": 215
+        },
+        {
+          "source": "858bc73ff319b3d9",
+          "action": 2,
+          "target": "d3750c8ca8a24968",
+          "first_used_at": 223
+        },
+        {
+          "source": "858bc73ff319b3d9",
+          "action": 1,
+          "target": "55a931ee1371a5d0",
+          "first_used_at": 227
+        },
+        {
+          "source": "55a931ee1371a5d0",
+          "action": 1,
+          "target": "f630f2e0fd5cc0a5",
+          "first_used_at": 228
+        },
+        {
+          "source": "f630f2e0fd5cc0a5",
+          "action": 1,
+          "target": "f630f2e0fd5cc0a5",
+          "first_used_at": 229
+        },
+        {
+          "source": "f630f2e0fd5cc0a5",
+          "action": 2,
+          "target": "7e18b9c5c1bd26d9",
+          "first_used_at": 231
+        },
+        {
+          "source": "7e18b9c5c1bd26d9",
+          "action": 2,
+          "target": "7e18b9c5c1bd26d9",
+          "first_used_at": 232
+        },
+        {
+          "source": "7e18b9c5c1bd26d9",
+          "action": 1,
+          "target": "f630f2e0fd5cc0a5",
+          "first_used_at": 233
+        },
+        {
+          "source": "f630f2e0fd5cc0a5",
+          "action": 3,
+          "target": "52974239801a14fc",
+          "first_used_at": 234
+        },
+        {
+          "source": "52974239801a14fc",
+          "action": 2,
+          "target": "794b14881bd9db7b",
+          "first_used_at": 235
+        },
+        {
+          "source": "794b14881bd9db7b",
+          "action": 1,
+          "target": "52974239801a14fc",
+          "first_used_at": 236
+        },
+        {
+          "source": "52974239801a14fc",
+          "action": 3,
+          "target": "74351cf87146975a",
+          "first_used_at": 237
+        },
+        {
+          "source": "74351cf87146975a",
+          "action": 0,
+          "target": "52974239801a14fc",
+          "first_used_at": 238
+        },
+        {
+          "source": "52974239801a14fc",
+          "action": 0,
+          "target": "0c225d7eac5a6f94",
+          "first_used_at": 239
+        },
+        {
+          "source": "6b33d769aaea3d3e",
+          "action": 0,
+          "target": "8a6b0647059d790e",
+          "first_used_at": 283
+        },
+        {
+          "source": "8a6b0647059d790e",
+          "action": 1,
+          "target": "cf09451bacdfc87a",
+          "first_used_at": 284
+        },
+        {
+          "source": "cf09451bacdfc87a",
+          "action": 3,
+          "target": "2969c67b16eb6967",
+          "first_used_at": 285
+        },
+        {
+          "source": "2969c67b16eb6967",
+          "action": 0,
+          "target": "cf09451bacdfc87a",
+          "first_used_at": 286
+        },
+        {
+          "source": "cf09451bacdfc87a",
+          "action": 1,
+          "target": "7e18b9c5c1bd26d9",
+          "first_used_at": 287
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 2,
+          "target": "c20c33b8f4241c05",
+          "first_used_at": 301
+        },
+        {
+          "source": "c20c33b8f4241c05",
+          "action": 1,
+          "target": "5f2f5cd3275b5a5c",
+          "first_used_at": 302
+        },
+        {
+          "source": "19dd57f165ceb4c9",
+          "action": 3,
+          "target": "5f2f5cd3275b5a5c",
+          "first_used_at": 306
+        },
+        {
+          "source": "28954e8e9bd987f1",
+          "action": 0,
+          "target": "3cb210fc8e7e209d",
+          "first_used_at": 332
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 2,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 340
+        },
+        {
+          "source": "8a6b0647059d790e",
+          "action": 0,
+          "target": "6b33d769aaea3d3e",
+          "first_used_at": 346
+        },
+        {
+          "source": "c20c33b8f4241c05",
+          "action": 0,
+          "target": "12a4296ea8e90089",
+          "first_used_at": 376
+        },
+        {
+          "source": "12a4296ea8e90089",
+          "action": 0,
+          "target": "c20c33b8f4241c05",
+          "first_used_at": 377
+        },
+        {
+          "source": "663f5e48a597810c",
+          "action": 3,
+          "target": "ed934be8e15e1641",
+          "first_used_at": 406
+        },
+        {
+          "source": "ed934be8e15e1641",
+          "action": 1,
+          "target": "663f5e48a597810c",
+          "first_used_at": 407
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 0,
+          "target": "649b67cecaa62132",
+          "first_used_at": 426
+        },
+        {
+          "source": "7e18b9c5c1bd26d9",
+          "action": 3,
+          "target": "cf09451bacdfc87a",
+          "first_used_at": 473
+        },
+        {
+          "source": "cf09451bacdfc87a",
+          "action": 2,
+          "target": "8a6b0647059d790e",
+          "first_used_at": 476
+        },
+        {
+          "source": "a4c671b16f2a6195",
+          "action": 3,
+          "target": "6a29a952e4d4b25a",
+          "first_used_at": 503
+        },
+        {
+          "source": "ab658c6b2b5106d7",
+          "action": 1,
+          "target": "6172f10588009f38",
+          "first_used_at": 549
+        },
+        {
+          "source": "6172f10588009f38",
+          "action": 1,
+          "target": "feef8a5cff5a42db",
+          "first_used_at": 550
+        },
+        {
+          "source": "feef8a5cff5a42db",
+          "action": 1,
+          "target": "feef8a5cff5a42db",
+          "first_used_at": 551
+        },
+        {
+          "source": "8abd409396c6a1ee",
+          "action": 2,
+          "target": "f9121dfd53fb5171",
+          "first_used_at": 592
+        },
+        {
+          "source": "f9121dfd53fb5171",
+          "action": 0,
+          "target": "3eaffc355e7e3505",
+          "first_used_at": 593
+        },
+        {
+          "source": "3eaffc355e7e3505",
+          "action": 1,
+          "target": "bc935b5bf139380c",
+          "first_used_at": 594
+        },
+        {
+          "source": "bc935b5bf139380c",
+          "action": 1,
+          "target": "9106155fa51f3d79",
+          "first_used_at": 595
+        },
+        {
+          "source": "9106155fa51f3d79",
+          "action": 0,
+          "target": "0edda2bac608ab4f",
+          "first_used_at": 596
+        },
+        {
+          "source": "0edda2bac608ab4f",
+          "action": 1,
+          "target": "8f400d4c93c72b9c",
+          "first_used_at": 597
+        },
+        {
+          "source": "8f400d4c93c72b9c",
+          "action": 3,
+          "target": "c53904331eeebf96",
+          "first_used_at": 598
+        },
+        {
+          "source": "c53904331eeebf96",
+          "action": 3,
+          "target": "558f7627504d29ee",
+          "first_used_at": 599
+        }
+      ],
+      "proof_sequences": {
+        "/text-proof": {
+          "step": 24,
+          "path": [
+            "Preview [GET /preview]",
+            "Home [GET /]",
+            "Palette [GET /palette]",
+            "Set palette: blue [POST /palette palette=blue]",
+            "Set palette: plain [POST /palette palette=plain]",
+            "Home [GET /]",
+            "Palette [GET /palette]",
+            "Home [GET /]",
+            "Palette [GET /palette]",
+            "Set palette: green [POST /palette palette=green]",
+            "Home [GET /]",
+            "Preview [GET /preview]",
+            "Home [GET /]",
+            "Text [GET /text]",
+            "Home [GET /]",
+            "Text [GET /text]",
+            "Set text: empty [POST /text text=empty]",
+            "Set text: draft [POST /text text=draft]",
+            "Set text: draft [POST /text text=draft]",
+            "Set text: empty [POST /text text=empty]",
+            "Set text: draft [POST /text text=draft]",
+            "Home [GET /]",
+            "Preview [GET /preview]",
+            "Open text proof [GET /text-proof]"
+          ]
+        },
+        "/print-proof": {
+          "step": 215,
+          "path": [
+            "Preview [GET /preview]",
+            "Home [GET /]",
+            "Palette [GET /palette]",
+            "Set palette: blue [POST /palette palette=blue]",
+            "Set palette: plain [POST /palette palette=plain]",
+            "Home [GET /]",
+            "Palette [GET /palette]",
+            "Home [GET /]",
+            "Palette [GET /palette]",
+            "Set palette: green [POST /palette palette=green]",
+            "Home [GET /]",
+            "Preview [GET /preview]",
+            "Home [GET /]",
+            "Text [GET /text]",
+            "Set text: final [POST /text text=final]",
+            "Home [GET /]",
+            "Cover [GET /cover]",
+            "Add cover [POST /cover cover=on]",
+            "Home [GET /]",
+            "Preview [GET /preview]",
+            "Home [GET /]",
+            "Preview [GET /preview]",
+            "Open print proof [GET /print-proof]"
+          ]
+        }
+      }
+    },
+    "Genetic": {
+      "checkpoints": [
+        {
+          "step": 0,
+          "states": 1,
+          "discovered_actions": 4,
+          "transitions": 0
+        },
+        {
+          "step": 150,
+          "states": 27,
+          "discovered_actions": 87,
+          "transitions": 57
+        },
+        {
+          "step": 300,
+          "states": 53,
+          "discovered_actions": 162,
+          "transitions": 105
+        },
+        {
+          "step": 450,
+          "states": 55,
+          "discovered_actions": 170,
+          "transitions": 116
+        },
+        {
+          "step": 600,
+          "states": 60,
+          "discovered_actions": 186,
+          "transitions": 128
+        }
+      ],
+      "nodes": [
+        {
+          "id": "hub",
+          "path": "/",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 0,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "649b67cecaa62132",
+          "path": "/text",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 1,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "cc4e5a6fc5681293",
+          "path": "/text",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 4,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "7e4789f39a02d0a4",
+          "path": "/text",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 10,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "5f2f5cd3275b5a5c",
+          "path": "/",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 20,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "19dd57f165ceb4c9",
+          "path": "/palette",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 21,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "a8edc53e7f1d668e",
+          "path": "/palette",
+          "text": "draft",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 23,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "1fc96c025dc3e212",
+          "path": "/",
+          "text": "draft",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 24,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "ed934be8e15e1641",
+          "path": "/",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 33,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "9ad44f6fe9083778",
+          "path": "/cover",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 34,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "9daaafcd6f6368f2",
+          "path": "/cover",
+          "text": "final",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 35,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "663f5e48a597810c",
+          "path": "/palette",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 38,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "6a97916fbb52d400",
+          "path": "/preview",
+          "text": "final",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 43,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "f369263e60837a81",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 61,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "f019c23c9bee74f1",
+          "path": "/preview",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 71,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "3911f7b54263dec5",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 73,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "0f6e0f1e409eb0f7",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 75,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "fd190465d44e46c4",
+          "path": "/",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 76,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "c0b821a08c7a2f88",
+          "path": "/text",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 77,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "185b9ba5ab9daecb",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 84,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "66b4c5a8b73e7752",
+          "path": "/",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 96,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "43bc5c1fad6adf58",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 99,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "c20c33b8f4241c05",
+          "path": "/cover",
+          "text": "draft",
+          "palette": "plain",
+          "cover": false,
+          "discovered_at": 116,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "12a4296ea8e90089",
+          "path": "/cover",
+          "text": "draft",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 117,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "e4624d1a0ed145c5",
+          "path": "/",
+          "text": "draft",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 118,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "0edda2bac608ab4f",
+          "path": "/palette",
+          "text": "draft",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 119,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "d3750c8ca8a24968",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 122,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "8c8ab47809d5e03a",
+          "path": "/palette",
+          "text": "final",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 163,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "28954e8e9bd987f1",
+          "path": "/",
+          "text": "final",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 164,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "ec414f3b9eccc6f6",
+          "path": "/preview",
+          "text": "final",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 167,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "6b33d769aaea3d3e",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 182,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "8a6b0647059d790e",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 187,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "cf09451bacdfc87a",
+          "path": "/",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 190,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "2969c67b16eb6967",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 191,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "96a69739e42674b4",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 202,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "794b14881bd9db7b",
+          "path": "/cover",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 203,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "52974239801a14fc",
+          "path": "/",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 204,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "f630f2e0fd5cc0a5",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 205,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "74351cf87146975a",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 208,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "0c225d7eac5a6f94",
+          "path": "/text",
+          "text": "empty",
+          "palette": "blue",
+          "cover": true,
+          "discovered_at": 210,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "52462fc75b4a1c03",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 220,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "cddb0bd472120afc",
+          "path": "/text",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 227,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "8abd409396c6a1ee",
+          "path": "/",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 228,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "2cb98d6a8ed50d38",
+          "path": "/preview",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 229,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            },
+            {
+              "index": 1,
+              "name": "Open text proof [GET /text-proof]"
+            }
+          ]
+        },
+        {
+          "id": "02d7e433c07edbab",
+          "path": "/text-proof",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 230,
+          "actions": []
+        },
+        {
+          "id": "028c0493b1e095b2",
+          "path": "/text",
+          "text": "empty",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 248,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "4bf5c7ab7443086c",
+          "path": "/text",
+          "text": "draft",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 250,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "a4c671b16f2a6195",
+          "path": "/text",
+          "text": "final",
+          "palette": "blue",
+          "cover": false,
+          "discovered_at": 252,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "858bc73ff319b3d9",
+          "path": "/",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 263,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "8f8b73450cc484e2",
+          "path": "/preview",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 264,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "55a931ee1371a5d0",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 268,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "c48456d6bd66de94",
+          "path": "/text",
+          "text": "empty",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 272,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "7e18b9c5c1bd26d9",
+          "path": "/palette",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 298,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "221319767f10b2e0",
+          "path": "/text",
+          "text": "empty",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 302,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "3cb210fc8e7e209d",
+          "path": "/text",
+          "text": "final",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 323,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "f9121dfd53fb5171",
+          "path": "/cover",
+          "text": "draft",
+          "palette": "green",
+          "cover": false,
+          "discovered_at": 498,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Add cover [POST /cover cover=on]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "3eaffc355e7e3505",
+          "path": "/cover",
+          "text": "draft",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 499,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Remove cover [POST /cover cover=off]"
+            },
+            {
+              "index": 1,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "bc935b5bf139380c",
+          "path": "/",
+          "text": "draft",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 500,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Text [GET /text]"
+            },
+            {
+              "index": 1,
+              "name": "Palette [GET /palette]"
+            },
+            {
+              "index": 2,
+              "name": "Cover [GET /cover]"
+            },
+            {
+              "index": 3,
+              "name": "Preview [GET /preview]"
+            }
+          ]
+        },
+        {
+          "id": "9106155fa51f3d79",
+          "path": "/palette",
+          "text": "draft",
+          "palette": "green",
+          "cover": true,
+          "discovered_at": 501,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set palette: plain [POST /palette palette=plain]"
+            },
+            {
+              "index": 1,
+              "name": "Set palette: blue [POST /palette palette=blue]"
+            },
+            {
+              "index": 2,
+              "name": "Set palette: green [POST /palette palette=green]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        },
+        {
+          "id": "322a054c8baa20d4",
+          "path": "/text",
+          "text": "draft",
+          "palette": "plain",
+          "cover": true,
+          "discovered_at": 597,
+          "actions": [
+            {
+              "index": 0,
+              "name": "Set text: empty [POST /text text=empty]"
+            },
+            {
+              "index": 1,
+              "name": "Set text: draft [POST /text text=draft]"
+            },
+            {
+              "index": 2,
+              "name": "Set text: final [POST /text text=final]"
+            },
+            {
+              "index": 3,
+              "name": "Home [GET /]"
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "source": "hub",
+          "action": 0,
+          "target": "649b67cecaa62132",
+          "first_used_at": 1
+        },
+        {
+          "source": "649b67cecaa62132",
+          "action": 3,
+          "target": "hub",
+          "first_used_at": 2
+        },
+        {
+          "source": "649b67cecaa62132",
+          "action": 2,
+          "target": "cc4e5a6fc5681293",
+          "first_used_at": 4
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 0,
+          "target": "649b67cecaa62132",
+          "first_used_at": 5
+        },
+        {
+          "source": "649b67cecaa62132",
+          "action": 0,
+          "target": "649b67cecaa62132",
+          "first_used_at": 6
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 1,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 10
+        },
+        {
+          "source": "7e4789f39a02d0a4",
+          "action": 1,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 11
+        },
+        {
+          "source": "7e4789f39a02d0a4",
+          "action": 0,
+          "target": "649b67cecaa62132",
+          "first_used_at": 13
+        },
+        {
+          "source": "649b67cecaa62132",
+          "action": 1,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 18
+        },
+        {
+          "source": "7e4789f39a02d0a4",
+          "action": 3,
+          "target": "5f2f5cd3275b5a5c",
+          "first_used_at": 20
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 1,
+          "target": "19dd57f165ceb4c9",
+          "first_used_at": 21
+        },
+        {
+          "source": "19dd57f165ceb4c9",
+          "action": 0,
+          "target": "19dd57f165ceb4c9",
+          "first_used_at": 22
+        },
+        {
+          "source": "19dd57f165ceb4c9",
+          "action": 1,
+          "target": "a8edc53e7f1d668e",
+          "first_used_at": 23
+        },
+        {
+          "source": "a8edc53e7f1d668e",
+          "action": 3,
+          "target": "1fc96c025dc3e212",
+          "first_used_at": 24
+        },
+        {
+          "source": "7e4789f39a02d0a4",
+          "action": 2,
+          "target": "cc4e5a6fc5681293",
+          "first_used_at": 28
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 3,
+          "target": "ed934be8e15e1641",
+          "first_used_at": 33
+        },
+        {
+          "source": "ed934be8e15e1641",
+          "action": 2,
+          "target": "9ad44f6fe9083778",
+          "first_used_at": 34
+        },
+        {
+          "source": "9ad44f6fe9083778",
+          "action": 0,
+          "target": "9daaafcd6f6368f2",
+          "first_used_at": 35
+        },
+        {
+          "source": "9daaafcd6f6368f2",
+          "action": 0,
+          "target": "9ad44f6fe9083778",
+          "first_used_at": 36
+        },
+        {
+          "source": "9ad44f6fe9083778",
+          "action": 1,
+          "target": "ed934be8e15e1641",
+          "first_used_at": 37
+        },
+        {
+          "source": "ed934be8e15e1641",
+          "action": 1,
+          "target": "663f5e48a597810c",
+          "first_used_at": 38
+        },
+        {
+          "source": "663f5e48a597810c",
+          "action": 0,
+          "target": "663f5e48a597810c",
+          "first_used_at": 39
+        },
+        {
+          "source": "663f5e48a597810c",
+          "action": 3,
+          "target": "ed934be8e15e1641",
+          "first_used_at": 40
+        },
+        {
+          "source": "ed934be8e15e1641",
+          "action": 3,
+          "target": "6a97916fbb52d400",
+          "first_used_at": 43
+        },
+        {
+          "source": "6a97916fbb52d400",
+          "action": 0,
+          "target": "ed934be8e15e1641",
+          "first_used_at": 44
+        },
+        {
+          "source": "ed934be8e15e1641",
+          "action": 0,
+          "target": "cc4e5a6fc5681293",
+          "first_used_at": 47
+        },
+        {
+          "source": "cc4e5a6fc5681293",
+          "action": 2,
+          "target": "cc4e5a6fc5681293",
+          "first_used_at": 51
+        },
+        {
+          "source": "hub",
+          "action": 2,
+          "target": "f369263e60837a81",
+          "first_used_at": 61
+        },
+        {
+          "source": "f369263e60837a81",
+          "action": 1,
+          "target": "hub",
+          "first_used_at": 62
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 3,
+          "target": "f019c23c9bee74f1",
+          "first_used_at": 71
+        },
+        {
+          "source": "f019c23c9bee74f1",
+          "action": 0,
+          "target": "5f2f5cd3275b5a5c",
+          "first_used_at": 72
+        },
+        {
+          "source": "hub",
+          "action": 1,
+          "target": "3911f7b54263dec5",
+          "first_used_at": 73
+        },
+        {
+          "source": "3911f7b54263dec5",
+          "action": 0,
+          "target": "3911f7b54263dec5",
+          "first_used_at": 74
+        },
+        {
+          "source": "3911f7b54263dec5",
+          "action": 2,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 75
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 3,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 76
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 0,
+          "target": "c0b821a08c7a2f88",
+          "first_used_at": 77
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 3,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 78
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 1,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 79
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 0,
+          "target": "3911f7b54263dec5",
+          "first_used_at": 80
+        },
+        {
+          "source": "3911f7b54263dec5",
+          "action": 3,
+          "target": "hub",
+          "first_used_at": 81
+        },
+        {
+          "source": "3911f7b54263dec5",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 84
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 0,
+          "target": "3911f7b54263dec5",
+          "first_used_at": 85
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 87
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 2,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 89
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 90
+        },
+        {
+          "source": "185b9ba5ab9daecb",
+          "action": 3,
+          "target": "66b4c5a8b73e7752",
+          "first_used_at": 96
+        },
+        {
+          "source": "hub",
+          "action": 3,
+          "target": "43bc5c1fad6adf58",
+          "first_used_at": 99
+        },
+        {
+          "source": "43bc5c1fad6adf58",
+          "action": 0,
+          "target": "hub",
+          "first_used_at": 100
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 0,
+          "target": "7e4789f39a02d0a4",
+          "first_used_at": 108
+        },
+        {
+          "source": "5f2f5cd3275b5a5c",
+          "action": 2,
+          "target": "c20c33b8f4241c05",
+          "first_used_at": 116
+        },
+        {
+          "source": "c20c33b8f4241c05",
+          "action": 0,
+          "target": "12a4296ea8e90089",
+          "first_used_at": 117
+        },
+        {
+          "source": "12a4296ea8e90089",
+          "action": 1,
+          "target": "e4624d1a0ed145c5",
+          "first_used_at": 118
+        },
+        {
+          "source": "e4624d1a0ed145c5",
+          "action": 1,
+          "target": "0edda2bac608ab4f",
+          "first_used_at": 119
+        },
+        {
+          "source": "0edda2bac608ab4f",
+          "action": 0,
+          "target": "0edda2bac608ab4f",
+          "first_used_at": 120
+        },
+        {
+          "source": "f369263e60837a81",
+          "action": 0,
+          "target": "d3750c8ca8a24968",
+          "first_used_at": 122
+        },
+        {
+          "source": "d3750c8ca8a24968",
+          "action": 0,
+          "target": "f369263e60837a81",
+          "first_used_at": 123
+        },
+        {
+          "source": "0f6e0f1e409eb0f7",
+          "action": 2,
+          "target": "0f6e0f1e409eb0f7",
+          "first_used_at": 131
+        },
+        {
+          "source": "663f5e48a597810c",
+          "action": 2,
+          "target": "8c8ab47809d5e03a",
+          "first_used_at": 163
+        },
+        {
+          "source": "8c8ab47809d5e03a",
+          "action": 3,
+          "target": "28954e8e9bd987f1",
+          "first_used_at": 164
+        },
+        {
+          "source": "28954e8e9bd987f1",
+          "action": 1,
+          "target": "8c8ab47809d5e03a",
+          "first_used_at": 165
+        },
+        {
+          "source": "28954e8e9bd987f1",
+          "action": 3,
+          "target": "ec414f3b9eccc6f6",
+          "first_used_at": 167
+        },
+        {
+          "source": "ec414f3b9eccc6f6",
+          "action": 0,
+          "target": "28954e8e9bd987f1",
+          "first_used_at": 168
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 2,
+          "target": "6b33d769aaea3d3e",
+          "first_used_at": 182
+        },
+        {
+          "source": "6b33d769aaea3d3e",
+          "action": 1,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 183
+        },
+        {
+          "source": "6b33d769aaea3d3e",
+          "action": 0,
+          "target": "8a6b0647059d790e",
+          "first_used_at": 187
+        },
+        {
+          "source": "8a6b0647059d790e",
+          "action": 0,
+          "target": "6b33d769aaea3d3e",
+          "first_used_at": 188
+        },
+        {
+          "source": "8a6b0647059d790e",
+          "action": 1,
+          "target": "cf09451bacdfc87a",
+          "first_used_at": 190
+        },
+        {
+          "source": "cf09451bacdfc87a",
+          "action": 3,
+          "target": "2969c67b16eb6967",
+          "first_used_at": 191
+        },
+        {
+          "source": "2969c67b16eb6967",
+          "action": 0,
+          "target": "cf09451bacdfc87a",
+          "first_used_at": 192
+        },
+        {
+          "source": "66b4c5a8b73e7752",
+          "action": 2,
+          "target": "96a69739e42674b4",
+          "first_used_at": 202
+        },
+        {
+          "source": "96a69739e42674b4",
+          "action": 0,
+          "target": "794b14881bd9db7b",
+          "first_used_at": 203
+        },
+        {
+          "source": "794b14881bd9db7b",
+          "action": 1,
+          "target": "52974239801a14fc",
+          "first_used_at": 204
+        },
+        {
+          "source": "52974239801a14fc",
+          "action": 1,
+          "target": "f630f2e0fd5cc0a5",
+          "first_used_at": 205
+        },
+        {
+          "source": "f630f2e0fd5cc0a5",
+          "action": 1,
+          "target": "f630f2e0fd5cc0a5",
+          "first_used_at": 206
+        },
+        {
+          "source": "f630f2e0fd5cc0a5",
+          "action": 3,
+          "target": "52974239801a14fc",
+          "first_used_at": 207
+        },
+        {
+          "source": "52974239801a14fc",
+          "action": 3,
+          "target": "74351cf87146975a",
+          "first_used_at": 208
+        },
+        {
+          "source": "74351cf87146975a",
+          "action": 0,
+          "target": "52974239801a14fc",
+          "first_used_at": 209
+        },
+        {
+          "source": "52974239801a14fc",
+          "action": 0,
+          "target": "0c225d7eac5a6f94",
+          "first_used_at": 210
+        },
+        {
+          "source": "0c225d7eac5a6f94",
+          "action": 3,
+          "target": "52974239801a14fc",
+          "first_used_at": 211
+        },
+        {
+          "source": "52974239801a14fc",
+          "action": 2,
+          "target": "794b14881bd9db7b",
+          "first_used_at": 212
+        },
+        {
+          "source": "fd190465d44e46c4",
+          "action": 3,
+          "target": "52462fc75b4a1c03",
+          "first_used_at": 220
+        },
+        {
+          "source": "52462fc75b4a1c03",
+          "action": 0,
+          "target": "fd190465d44e46c4",
+          "first_used_at": 221
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 1,
+          "target": "cddb0bd472120afc",
+          "first_used_at": 227
+        },
+        {
+          "source": "cddb0bd472120afc",
+          "action": 3,
+          "target": "8abd409396c6a1ee",
+          "first_used_at": 228
+        },
+        {
+          "source": "8abd409396c6a1ee",
+          "action": 3,
+          "target": "2cb98d6a8ed50d38",
+          "first_used_at": 229
+        },
+        {
+          "source": "2cb98d6a8ed50d38",
+          "action": 1,
+          "target": "02d7e433c07edbab",
+          "first_used_at": 230
+        },
+        {
+          "source": "66b4c5a8b73e7752",
+          "action": 0,
+          "target": "028c0493b1e095b2",
+          "first_used_at": 248
+        },
+        {
+          "source": "028c0493b1e095b2",
+          "action": 0,
+          "target": "028c0493b1e095b2",
+          "first_used_at": 249
+        },
+        {
+          "source": "028c0493b1e095b2",
+          "action": 1,
+          "target": "4bf5c7ab7443086c",
+          "first_used_at": 250
+        },
+        {
+          "source": "4bf5c7ab7443086c",
+          "action": 0,
+          "target": "028c0493b1e095b2",
+          "first_used_at": 251
+        },
+        {
+          "source": "028c0493b1e095b2",
+          "action": 2,
+          "target": "a4c671b16f2a6195",
+          "first_used_at": 252
+        },
+        {
+          "source": "a4c671b16f2a6195",
+          "action": 0,
+          "target": "028c0493b1e095b2",
+          "first_used_at": 253
+        },
+        {
+          "source": "d3750c8ca8a24968",
+          "action": 1,
+          "target": "858bc73ff319b3d9",
+          "first_used_at": 263
+        },
+        {
+          "source": "858bc73ff319b3d9",
+          "action": 3,
+          "target": "8f8b73450cc484e2",
+          "first_used_at": 264
+        },
+        {
+          "source": "8f8b73450cc484e2",
+          "action": 0,
+          "target": "858bc73ff319b3d9",
+          "first_used_at": 265
+        },
+        {
+          "source": "858bc73ff319b3d9",
+          "action": 1,
+          "target": "55a931ee1371a5d0",
+          "first_used_at": 268
+        },
+        {
+          "source": "55a931ee1371a5d0",
+          "action": 1,
+          "target": "f630f2e0fd5cc0a5",
+          "first_used_at": 269
+        },
+        {
+          "source": "f630f2e0fd5cc0a5",
+          "action": 0,
+          "target": "55a931ee1371a5d0",
+          "first_used_at": 270
+        },
+        {
+          "source": "55a931ee1371a5d0",
+          "action": 3,
+          "target": "858bc73ff319b3d9",
+          "first_used_at": 271
+        },
+        {
+          "source": "858bc73ff319b3d9",
+          "action": 0,
+          "target": "c48456d6bd66de94",
+          "first_used_at": 272
+        },
+        {
+          "source": "c48456d6bd66de94",
+          "action": 3,
+          "target": "858bc73ff319b3d9",
+          "first_used_at": 273
+        },
+        {
+          "source": "858bc73ff319b3d9",
+          "action": 2,
+          "target": "d3750c8ca8a24968",
+          "first_used_at": 274
+        },
+        {
+          "source": "55a931ee1371a5d0",
+          "action": 0,
+          "target": "55a931ee1371a5d0",
+          "first_used_at": 297
+        },
+        {
+          "source": "55a931ee1371a5d0",
+          "action": 2,
+          "target": "7e18b9c5c1bd26d9",
+          "first_used_at": 298
+        },
+        {
+          "source": "7e18b9c5c1bd26d9",
+          "action": 3,
+          "target": "cf09451bacdfc87a",
+          "first_used_at": 299
+        },
+        {
+          "source": "cf09451bacdfc87a",
+          "action": 0,
+          "target": "221319767f10b2e0",
+          "first_used_at": 302
+        },
+        {
+          "source": "66b4c5a8b73e7752",
+          "action": 1,
+          "target": "185b9ba5ab9daecb",
+          "first_used_at": 307
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 2,
+          "target": "3cb210fc8e7e209d",
+          "first_used_at": 323
+        },
+        {
+          "source": "3cb210fc8e7e209d",
+          "action": 2,
+          "target": "3cb210fc8e7e209d",
+          "first_used_at": 324
+        },
+        {
+          "source": "3cb210fc8e7e209d",
+          "action": 3,
+          "target": "28954e8e9bd987f1",
+          "first_used_at": 325
+        },
+        {
+          "source": "7e18b9c5c1bd26d9",
+          "action": 1,
+          "target": "f630f2e0fd5cc0a5",
+          "first_used_at": 360
+        },
+        {
+          "source": "f630f2e0fd5cc0a5",
+          "action": 2,
+          "target": "7e18b9c5c1bd26d9",
+          "first_used_at": 361
+        },
+        {
+          "source": "7e18b9c5c1bd26d9",
+          "action": 2,
+          "target": "7e18b9c5c1bd26d9",
+          "first_used_at": 364
+        },
+        {
+          "source": "7e18b9c5c1bd26d9",
+          "action": 0,
+          "target": "55a931ee1371a5d0",
+          "first_used_at": 372
+        },
+        {
+          "source": "c0b821a08c7a2f88",
+          "action": 0,
+          "target": "c0b821a08c7a2f88",
+          "first_used_at": 421
+        },
+        {
+          "source": "3cb210fc8e7e209d",
+          "action": 0,
+          "target": "c0b821a08c7a2f88",
+          "first_used_at": 426
+        },
+        {
+          "source": "4bf5c7ab7443086c",
+          "action": 3,
+          "target": "1fc96c025dc3e212",
+          "first_used_at": 478
+        },
+        {
+          "source": "28954e8e9bd987f1",
+          "action": 0,
+          "target": "3cb210fc8e7e209d",
+          "first_used_at": 495
+        },
+        {
+          "source": "3cb210fc8e7e209d",
+          "action": 1,
+          "target": "cddb0bd472120afc",
+          "first_used_at": 496
+        },
+        {
+          "source": "8abd409396c6a1ee",
+          "action": 2,
+          "target": "f9121dfd53fb5171",
+          "first_used_at": 498
+        },
+        {
+          "source": "f9121dfd53fb5171",
+          "action": 0,
+          "target": "3eaffc355e7e3505",
+          "first_used_at": 499
+        },
+        {
+          "source": "3eaffc355e7e3505",
+          "action": 1,
+          "target": "bc935b5bf139380c",
+          "first_used_at": 500
+        },
+        {
+          "source": "bc935b5bf139380c",
+          "action": 1,
+          "target": "9106155fa51f3d79",
+          "first_used_at": 501
+        },
+        {
+          "source": "9106155fa51f3d79",
+          "action": 2,
+          "target": "9106155fa51f3d79",
+          "first_used_at": 502
+        },
+        {
+          "source": "0edda2bac608ab4f",
+          "action": 3,
+          "target": "e4624d1a0ed145c5",
+          "first_used_at": 594
+        },
+        {
+          "source": "e4624d1a0ed145c5",
+          "action": 2,
+          "target": "12a4296ea8e90089",
+          "first_used_at": 595
+        },
+        {
+          "source": "e4624d1a0ed145c5",
+          "action": 0,
+          "target": "322a054c8baa20d4",
+          "first_used_at": 597
+        },
+        {
+          "source": "322a054c8baa20d4",
+          "action": 3,
+          "target": "e4624d1a0ed145c5",
+          "first_used_at": 598
+        }
+      ],
+      "proof_sequences": {
+        "/text-proof": {
+          "step": 230,
+          "path": [
+            "Palette [GET /palette]",
+            "Set palette: green [POST /palette palette=green]",
+            "Home [GET /]",
+            "Preview [GET /preview]",
+            "Home [GET /]",
+            "Preview [GET /preview]",
+            "Home [GET /]",
+            "Cover [GET /cover]",
+            "Home [GET /]",
+            "Text [GET /text]",
+            "Set text: draft [POST /text text=draft]",
+            "Home [GET /]",
+            "Preview [GET /preview]",
+            "Open text proof [GET /text-proof]"
+          ]
+        }
+      }
+    }
+  }
+}

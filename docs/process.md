@@ -9,7 +9,9 @@
 > единственный контракт с пользователем; отдельный UI под secaudit не вводится.
 > Служебные артефакты (`secaudit/`, SARIF и т.п.) не появляются как кнопки на
 > странице скана. CLI/bench (`python -m app`, `python -m bench`) — отдельный
-> research-контур, на UI не влияют.
+> research-контур, на UI не влияют. Live sequence runner (`live_test_runner/`,
+> [`LIVE_SEQUENCE_RUNNER.md`](LIVE_SEQUENCE_RUNNER.md)) — lab-обход HTTP с GA/Q-learning;
+> в форму скана и отчёт UI не входит.
 
 ---
 
