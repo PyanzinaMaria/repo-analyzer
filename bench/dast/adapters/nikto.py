@@ -32,23 +32,33 @@ def _item_cwe(text: str) -> list[str]:
     return []
 
 
-def parse(payload: dict, tool: str = "nikto") -> list[DastFinding]:
+def parse(payload, tool: str = "nikto") -> list[DastFinding]:
+    """Accepts both report shapes: a single host record or the array of host records
+    nikto 2.5 emits (`[{"host":..., "vulnerabilities": [...]}]`); item text lives in
+    `msg` (2.5) or `item`/`description` (older), and `url` is often a bare path."""
+    records = payload if isinstance(payload, list) else [payload]
     findings = []
-    for item in payload.get("vulnerabilities") or []:
-        if not isinstance(item, dict):
+    for record in records:
+        if not isinstance(record, dict):
             continue
-        text = str(item.get("item") or item.get("description") or "")
-        host = str(item.get("ip") or "")
-        port = item.get("port") or ""
-        scheme = "https" if item.get("ssl") else "http"
-        url = str(item.get("url") or f"{scheme}://{host}:{port}/")
-        findings.append(DastFinding(
-            tool=tool, rule_id=str(item.get("id") or item.get("OSVDBLCV") or "nikto"),
-            title=text, severity=norm_severity(item.get("severity")) if item.get("severity") else "low",
-            cwe=_item_cwe(text), url=url, method=str(item.get("method") or "GET"),
-            parameter=None, evidence=item.get("http") and f"HTTP {item.get('http')}",
-            message=text,
-        ))
+        host = str(record.get("host") or record.get("ip") or "")
+        port = record.get("port") or ""
+        scheme = "https" if record.get("ssl") else "http"
+        base = f"{scheme}://{host}:{port}" if host else ""
+        for item in record.get("vulnerabilities") or []:
+            if not isinstance(item, dict):
+                continue
+            text = str(item.get("item") or item.get("msg") or item.get("description") or "")
+            url = str(item.get("url") or "/")
+            if not url.startswith("http"):
+                url = base + (url if url.startswith("/") else "/" + url)
+            findings.append(DastFinding(
+                tool=tool, rule_id=str(item.get("id") or item.get("OSVDBLCV") or "nikto"),
+                title=text, severity=norm_severity(item.get("severity")) if item.get("severity") else "low",
+                cwe=_item_cwe(text), url=url, method=str(item.get("method") or "GET"),
+                parameter=None, evidence=item.get("http") and f"HTTP {item.get('http')}",
+                message=text,
+            ))
     return findings
 
 
@@ -67,7 +77,7 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
     cmd = [docker, "run", "--rm", "--network", target.network,
            "-v", f"{out_dir.resolve()}:/output", spec.image,
            "-h", target.scan_url, "-o", f"/output/{raw.name}", "-Format", "json",
-           "-ask", "+", "-maxtime", f"{max(1, cfg.scan_timeout_s // 60)}m"]
+           "-ask+", "-maxtime", f"{max(1, cfg.scan_timeout_s // 60)}m"]
     if target.scan_url.startswith("https"):
         cmd.append("-ssl")
     try:
