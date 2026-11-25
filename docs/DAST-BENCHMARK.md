@@ -108,8 +108,20 @@ Precision на realvuln — прокси (нет URL-уровня ground truth).
   (non-test FP по построению).
 - Docker Desktop на этой машине имеет ~7.6 ГБ в WSL2 VM: два параллельных ZAP + сборки
   клинивают движок (500 на API) — корпуса сканировать строго последовательно.
-- **realvuln: 19 из 20 pinned-приложений не поднялись** песочницей (мёртвые пин-зависимости
-  в Dockerfile, отсутствующие env-файлы у compose, java-репозитории без runnable-плана;
-  у каждого — причина в `dast/targets.json`). Числа realvuln пока по одному приложению
-  (rv-dvws-node); `dast up realvuln` идемпотентен и дособирает цели по мере правок sandbox.
-  Доля незагрузки — сама по себе метрика пригодности sandbox для живых репозиториев.
+- **realvuln: выживаемость поднята с 1/20 до 5/20** (25.11.2026). Механизмы в `dast up`:
+  - `realvuln_overrides` в config/dast.yaml — готовые образы сообщества для juice-shop(+goof)/
+    bodgeit/dvna/dsvw (у снапшотов мёртвые пин-зависимости), port-override для dvpwa/dvga,
+    java_war (maven **и** gradle → tomcat:9) для altoroj;
+  - таймауты песочницы подняты до 900с (compose/build = max(boot_timeout,300)) и watchdog
+    1500-1800с на ребёнок; fineract получил индивидуальные 1500с;
+  - в boot-ребёнке: chdir в корень приложения и обновление env `PWD` (compose `include:`-файлы
+    интерполируют `${PWD}`), пропуск портов БД при выборе контейнера, создание отсутствующих
+    env_file (compose), для compose с port-override — собственный раннер, выбирающий
+    контейнер по сервисному порту.
+  - Не поднимаются генерически (причины в `dast/targets.json`): bank-of-anthos (k8s-only стек,
+    compose нет), fineract (compose пуллит `fineract:latest`, собирается только их Makefile),
+    altoroj (gradle war не собирается), dvpwa/dvga/dvna (падают внутри контейнера),
+    djangoat/dsvpwa/damn-vulnerable-flask-app/evfa/dvblab/ivna/oopssec (мёртвые apt/pip
+    зависимости их собственных Dockerfile), ninjasworkout/crm-saas-nestjs (нет runnable-плана).
+  - Каждая повторная `dast up realvuln` идемпотентна: живые цели пропускаются, отказы
+    ретраятся с актуальным кодом.
