@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import json
 import re
+import secrets
 import shutil
 import subprocess
+import tempfile
 import time
 from pathlib import Path
 
@@ -211,15 +213,210 @@ def _realvuln_worktrees(paths: Paths) -> dict[str, Path]:
     return out
 
 
-def _boot_one(root_str: str, network: str, out_file: str) -> None:
-    """Child-process entry: boot one sandbox app and dump the record as JSON."""
+_DB_PORTS = {5432, 3306, 6379, 27017, 5984, 9092, 7687, 1433, 1521, 9200, 5601, 15672, 2181, 9042}
+
+_JAVA_WAR_DOCKERFILE = """FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /src
+COPY . /src
+# spotless needs a git repo, which the build context (a detached worktree) is not
+RUN mvn -q -B clean package -DskipTests -Dspotless.skip=true
+
+FROM tomcat:9.0-jdk17-temurin
+COPY --from=build /src/target/*.war /usr/local/tomcat/webapps/
+RUN cd /usr/local/tomcat/webapps && for f in *.war; do [ "$f" = "ROOT.war" ] || mv "$f" ROOT.war; done
+EXPOSE {port}
+CMD ["catalina.sh", "run"]
+"""
+
+
+def _sanitize_compose_envfiles(compose_file: Path) -> list[str]:
+    """Create empty env_file targets referenced by a compose file but missing on disk
+    (ancient pinned apps reference env files their setup scripts were supposed to write)."""
+    import yaml
+
+    created = []
+    doc = yaml.safe_load(compose_file.read_text(encoding="utf-8")) or {}
+    services = doc.get("services") or {}
+    base = compose_file.parent
+    for svc in services.values():
+        if not isinstance(svc, dict):
+            continue
+        env = svc.get("env_file")
+        entries = env if isinstance(env, list) else [env] if env else []
+        for e in entries:
+            p = base / str(e)
+            if not p.is_file():
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text("", encoding="utf-8")
+                created.append(str(p))
+    return created
+
+
+def _boot_image_override(container: str, image: str, network: str, port: int,
+                         cmd: list[str] | None, boot_timeout: int, out: dict) -> None:
+    """Prebuilt community image: bypasses building ancient pinned commits entirely."""
+    import httpx
+
+    docker = shutil.which("docker")
+    if not docker:
+        out["ok"] = False
+        out["reason"] = "docker not found on PATH"
+        return
+    run = subprocess.run(
+        [docker, "run", "-d", "--name", container, "--network", network,
+         "-p", f"127.0.0.1::{port}", image] + (cmd or []),
+        capture_output=True, text=True, timeout=600)
+    if run.returncode != 0:
+        out["ok"] = False
+        out["reason"] = f"docker run failed: {run.stderr[-400:]}"
+        return
+    published = subprocess.run([docker, "port", container, str(port)],
+                               capture_output=True, text=True, timeout=60)
+    line = (published.stdout or "").strip().splitlines()
+    host_port = int(line[0].rsplit(":", 1)[1]) if line and ":" in line[0] else None
+    if host_port is None:
+        out["ok"] = False
+        out["reason"] = f"cannot resolve published port for {port}"
+        return
+    host_url = f"http://127.0.0.1:{host_port}"
+    deadline = time.monotonic() + boot_timeout
+    while time.monotonic() < deadline:
+        try:
+            with httpx.Client(verify=False, timeout=5) as client:
+                if client.get(host_url).status_code < 600:
+                    break
+        except httpx.HTTPError:
+            pass
+        time.sleep(2)
+    else:
+        out["ok"] = False
+        out["reason"] = f"image {image} not ready after {boot_timeout}s"
+        subprocess.run([docker, "rm", "-f", container], capture_output=True, timeout=60)
+        return
+    out.update(ok=True, host_url=host_url + "/", scan_url=f"http://{container}:{port}/",
+               network=network, container=container,
+               teardown={"method": "docker", "container": container, "image": image})
+
+
+def _boot_java_war(root: Path, work_dir: Path, container: str, network: str, port: int,
+                   boot_timeout: int, out: dict) -> None:
+    """Maven WAR app -> tomcat:9 (java repos the sandbox has no runnable plan for)."""
+    import httpx
+
+    docker = shutil.which("docker")
+    build_dir = work_dir / "realvuln" / container
+    build_dir.mkdir(parents=True, exist_ok=True)
+    (build_dir / "Dockerfile").write_text(_JAVA_WAR_DOCKERFILE.format(port=port), encoding="utf-8")
+    tag = f"dast-bench:{container}"
+    build = subprocess.run([docker, "build", "-f", str(build_dir / "Dockerfile"),
+                            "-t", tag, str(root)], capture_output=True, text=True, timeout=3600)
+    if build.returncode != 0:
+        out["ok"] = False
+        out["reason"] = f"java_war build failed: {(build.stderr or build.stdout)[-400:]}"
+        return
+    run = subprocess.run([docker, "run", "-d", "--name", container, "--network", network,
+                          "-p", f"127.0.0.1::{port}", tag],
+                         capture_output=True, text=True, timeout=120)
+    if run.returncode != 0:
+        out["ok"] = False
+        out["reason"] = f"docker run failed: {run.stderr[-400:]}"
+        return
+    published = subprocess.run([docker, "port", container, str(port)],
+                               capture_output=True, text=True, timeout=60)
+    line = (published.stdout or "").strip().splitlines()
+    host_port = int(line[0].rsplit(":", 1)[1]) if line and ":" in line[0] else None
+    if host_port is None:
+        out["ok"] = False
+        out["reason"] = f"cannot resolve published port for {port}"
+        return
+    host_url = f"http://127.0.0.1:{host_port}"
+    deadline = time.monotonic() + boot_timeout
+    while time.monotonic() < deadline:
+        try:
+            with httpx.Client(verify=False, timeout=5) as client:
+                if client.get(host_url).status_code < 600:
+                    break
+        except httpx.HTTPError:
+            pass
+        time.sleep(3)
+    else:
+        out["ok"] = False
+        out["reason"] = f"java_war app not ready after {boot_timeout}s"
+        subprocess.run([docker, "rm", "-f", container], capture_output=True, timeout=60)
+        return
+    out.update(ok=True, host_url=host_url + "/", scan_url=f"http://{container}:{port}/",
+               network=network, container=container,
+               teardown={"method": "docker", "container": container, "image": tag})
+
+
+def _boot_one(root_str: str, network: str, out_file: str,
+              override_json: str = "{}", work_dir_str: str = "",
+              boot_timeout: int = 900) -> None:
+    """Child-process entry: boot one app (sandbox / prebuilt image / java_war) and dump the record."""
     import json as _json
+    import secrets
 
+    import httpx
+
+    import app.sandbox.runner as sandbox_runner
     from app.sandbox.config import SandboxConfig
-    from app.sandbox.runner import start_sandbox
+    from app.sandbox.detect import detect_run_plan
 
+    override = _json.loads(override_json) if override_json else {}
+    root = Path(root_str)
+    token = secrets.token_hex(5)
     try:
-        session = start_sandbox(Path(root_str), cfg=SandboxConfig(network=network))
+        if override.get("image"):
+            out = {}
+            _boot_image_override(f"ra-dast-{token}", override["image"], network,
+                                 int(override.get("port") or 8000), override.get("cmd"),
+                                 override.get("boot_timeout_s") or boot_timeout, out)
+            Path(out_file).write_text(_json.dumps(out, ensure_ascii=False), encoding="utf-8")
+            return
+        if override.get("java_war"):
+            out = {}
+            _boot_java_war(root, Path(work_dir_str) if work_dir_str else Path(tempfile.gettempdir()),
+                           f"ra-dast-{token}", network, int(override.get("port") or 8080),
+                           override.get("boot_timeout_s") or boot_timeout, out)
+            Path(out_file).write_text(_json.dumps(out, ensure_ascii=False), encoding="utf-8")
+            return
+
+        # bench-local patches (the product sandbox keeps its own defaults):
+        # 1) compose readiness must not land on a database port
+        _orig_published = sandbox_runner._published_port
+
+        def _published_port_skip_db(docker: str, container: str) -> tuple[int, int]:
+            listed = sandbox_runner._run([docker, "port", container])
+            pairs = []
+            for line in (listed.stdout or "").splitlines():
+                left, sep, right = line.partition("->")
+                if not sep or not left.strip().endswith("/tcp"):
+                    continue
+                try:
+                    pairs.append((int(right.strip().rsplit(":", 1)[1]),
+                                  int(left.split("/", 1)[0])))
+                except (ValueError, IndexError):
+                    continue
+            for h, c in pairs:
+                if c not in _DB_PORTS:
+                    return h, c
+            return pairs[0] if pairs else (0, 0)
+
+        sandbox_runner._published_port = _published_port_skip_db
+
+        plan = detect_run_plan(root)
+        if plan is None:
+            raise RuntimeError("no runnable web target detected")
+        if override.get("port"):
+            plan.port = int(override["port"])
+        if plan.method == "compose" and plan.compose_file and Path(plan.compose_file).is_file():
+            created = _sanitize_compose_envfiles(Path(plan.compose_file))
+            if created:
+                plan.compose_file = Path(plan.compose_file)
+        session = sandbox_runner.start_sandbox(root, cfg=SandboxConfig(network=network,
+                                                        boot_timeout_seconds=boot_timeout),
+                                plan=plan)
+        sandbox_runner._published_port = _orig_published
         plan = session.plan
         teardown = {"method": plan.method, "container": session.container_name,
                     "image": session.meta.get("image")}
@@ -237,14 +434,15 @@ def _boot_one(root_str: str, network: str, out_file: str) -> None:
 def _up_realvuln(cfg: DastBenchConfig, paths: Paths, state: dict,
                  force: bool, summary: RunSummary | None) -> None:
     """One app per bounded child process: a stuck npm/compose boot must not block
-    the other 19 (the product sandbox has no build timeout, and old vulnerable
-    apps routinely hang)."""
+    the other items (the sandbox build/readiness caps are configurable, but ancient
+    pinned apps still hang sometimes)."""
     import json as _json
     import multiprocessing
     import time
 
     docker = _docker()
-    boot_timeout = 600  # hard cap per item
+    boot_timeout = cfg.boot_timeout_s
+    watchdog = cfg.watchdog_timeout_s
     worktrees = _realvuln_worktrees(paths)
     summary = summary or RunSummary("dast up realvuln")
     boot_dir = paths.dast / "_boot"
@@ -261,17 +459,24 @@ def _up_realvuln(cfg: DastBenchConfig, paths: Paths, state: dict,
             _write(paths, state)
             summary.fail(f"{tid}: worktree missing")
             continue
+        override = cfg.realvuln_overrides.get(tid)
+        boot_for_item = (override.boot_timeout_s if override and override.boot_timeout_s
+                         else boot_timeout)
         out = boot_dir / f"{tid}.json"
         out.unlink(missing_ok=True)
-        proc = multiprocessing.Process(target=_boot_one, args=(str(root), cfg.network, str(out)),
-                                       daemon=True)
+        proc = multiprocessing.Process(
+            target=_boot_one,
+            args=(str(root), cfg.network, str(out),
+                  override.model_dump_json() if override else "{}",
+                  str(paths.work), boot_for_item),
+            daemon=True)
         started = time.monotonic()
         proc.start()
-        proc.join(boot_timeout)
+        proc.join(watchdog)
         if proc.is_alive():
             proc.kill()
             proc.join(10)
-            result = {"ok": False, "reason": f"boot exceeded {boot_timeout}s (killed)"}
+            result = {"ok": False, "reason": f"boot exceeded {watchdog}s (killed)"}
         else:
             result = _json.loads(out.read_text(encoding="utf-8")) if out.is_file() else \
                 {"ok": False, "reason": "boot child produced no result"}

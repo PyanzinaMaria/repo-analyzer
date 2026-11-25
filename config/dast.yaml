@@ -3,7 +3,8 @@
 # expectedresults CSVs, RealVuln hand labels); this config only describes the live side.
 
 scan_timeout_s: 1800          # per tool per target (30 min)
-boot_timeout_s: 600           # per target container readiness wait
+boot_timeout_s: 900           # per-app readiness budget (sandbox compose/build cap = max(this, 300))
+watchdog_timeout_s: 1500      # hard cap for one boot child process
 network: repo-analyzer-dast   # shared docker network for dockerized tools and targets
 
 owasp_java:
@@ -23,7 +24,7 @@ tools:
     image: ghcr.io/zaproxy/zaproxy:stable
     time_limit_m: 30          # zap-full-scan -T (spider+active scan budget, minutes)
   wapiti:
-    executable: wapiti        # pip install wapiti (into the bench venv)
+    executable: wapiti        # pip install wapiti3 (into the bench venv)
     modules: common           # attack modules; excludes nikto/wapp fingerprint extras
     level: 2                  # --level 2: aggressive parameter fuzzing
   nuclei:
@@ -34,3 +35,16 @@ tools:
     executable: offat         # pip install offat (OWASP API Fuzzing Tool)
   nikto:
     image: ghcr.io/sullo/nikto:latest # Perl tool: official image (ghcr; Docker Hub sullo/nikto is gone)
+
+# Per-app boot recipes for the pinned realvuln corpus. image = prebuilt community image
+# (bypasses dead-dep builds of ancient pinned commits); port = the container port that
+# actually serves HTTP (fixes DB-port misdetection); java_war = maven build -> tomcat:9.
+realvuln_overrides:
+  rv-juice-shop:       {image: bkimminich/juice-shop:latest, port: 3000}
+  rv-juice-shop-goof:  {image: bkimminich/juice-shop:latest, port: 3000}
+  rv-realvuln-bodgeit: {image: psiinon/bodgeit:latest, port: 8080}
+  rv-dvna:             {image: appsecco/dvna:latest, port: 3000}
+  rv-dsvw:             {image: appsecco/dsvw:latest, port: 65412}
+  rv-dvpwa:            {port: 8080}        # compose maps 8080:8080; detection picked the DB port
+  rv-dvga:             {port: 5000}        # flask GraphQL, slow first start
+  rv-realvuln-altoroj: {java_war: true, port: 8080}

@@ -38,6 +38,23 @@ class NiktoTool(BaseModel):
     image: str = "sullo/nikto:latest"
 
 
+class RealVulnOverride(BaseModel):
+    """Per-app boot recipe for the pinned realvuln corpus (repo ids are stable).
+
+    image    -> run this prebuilt image instead of the sandbox boot (dead-dep builds)
+    port     -> container port serving HTTP (fixes DB-port misdetection / compose picks)
+    java_war -> maven build -> tomcat:9 (java repos the sandbox has no plan for)
+    cmd      -> override the image entrypoint args
+    boot_timeout_s -> per-app readiness budget (default: boot_timeout_s)
+    """
+
+    image: str | None = None
+    port: int | None = None
+    java_war: bool = False
+    cmd: list[str] | None = None
+    boot_timeout_s: int | None = None
+
+
 class TargetSpec(BaseModel):
     scheme: str = "http"
     port: int
@@ -47,12 +64,14 @@ class TargetSpec(BaseModel):
 
 class DastBenchConfig(BaseModel):
     scan_timeout_s: int = 1800
-    boot_timeout_s: int = 600
+    boot_timeout_s: int = 900            # readiness budget per app (sandbox compose/build use max(this, 300))
+    watchdog_timeout_s: int = 1500       # hard cap per boot child process
     network: str = "repo-analyzer-dast"
     owasp_java: TargetSpec = TargetSpec(scheme="https", port=8443, container="dast-bench-owasp-java-app",
                                         image="dast-bench:owasp-java")
     owasp_python: TargetSpec = TargetSpec(scheme="http", port=5000, container="dast-bench-owasp-python-app",
                                           image="dast-bench:owasp-python")
+    realvuln_overrides: dict[str, RealVulnOverride] = Field(default_factory=dict)
     tools: dict[str, BaseModel] = Field(default_factory=dict)
 
     def tool(self, name: str) -> BaseModel:
@@ -80,7 +99,7 @@ def load_dast_config(path: Path | str = CONFIG_DIR / "dast.yaml") -> DastBenchCo
         if cls is None:
             raise KeyError(f"unknown DAST tool {name!r} in {p}")
         tools[name] = cls(**{k: v for k, v in (spec or {}).items() if v is not None})
-    cfg = DastBenchConfig(**raw)
+    cfg = DastBenchConfig(**raw)  # realvuln_overrides coerce into RealVulnOverride automatically
     cfg.tools = tools
     return cfg
 

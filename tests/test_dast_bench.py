@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 from bench.config import Paths
 from bench.dast.compare import write_comparison
@@ -28,6 +29,32 @@ def test_load_dast_config_tools():
     assert cfg.tool("zap").image.startswith("ghcr.io/zaproxy")
     assert cfg.scan_timeout_s == 1800
     assert cfg.tool("nuclei").templates_dir is None
+
+
+def test_load_dast_config_realvuln_overrides():
+    cfg = load_dast_config()
+    ov = cfg.realvuln_overrides
+    assert "rv-juice-shop" in ov and ov["rv-juice-shop"].image
+    assert ov["rv-realvuln-altoroj"].java_war and ov["rv-dvpwa"].port == 8080
+    assert cfg.watchdog_timeout_s > cfg.boot_timeout_s
+
+
+def test_sanitize_compose_envfiles(tmp_path: Path):
+    import yaml as pyyaml
+
+    from bench.dast.targets import _sanitize_compose_envfiles
+
+    compose = tmp_path / "docker-compose.yml"
+    compose.write_text(yaml.safe_dump({
+        "services": {
+            "app": {"env_file": ["./vars.env", "./present.env"], "image": "x"},
+            "db": {"env_file": "db.env"},
+        }}), encoding="utf-8")
+    (tmp_path / "present.env").write_text("A=1\n", encoding="utf-8")
+    created = _sanitize_compose_envfiles(compose)
+    assert (tmp_path / "vars.env").is_file() and (tmp_path / "db.env").is_file()
+    assert len(created) == 2
+    assert _sanitize_compose_envfiles(compose) == []  # idempotent
 
 
 # --------------------------------------------------------------------------- openapi
