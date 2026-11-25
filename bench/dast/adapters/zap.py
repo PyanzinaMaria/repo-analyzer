@@ -145,7 +145,7 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
                            cmd=cmd, meta={"returncode": completed.returncode}), findings
     for alert in alerts:
         findings.extend(_instance_findings(alert, tool))
-    res = result_stub(tool, target, started, "", cmd=cmd, completed=None,
+    res = result_stub(tool, target, started, "", findings=findings, cmd=cmd,
                       meta={"alerts": len(alerts), "image": spec.image,
                             "scan_url": target.scan_url, "report": src.name,
                             "timed_out": timed_out,
@@ -154,10 +154,11 @@ def run(target: TargetInfo, out_dir: Path, cfg: DastBenchConfig):
 
 
 def result_stub(tool: str, target: TargetInfo, started: float, error: str, *,
-                cmd: list[str] | None = None, meta: dict | None = None,
+                findings: list[DastFinding] | None = None, cmd: list[str] | None = None,
+                meta: dict | None = None,
                 completed: subprocess.CompletedProcess | None = None):
     from bench.dast.adapters.base import result as mk_result
 
-    res = mk_result(tool, target, [], started=started, cmd=cmd or [],
+    res = mk_result(tool, target, findings or [], started=started, cmd=cmd or [],
                     completed=completed, error=error, meta=meta or {})
     return res
