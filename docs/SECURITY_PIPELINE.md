@@ -5,6 +5,9 @@
 (агентное исследование кода, «guidance», порог severity, SARIF, идея
 plugin × strategy из red teaming).
 
+Схема: [`images/pentest-agent-flow.png`](images/pentest-agent-flow.png) ·
+краткое описание: [PENTEST_AGENT_OVERVIEW.md](PENTEST_AGENT_OVERVIEW.md).
+
 Ищет **не только LLM-уязвимости**, а общие классы: SQLi, XSS, path traversal,
 SSRF, XXE, инъекции команд, open redirect, небезопасную десериализацию,
 секреты в коде, security-заголовки, раскрытие ошибок, prompt injection.
