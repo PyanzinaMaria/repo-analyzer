@@ -463,6 +463,8 @@ def _boot_one(root_str: str, network: str, out_file: str,
     token = secrets.token_hex(5)
     try:
         os.chdir(root)
+        # compose files interpolate ${PWD} from the environment, not the process dir
+        os.environ["PWD"] = str(root)
         if override.get("image"):
             out = {}
             _boot_image_override(f"ra-dast-{token}", override["image"], network,
