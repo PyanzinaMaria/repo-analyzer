@@ -44,7 +44,7 @@ methods:
     description: Автоподъём приложения в Docker и динамический анализ (preflight + ZAP).
   pentest:
     label: Пентест
-    description: Ручная проверка с помощью ИИ-агента. Запланировано.
+    description: Гипотезы по коду, проверка на живом приложении и активный ИИ-агент (пробы SQLi/XSS/CMDi и др.).
 
 formats:
   md:
@@ -89,8 +89,14 @@ results:
   kinds:
     sast: SAST
     dast: DAST
+    pentest: Пентест
     sast_dast: SAST + DAST
+    sast_pentest: SAST + Пентест
+    sast_dast_pentest: SAST + DAST + Пентест
     sast_ai: SAST + ИИ
+    sast_ai_dast: SAST + ИИ + DAST
+    sast_ai_pentest: SAST + ИИ + Пентест
+    sast_ai_dast_pentest: SAST + ИИ + DAST + Пентест
 
 docs:
   title: Документация

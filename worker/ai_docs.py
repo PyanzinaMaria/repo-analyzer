@@ -34,6 +34,20 @@ INLINE_EXTENSIONS = {".md", ".markdown", ".txt"}
 # it is treated as a broken answer rather than a document.
 MAX_ANSWER_BYTES = 2 * 1024 * 1024
 
+# Free-tier models choke on ~120k-char payloads (finish_reason=length). Keep
+# the user prompt under this ceiling; findings first, then ranked source files.
+MAX_USER_PROMPT_CHARS = 80_000
+DEFAULT_DOC_MAX_FINDINGS = 50
+
+_SEVERITY_RANK = {
+    "critical": 0,
+    "high": 1,
+    "medium": 2,
+    "low": 3,
+    "info": 4,
+    "unknown": 5,
+}
+
 
 class AiDocError(RuntimeError):
     """A document generation attempt produced no usable document."""
@@ -146,26 +160,90 @@ def build_combined_markdown(main: str, files: list[DocFile]) -> str:
     return combined
 
 
+def _rank_findings(findings: list[Any]) -> list[Any]:
+    """Highest severity first so truncation keeps the most important hits."""
+
+    def _key(item: Any) -> tuple[int, str]:
+        if isinstance(item, dict):
+            sev = str(item.get("severity") or "unknown").lower()
+            fid = str(item.get("id") or "")
+        else:
+            sev = str(getattr(item, "severity", "unknown")).lower()
+            # Enum → value
+            if hasattr(getattr(item, "severity", None), "value"):
+                sev = str(item.severity.value).lower()
+            fid = str(getattr(item, "id", "") or "")
+        return (_SEVERITY_RANK.get(sev, 9), fid)
+
+    return sorted(findings, key=_key)
+
+
 def build_user_prompt(
     doc_id: str,
     result: Any,
     *,
     max_findings: int = 0,
     selected_files: list[Any] | None = None,
+    max_chars: int = MAX_USER_PROMPT_CHARS,
 ) -> str:
     """Serialize the raw analyzer output the way the system prompts expect:
-    ScanResult JSON, plus `<file path="...">` blocks for code documentation."""
+    ScanResult JSON, plus `<file path="...">` blocks for code documentation.
+
+    Findings are severity-ranked and truncated; source files are appended
+    until ``max_chars`` is reached so free LLM tiers stay within context.
+    """
     data = result.model_dump(mode="json") if hasattr(result, "model_dump") else dict(result)
-    findings = data.get("findings") or []
-    if max_findings and len(findings) > max_findings:
-        data["findings"] = findings[:max_findings]
+    findings = list(data.get("findings") or [])
+    ranked = _rank_findings(findings)
+    limit = int(max_findings) if max_findings else 0
+    if limit and len(ranked) > limit:
+        data["findings"] = ranked[:limit]
         data.setdefault("meta", {})["findings_truncated"] = {
-            "shown": max_findings,
+            "shown": limit,
             "total": len(findings),
         }
-    parts = [json.dumps(data, ensure_ascii=False, indent=2)]
+    else:
+        data["findings"] = ranked
+
+    # Drop bulky blobs that rarely help FSTEC/codedocs and blow the budget.
+    meta = data.get("meta")
+    if isinstance(meta, dict):
+        meta = dict(meta)
+        meta.pop("security_hypotheses", None)
+        data["meta"] = meta
+
+    base = json.dumps(data, ensure_ascii=False, indent=2)
+    if max_chars > 0 and len(base) > max_chars:
+        # Extreme case: even truncated findings overflow — hard-cut JSON.
+        data.setdefault("meta", {})["prompt_truncated"] = {
+            "reason": "findings_json_too_large",
+            "max_chars": max_chars,
+        }
+        base = json.dumps(data, ensure_ascii=False, indent=2)[:max_chars]
+
+    parts = [base]
+    included = 0
+    skipped = 0
     for item in selected_files or []:
-        parts.append(f'<file path="{item.rel_path}">\n{item.content}\n</file>')
+        block = f'<file path="{item.rel_path}">\n{item.content}\n</file>'
+        candidate = "\n\n".join(parts + [block])
+        if max_chars > 0 and len(candidate) > max_chars:
+            skipped += 1
+            continue
+        parts.append(block)
+        included += 1
+    if skipped:
+        # Tiny trailer so the model knows context was capped.
+        note = (
+            f"\n\n<!-- prompt_truncated: included_files={included} "
+            f"skipped_files={skipped} max_chars={max_chars} -->"
+        )
+        if max_chars <= 0 or len("\n\n".join(parts)) + len(note) <= max_chars:
+            parts.append(note.strip())
+        data_meta = data.setdefault("meta", {})
+        if isinstance(data_meta, dict):
+            # Re-serialize is expensive; the HTML comment above is enough for the model.
+            pass
     return "\n\n".join(parts)
 
 
@@ -194,15 +272,42 @@ def generate_document(
     if ai_settings is None:
         ai_settings = load_ai_settings()
     timeout = int(spec.get("timeout_seconds") or ai_settings.timeout_seconds)
-    ai_settings = replace(ai_settings, timeout_seconds=timeout)
+    # Per-document overrides from worker.yaml `ai_documents.<id>`.
+    max_files = int(spec.get("max_files") or ai_settings.max_files or 25)
+    max_file_bytes = int(spec.get("max_file_bytes") or ai_settings.max_file_bytes or 40_000)
+    max_findings = int(
+        spec.get("max_findings")
+        or ai_settings.max_findings
+        or DEFAULT_DOC_MAX_FINDINGS
+    )
+    max_chars = int(spec.get("max_prompt_chars") or MAX_USER_PROMPT_CHARS)
+    ai_settings = replace(
+        ai_settings,
+        timeout_seconds=timeout,
+        max_files=max_files,
+        max_file_bytes=max_file_bytes,
+        max_findings=max_findings,
+    )
     if client is None:
         client = OpenAICompatibleClient(ai_settings)
 
     system_prompt = load_prompt(spec.get("prompt") or "")
-    user_prompt = _user_prompt_for(doc_id, result, ai_settings, workspace_root)
+    user_prompt = _user_prompt_for(
+        doc_id,
+        result,
+        ai_settings,
+        workspace_root,
+        max_chars=max_chars,
+    )
     logger.info(
-        "Generating %s document (model=%s, timeout=%ds, prompt=%d chars)",
-        doc_id, ai_settings.model, timeout, len(user_prompt),
+        "Generating %s document (model=%s, timeout=%ds, prompt=%d chars, "
+        "max_files=%d, max_findings=%d)",
+        doc_id,
+        ai_settings.model,
+        timeout,
+        len(user_prompt),
+        max_files,
+        max_findings,
     )
     answer = client.chat(system_prompt, user_prompt)
     if len(answer.encode("utf-8")) > MAX_ANSWER_BYTES:
@@ -217,16 +322,32 @@ def _user_prompt_for(
     result: Any,
     ai_settings: Any,
     workspace_root: Path | None,
+    *,
+    max_chars: int = MAX_USER_PROMPT_CHARS,
 ) -> str:
-    max_findings = int(ai_settings.max_findings or 0)
+    max_findings = int(ai_settings.max_findings or DEFAULT_DOC_MAX_FINDINGS)
+    selected: list[Any] = []
     if workspace_root is not None:
-        from app.ai.selector import collect_all_files
+        from app.ai.selector import select_files
 
-        all_files = collect_all_files(
+        # Ranked + capped selection — never dump the whole repo (collect_all_files
+        # previously blew free-tier context to ~120k chars).
+        selected = select_files(
             Path(workspace_root),
             list(result.inventories),
-            max_file_bytes=ai_settings.max_file_bytes,
+            ai_settings,
         )
-        logger.info("Collected %d project files for %s payload", len(all_files), doc_id)
-        return build_user_prompt(doc_id, result, max_findings=max_findings, selected_files=all_files)
-    return build_user_prompt(doc_id, result, max_findings=max_findings)
+        logger.info(
+            "Selected %d/%s project files for %s payload (max_files=%s)",
+            len(selected),
+            ai_settings.max_files,
+            doc_id,
+            ai_settings.max_files,
+        )
+    return build_user_prompt(
+        doc_id,
+        result,
+        max_findings=max_findings,
+        selected_files=selected,
+        max_chars=max_chars,
+    )

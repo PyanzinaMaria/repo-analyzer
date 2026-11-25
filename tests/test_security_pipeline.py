@@ -197,8 +197,11 @@ def test_orchestrator_runs_review_stage(monkeypatch):
     import app.services.scan.dast_merge as dast_merge
 
     # keep Docker out of the unit test: the DAST merge is covered separately
-    monkeypatch.setattr(dast_merge, "merge_dast_via_sandbox",
-                        lambda result, root, registry=None: result)
+    monkeypatch.setattr(
+        dast_merge,
+        "merge_dast_via_sandbox",
+        lambda result, root, registry=None, **_kw: result,
+    )
     from app.services.scan.orchestrator import ScanOrchestrator
 
     result = ScanOrchestrator()._run("p1", "s1", FIXTURE_REPO, "demo", enable_ai=False)
@@ -215,3 +218,39 @@ def test_orchestrator_runs_review_stage(monkeypatch):
     run = run_security_scan(FIXTURE_REPO, None, findings=[],
                             cfg=load_security_config({"llm_enabled": False}), use_llm=False)
     assert any(f.source in {"llm-review", "review-agent"} for f in run.findings)
+
+
+def test_orchestrator_gates_security_on_manual_runner(monkeypatch):
+    """Form jobs: security review only when UI «Пентест» (`manual`) is selected."""
+    import app.services.scan.dast_merge as dast_merge
+    from app.services.scan.orchestrator import ScanOrchestrator
+
+    merge_calls: list[dict] = []
+
+    def fake_merge(result, root, registry=None, **kw):
+        merge_calls.append(kw)
+        return result
+
+    monkeypatch.setattr(dast_merge, "merge_dast_via_sandbox", fake_merge)
+
+    orch = ScanOrchestrator()
+    static_only = orch._run(
+        "p1", "s-static", FIXTURE_REPO, "demo", methods=["static"],
+    )
+    assert static_only.meta["security"].get("status") == "disabled"
+    assert not static_only.meta.get("security_hypotheses")
+    assert merge_calls == []
+
+    pentest = orch._run(
+        "p1", "s-pentest", FIXTURE_REPO, "demo", methods=["manual"],
+    )
+    assert pentest.meta["security"].get("hypotheses", 0) >= 1
+    assert pentest.meta["security_hypotheses"]
+    assert pentest.summary["scan_kind"] == "pentest"
+    assert merge_calls and merge_calls[0].get("run_active_pentest") is True
+    assert merge_calls[0].get("run_zap") is False
+
+    both = orch._run(
+        "p1", "s-both", FIXTURE_REPO, "demo", methods=["static", "manual"],
+    )
+    assert both.summary["scan_kind"] == "sast+pentest"

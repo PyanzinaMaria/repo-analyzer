@@ -104,9 +104,11 @@ def test_submission_without_choices_inherits_config_defaults(client):
     assert job["options"] == {"methods": ["sast"], "formats": ["html"]}
 
 
-def test_submission_rejects_unavailable_method(client):
-    """Planned methods are rejected even on direct API posts."""
-    c, _, _ = client
+def test_submission_accepts_pentest_method(client):
+    """Пентест is available and rides the queue like other methods."""
+    import json
+
+    c, _, data_dir = client
     r = c.post(
         "/api/scans",
         data={
@@ -115,9 +117,12 @@ def test_submission_rejects_unavailable_method(client):
             "methods": ["sast", "pentest"],
             "formats": ["md"],
         },
+        follow_redirects=False,
     )
-    assert r.status_code == 200
-    assert "недоступен" in r.text
+    assert r.status_code == 303
+    scan_id = r.headers["location"].rsplit("/", 1)[-1]
+    job = json.loads((data_dir / "queue" / f"{scan_id}.json").read_text(encoding="utf-8"))
+    assert job["options"]["methods"] == ["sast", "pentest"]
 
 
 def test_index_renders_analysis_and_format_choices(client):
@@ -128,10 +133,12 @@ def test_index_renders_analysis_and_format_choices(client):
     assert r.status_code == 200
     assert 'name="methods"' in r.text
     assert 'value="dast"' in r.text
-    assert 'value="pentest"' in r.text and "запланировано" in r.text
-    # DAST checkbox itself must not be disabled (pentest still is).
+    assert 'value="pentest"' in r.text
+    assert "запланировано" not in r.text
     dast_input = re.search(r'<input[^>]*value="dast"[^>]*>', r.text)
     assert dast_input is not None and "disabled" not in dast_input.group(0)
+    pentest_input = re.search(r'<input[^>]*value="pentest"[^>]*>', r.text)
+    assert pentest_input is not None and "disabled" not in pentest_input.group(0)
     assert 'name="formats"' in r.text
     assert set(re.findall(r'<input[^>]*name="formats"[^>]*value="([^"]+)"', r.text)) == {
         "html", "md", "pdf",

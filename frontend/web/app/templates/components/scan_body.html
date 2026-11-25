@@ -1,6 +1,7 @@
 {# HTMX self-replacing fragment: polls until every stage reaches a final state. #}
+{% set selected_methods = (status.options.methods if status.options else none) %}
 {% set scan_kind = (status.summary.meta.scan_kind if status.summary and status.summary.meta else none) %}
-{% set kind_key = 'sast_dast' if scan_kind == 'sast+dast' else scan_kind %}
+{% set kind_key = scan_kind|replace('+', '_') if scan_kind else none %}
 <div {% if not complete %}hx-get="/scan/{{ status.id }}/body" hx-trigger="load delay:2000ms" hx-swap="outerHTML"{% endif %}>
     <section class="card">
         <h2>{{ t("scan.status_title") }}</h2>
@@ -9,7 +10,11 @@
         {% else %}
         <p>{{ status.source.file_count }} {{ status.source.kind }}</p>
         {% endif %}
-        {% if kind_key %}
+        {% if selected_methods %}
+        <p>{{ t("results.scan_kind") }}:
+            {% for method_id in selected_methods %}{{ t("methods." + method_id + ".label") }}{% if not loop.last %}; {% endif %}{% endfor %}
+        </p>
+        {% elif kind_key %}
         <p>{{ t("results.scan_kind") }}: {{ t("results.kinds." + kind_key) }}</p>
         {% endif %}
         {% set done = status.stages | selectattr("state", "in", ["ok", "fail"]) | list | length %}

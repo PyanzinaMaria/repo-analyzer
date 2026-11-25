@@ -152,6 +152,50 @@ def test_build_user_prompt_appends_project_files(scan_result):
     assert "print('hi')" in prompt
 
 
+def test_build_user_prompt_caps_total_chars(scan_result):
+    huge = "x" * 5_000
+    files = [_File(rel_path=f"app/f{i}.py", content=huge) for i in range(40)]
+    prompt = build_user_prompt(
+        "codedocs",
+        scan_result,
+        max_findings=50,
+        selected_files=files,
+        max_chars=12_000,
+    )
+    assert len(prompt) <= 12_000 + 200  # small slack for truncation note
+    assert "prompt_truncated" in prompt or prompt.count("<file path=") < 40
+
+
+def test_build_user_prompt_ranks_critical_before_unknown(scan_result):
+    prompt = build_user_prompt("fstec", scan_result, max_findings=1)
+    data = json.loads(prompt)
+    assert data["findings"][0]["severity"] == "critical"
+    assert data["findings"][0]["id"] == "f1"
+
+
+def test_user_prompt_for_uses_select_files(monkeypatch, scan_result, tmp_path):
+    from worker import ai_docs as mod
+
+    calls: list[object] = []
+
+    def fake_select(root, inventories, ai_cfg, extensions=None):
+        calls.append({"root": root, "max_files": ai_cfg.max_files})
+        return [_File(rel_path="a.py", content="print(1)")]
+
+    monkeypatch.setattr("app.ai.selector.select_files", fake_select)
+
+    class _Cfg:
+        max_findings = 10
+        max_files = 3
+        max_file_bytes = 1000
+
+    prompt = mod._user_prompt_for(
+        "codedocs", scan_result, _Cfg(), tmp_path, max_chars=50_000
+    )
+    assert calls and calls[0]["max_files"] == 3
+    assert '<file path="a.py">' in prompt
+
+
 # ------------------------------------------------------------- generation
 
 
@@ -321,6 +365,92 @@ def test_pipeline_with_ai_docs_produces_artifacts_and_docs_kit(
     summary = json.loads((reports_dir / "summary.json").read_text("utf-8"))
     assert summary["documents"] == {"fstec": "ok", "codedocs": "ok"}
     assert manifest["stages"] == {"analysis": "ok", "report": "ok"}
+
+
+def test_pipeline_publishes_core_report_before_ai_docs(
+    cfg, make_job, scan_result, monkeypatch
+):
+    """UI must see report=ok + report.html before slow LLM docs finish."""
+    from worker.pipeline import Pipeline
+
+    scan_id = "11111111-1111-1111-1111-111111111111"
+    make_job(scan_id, {"kind": "zip"})
+    pipe = Pipeline(_enabled_cfg(cfg, monkeypatch))
+    monkeypatch.setattr(pipe, "_analyze", lambda scan_id, source, options: scan_result)
+
+    seen: dict[str, object] = {}
+
+    def slow_generate(self, doc_id, result, reports_dir):
+        # While LLM is "running", the core report must already be published.
+        manifest = json.loads(
+            (reports_dir / "manifest.json").read_text(encoding="utf-8")
+        )
+        seen.setdefault("during_ai", [])
+        seen["during_ai"].append(
+            {
+                "doc_id": doc_id,
+                "stages": dict(manifest["stages"]),
+                "artifacts": list(manifest["artifacts"]),
+            }
+        )
+        return f"# {doc_id}\n\nok\n"
+
+    monkeypatch.setattr(Pipeline, "_generate_ai_document", slow_generate)
+    pipe.process(
+        {
+            "scan_id": scan_id,
+            "source": {"kind": "zip"},
+            "options": {"formats": ["html", "md"]},
+        }
+    )
+
+    first = seen["during_ai"][0]
+    assert first["stages"] == {"analysis": "ok", "report": "ok"}
+    assert "report.html" in first["artifacts"]
+    assert not any(
+        name.startswith(("fstec.", "codedocs.")) for name in first["artifacts"]
+    )
+    # After fstec finishes, its artifacts are published before codedocs starts.
+    if len(seen["during_ai"]) > 1:
+        mid = seen["during_ai"][1]
+        assert mid["doc_id"] == "codedocs"
+        assert any(name.startswith("fstec.") for name in mid["artifacts"])
+    final = json.loads(
+        (cfg.reports_dir / scan_id / "manifest.json").read_text(encoding="utf-8")
+    )
+    assert final["stages"] == {"analysis": "ok", "report": "ok"}
+    assert "fstec.html" in final["artifacts"] or "fstec.md" in final["artifacts"]
+    assert "codedocs.zip" in final["artifacts"]
+
+
+def test_pipeline_ai_fail_still_publishes_codedocs_zip(
+    cfg, make_job, scan_result, monkeypatch
+):
+    """Even when LLM fails, the ZIP download chip must appear (placeholder)."""
+    from worker.pipeline import Pipeline
+
+    scan_id = "11111111-1111-1111-1111-111111111111"
+    make_job(scan_id, {"kind": "zip"})
+    pipe = Pipeline(_enabled_cfg(cfg, monkeypatch))
+    monkeypatch.setattr(pipe, "_analyze", lambda scan_id, source, options: scan_result)
+
+    def boom(self, doc_id, result, reports_dir):
+        raise AiDocError(f"{doc_id} blew up")
+
+    monkeypatch.setattr(Pipeline, "_generate_ai_document", boom)
+    pipe.process(
+        {
+            "scan_id": scan_id,
+            "source": {"kind": "zip"},
+            "options": {"formats": ["md", "html"]},
+        }
+    )
+    reports_dir = cfg.reports_dir / scan_id
+    manifest = json.loads((reports_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert "codedocs.zip" in manifest["artifacts"]
+    assert (reports_dir / "codedocs.zip").is_file()
+    summary = json.loads((reports_dir / "summary.json").read_text(encoding="utf-8"))
+    assert summary["documents"]["codedocs"] == "placeholder"
 
 
 def test_pipeline_ai_doc_failure_is_soft(cfg, make_job, scan_result, monkeypatch):

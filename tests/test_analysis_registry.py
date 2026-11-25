@@ -21,20 +21,39 @@ def test_scan_create_defaults():
 
 
 def test_enabled_runners_come_from_settings_yaml():
-    # The repo settings.yaml enables static + ai + dynamic (manual still off).
-    assert enabled_runners() == ("static", "ai", "dynamic")
+    # The repo settings.yaml enables static + ai + dynamic + manual (UI Пентест).
+    assert enabled_runners() == ("static", "ai", "dynamic", "manual")
 
 
 def test_check_runners_known_vs_unknown():
     check_runners(None)  # legacy path: no restriction
-    check_runners(["static", "ai", "dynamic"])
+    check_runners(["static", "ai", "dynamic", "manual"])
     with pytest.raises(ValueError, match="unknown analysis runner"):
         check_runners(["tarot"])
-    with pytest.raises(ValueError, match="disabled in this deployment"):
-        check_runners(["manual"])  # known, but not enabled in settings.yaml
 
 
-def test_scan_endpoint_rejects_disabled_runner(client, tmp_path):
+def test_scan_endpoint_accepts_manual_runner(client, tmp_path, monkeypatch):
+    import app.services.scan.orchestrator as orch_mod
+
+    monkeypatch.setattr(
+        orch_mod,
+        "run_ai_analysis",
+        lambda *a, **k: (
+            [],
+            {
+                "enabled": False,
+                "status": "skipped",
+                "model": None,
+                "files_sent": 0,
+                "findings_count": 0,
+                "error": "test_stub",
+            },
+        ),
+    )
+    monkeypatch.setattr(
+        "app.services.scan.dast_merge.merge_dast_via_sandbox",
+        lambda result, root, **kw: result,
+    )
     sample = _sample_repo(tmp_path / "sample_repo")
     project_id = client.post(
         "/api/v1/projects",
@@ -42,8 +61,10 @@ def test_scan_endpoint_rejects_disabled_runner(client, tmp_path):
     ).json()["id"]
 
     r = client.post(f"/api/v1/projects/{project_id}/scans", json={"methods": ["manual"]})
-    assert r.status_code == 400
-    assert "disabled in this deployment" in r.json()["detail"]
+    assert r.status_code == 201, r.text
+    result = client.get(f"/api/v1/projects/{project_id}/scans/{r.json()['id']}/result")
+    assert result.status_code == 200
+    assert result.json()["meta"]["runners"] == ["manual"]
 
 
 def test_scan_endpoint_threads_methods(client, tmp_path, monkeypatch):

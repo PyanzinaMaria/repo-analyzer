@@ -159,3 +159,8 @@ def test_worker_maps_form_methods_to_runners():
     )
     assert runners == ["static", "dynamic", "ai"]
     assert formats == ["html"]
+
+    runners, _ = pipe._resolve_options(
+        {"methods": ["sast", "pentest"], "formats": ["html"]}
+    )
+    assert runners == ["static", "manual"]

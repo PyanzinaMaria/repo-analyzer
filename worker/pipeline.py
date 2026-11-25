@@ -62,7 +62,12 @@ class Pipeline:
 
         write_manifest(reports_dir, {"analysis": "ok", "report": "running"}, [])
         try:
-            produced = self._produce(reports_dir, result, options, analysis_seconds)
+            # Core report/doc first — mark report ok so the UI unblocks, then
+            # optionally append slow LLM documents (fstec/codedocs) without
+            # holding the status page on OpenRouter.
+            produced, docs_status = self._produce(
+                reports_dir, result, options, analysis_seconds
+            )
         except Exception:
             logger.exception("Report rendering failed for scan %s", scan_id)
             write_manifest(reports_dir, {"analysis": "ok", "report": "fail"}, [])
@@ -70,7 +75,13 @@ class Pipeline:
 
         artifacts = [name for name in produced if (reports_dir / name).is_file()]
         write_manifest(reports_dir, {"analysis": "ok", "report": "ok"}, artifacts)
-        logger.info("Scan %s done: %d findings, artifacts %s", scan_id, len(result.findings), artifacts)
+        logger.info(
+            "Scan %s done: %d findings, artifacts %s, ai_docs=%s",
+            scan_id,
+            len(result.findings),
+            artifacts,
+            docs_status or "{}",
+        )
 
     # ------------------------------------------------------------------
 
@@ -276,11 +287,120 @@ class Pipeline:
         result,
         options: dict[str, Any],
         analysis_seconds: float = 0.0,
-    ) -> list[str]:
-        """Write the artifacts for this scan's document x format plan.
-        Returns the artifact names it produced."""
+    ) -> tuple[list[str], dict[str, str]]:
+        """Write artifacts. Core report/doc are published first (report=ok),
+        then optional LLM docs append without blocking the status page.
+
+        Returns ``(artifact_names, docs_status)``.
+        """
         reports_dir.mkdir(parents=True, exist_ok=True)
 
+        from worker.rendering import severity_counts
+
+        _, chosen_formats = self._resolve_options(options)
+        plan = self._format_plan(chosen_formats)
+        core_plan = [n for n in plan if not self.cfg.is_ai_doc(n.rpartition(".")[0])]
+        ai_plan = [n for n in plan if self.cfg.is_ai_doc(n.rpartition(".")[0])]
+
+        started = time.monotonic()
+        produced, format_errors = self._write_plan_artifacts(
+            reports_dir, result, core_plan, md_by_doc={}, docs_status={}
+        )
+        if not produced:
+            raise RuntimeError(
+                "no report artifacts produced: " + "; ".join(format_errors[:5])
+            )
+
+        report_seconds = round(time.monotonic() - started, 1)
+        scan_kind = (result.summary or {}).get("scan_kind") or (
+            (result.meta or {}).get("dast") and "dast"
+        ) or "sast"
+        summary: dict[str, Any] = {
+            "severities": severity_counts(result),
+            "timing": {
+                "analysis_seconds": analysis_seconds,
+                "report_seconds": report_seconds,
+                "total_seconds": round(analysis_seconds + report_seconds, 1),
+            },
+            "meta": {"scan_kind": scan_kind},
+        }
+        self._write_summary(reports_dir, summary)
+        # Unblock the UI before slow LLM document calls.
+        write_manifest(
+            reports_dir,
+            {"analysis": "ok", "report": "ok"},
+            [n for n in produced if (reports_dir / n).is_file()],
+        )
+        logger.info(
+            "Core report ready for %s (%d artifacts); AI docs pending=%s",
+            result.scan_id,
+            len(produced),
+            sorted({n.rpartition(".")[0] for n in ai_plan}) or "none",
+        )
+
+        docs_status: dict[str, str] = {}
+        if ai_plan:
+            # One document at a time so codedocs.zip / fstec.* appear in the
+            # UI as soon as that doc finishes (ok or placeholder).
+            by_doc: dict[str, list[str]] = {}
+            for name in ai_plan:
+                doc_id = name.rpartition(".")[0]
+                by_doc.setdefault(doc_id, []).append(name)
+
+            md_by_doc: dict[str, str] = {}
+            for doc_id, names in by_doc.items():
+                ai_names, ai_errors = self._write_plan_artifacts(
+                    reports_dir,
+                    result,
+                    names,
+                    md_by_doc=md_by_doc,
+                    docs_status=docs_status,
+                )
+                if ai_errors:
+                    logger.warning(
+                        "AI document format errors for %s: %s",
+                        doc_id,
+                        "; ".join(ai_errors[:5]),
+                    )
+                produced.extend(ai_names)
+                summary["documents"] = dict(docs_status)
+                summary["timing"]["report_seconds"] = round(time.monotonic() - started, 1)
+                summary["timing"]["total_seconds"] = round(
+                    analysis_seconds + summary["timing"]["report_seconds"], 1
+                )
+                self._write_summary(reports_dir, summary)
+                live_artifacts = [n for n in produced if (reports_dir / n).is_file()]
+                write_manifest(
+                    reports_dir,
+                    {"analysis": "ok", "report": "ok"},
+                    live_artifacts,
+                )
+                logger.info(
+                    "AI document %s=%s for %s; artifacts now %s",
+                    doc_id,
+                    docs_status.get(doc_id),
+                    result.scan_id,
+                    live_artifacts,
+                )
+
+        return produced, docs_status
+
+    @staticmethod
+    def _write_summary(reports_dir: Path, summary: dict[str, Any]) -> None:
+        (reports_dir / "summary.json").write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+    def _write_plan_artifacts(
+        self,
+        reports_dir: Path,
+        result,
+        plan: list[str],
+        *,
+        md_by_doc: dict[str, str],
+        docs_status: dict[str, str],
+    ) -> tuple[list[str], list[str]]:
+        """Render one plan slice (core or AI). Soft-fails per artifact."""
         from worker.formats import (
             HTML_CONVERTERS,
             create_zip_artifact,
@@ -288,17 +408,8 @@ class Pipeline:
             markdown_without_attached_files,
             render_document_markdown,
         )
-        from worker.rendering import severity_counts
 
-        _, chosen_formats = self._resolve_options(options)
-        plan = self._format_plan(chosen_formats)
-
-        started = time.monotonic()
         html_by_doc: dict[str, str] = {}
-        # LLM documents: one generation per doc id, every format derives
-        # from the combined markdown; a failed doc generates a placeholder.
-        md_by_doc: dict[str, str] = {}
-        docs_status: dict[str, str] = {}
         produced: list[str] = []
         format_errors: list[str] = []
         for name in plan:
@@ -328,9 +439,9 @@ class Pipeline:
                         html_by_doc[doc_id] = html
                         target.write_text(html, encoding="utf-8")
                     elif fmt == "pdf":
-                        # Protocol only: inlined JSON attachments become Courier
-                        # tofu for Cyrillic; files already live under fstec/.
-                        pdf_html = markdown_to_html(markdown_without_attached_files(combined))
+                        pdf_html = markdown_to_html(
+                            markdown_without_attached_files(combined)
+                        )
                         target.write_bytes(HTML_CONVERTERS[fmt](pdf_html))
                     elif fmt in HTML_CONVERTERS:
                         html = html_by_doc.get(doc_id) or markdown_to_html(combined)
@@ -338,7 +449,7 @@ class Pipeline:
                         target.write_bytes(HTML_CONVERTERS[fmt](html))
                     elif fmt == "zip":
                         docs_kit_dir = (
-                            reports_dir / "docs" if docs_status[doc_id] == "ok" else None
+                            reports_dir / "docs" if docs_status.get(doc_id) == "ok" else None
                         )
                         create_zip_artifact(
                             docs_kit_dir, target, fallback_markdown=combined
@@ -365,28 +476,4 @@ class Pipeline:
                         target.unlink()
                     except OSError:
                         pass
-        if not produced:
-            raise RuntimeError(
-                "no report artifacts produced: " + "; ".join(format_errors[:5])
-            )
-        report_seconds = round(time.monotonic() - started, 1)
-
-        scan_kind = (result.summary or {}).get("scan_kind") or (
-            (result.meta or {}).get("dast") and "dast"
-        ) or "sast"
-        timing = {
-            "analysis_seconds": analysis_seconds,
-            "report_seconds": report_seconds,
-            "total_seconds": round(analysis_seconds + report_seconds, 1),
-        }
-        summary = {
-            "severities": severity_counts(result),
-            "timing": timing,
-            "meta": {"scan_kind": scan_kind},
-        }
-        if docs_status:
-            summary["documents"] = docs_status
-        (reports_dir / "summary.json").write_text(
-            json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
-        return produced
+        return produced, format_errors

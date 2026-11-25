@@ -21,15 +21,24 @@ formats:
 # LLM-generated final documents. Each spec maps a document id from
 # frontend/config/reports.yaml to its system prompt (system_prompts/) and a
 # per-call timeout. WORKER_ENABLE_AI_DOCUMENTS overrides `enabled`.
-# Each doc can take many minutes on free LLM and blocks the single worker.
+# Core report/doc are published first (UI unblocks); these run after and
+# soft-fail into placeholders. Keep timeouts short on free LLM tiers.
 ai_documents:
   enabled: true
   fstec:
     prompt: system_prompts/FSTEC.md
-    timeout_seconds: 900
+    timeout_seconds: 120
+    max_findings: 50
+    max_files: 20
+    max_file_bytes: 40000
+    max_prompt_chars: 80000
   codedocs:
     prompt: system_prompts/CODE_DOCUMENTATION.md
-    timeout_seconds: 900
+    timeout_seconds: 120
+    max_findings: 40
+    max_files: 25
+    max_file_bytes: 40000
+    max_prompt_chars: 80000
 
 # Mirror of frontend/config/theme.yaml tokens. Kept local so the worker
 # renders artifacts without reading another service's config tree; if you

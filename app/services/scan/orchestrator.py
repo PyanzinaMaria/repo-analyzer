@@ -125,9 +125,11 @@ class ScanOrchestrator:
         run_ai = methods is None and enable_ai is not False
         if methods is not None:
             run_ai = "ai" in methods
+        # UI «Пентест» → runner `manual`: security review + live verify + agent.
+        run_pentest = methods is not None and "manual" in methods
 
-        # Context for triage/discovery: static or AI-only (not pure DAST).
-        want_context = run_static or run_ai
+        # Context for triage/discovery/pentest (not pure DAST).
+        want_context = run_static or run_ai or run_pentest
 
         # Service artifacts for SARIF/context stay under the scan reports dir;
         # they are NOT published as frontend serveable artifacts.
@@ -237,8 +239,9 @@ class ScanOrchestrator:
         findings = ordered(findings)
 
         # Security review: code -> vulnerability hypotheses (+ review findings).
-        # The hypotheses are stored in meta and verified by DAST against the
-        # sandboxed application (see dast_merge.verify_hypotheses).
+        # Form jobs: only when UI «Пентест» (`manual`) is selected.
+        # Legacy jobs (methods is None): keep config-driven review on static/AI.
+        # Hypotheses are verified after sandbox boot (see dast_merge).
         security_meta: dict = {"status": "disabled"}
         security_hypotheses: list[dict] = []
         try:
@@ -246,9 +249,17 @@ class ScanOrchestrator:
             from app.security.pipeline import run_security_scan
 
             sec_cfg = load_security_config()
-            if (run_static or run_ai) and sec_cfg.enabled and sec_cfg.review_enabled:
+            if methods is None:
+                want_security = (run_static or run_ai) and sec_cfg.enabled and sec_cfg.review_enabled
+            else:
+                want_security = run_pentest and sec_cfg.enabled and sec_cfg.review_enabled
+            if want_security:
                 sec_run = run_security_scan(
-                    root, None, findings=findings, cfg=sec_cfg, use_llm=run_ai,
+                    root,
+                    None,
+                    findings=findings,
+                    cfg=sec_cfg,
+                    use_llm=run_ai or run_pentest,
                 )
                 known = {f.id for f in findings}
                 for finding in sec_run.findings:
@@ -281,14 +292,13 @@ class ScanOrchestrator:
         elif run_ai and review_meta.get("error") and not llm_meta.get("enabled"):
             ai_meta["error"] = review_meta.get("error")
 
-        has_ai = "ai" in (methods or []) if methods is not None else bool(run_ai)
-        has_dast = methods is None or "dynamic" in (methods or [])
-        if has_dast:
-            scan_kind = "sast+dast"
-        elif has_ai:
-            scan_kind = "sast_ai"
-        else:
+        from app.analysis.registry import compose_scan_kind
+
+        if methods is None:
+            # Legacy: DAST is the historical default after SAST.
             scan_kind = "sast"
+        else:
+            scan_kind = compose_scan_kind(methods)
         summary = {
             "total_findings": len(active),
             "by_severity": dict(severity_counts),
@@ -351,14 +361,24 @@ class ScanOrchestrator:
             meta=meta,
         )
 
-        # DAST (sandbox boot + ZAP/preflight) when the client asked for
-        # `dynamic`, or on legacy jobs with no method list (previous default).
-        if methods is not None and "dynamic" not in methods:
+        # Sandbox path: DAST (`dynamic`) and/or pentest (`manual`).
+        # Legacy jobs (methods is None) keep the previous default (always try).
+        if methods is not None and "dynamic" not in methods and not run_pentest:
             return sast_result
 
         from app.services.scan.dast_merge import merge_dast_via_sandbox
 
-        return merge_dast_via_sandbox(sast_result, root, registry=self.registry)
+        # ZAP follows the DAST checkbox; active agent follows «Пентест».
+        # Legacy (no methods): both stages honor dast.* config defaults.
+        run_zap = methods is None or "dynamic" in methods
+        run_active_pentest = methods is None or run_pentest
+        return merge_dast_via_sandbox(
+            sast_result,
+            root,
+            registry=self.registry,
+            run_zap=run_zap,
+            run_active_pentest=run_active_pentest,
+        )
 
 
 def _language_run(meta: dict | None) -> LanguageRun | None:

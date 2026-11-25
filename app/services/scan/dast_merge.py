@@ -21,11 +21,15 @@ def merge_dast_via_sandbox(
     root: Path,
     *,
     registry: LanguageRegistry | None = None,
+    run_zap: bool = True,
+    run_active_pentest: bool = True,
 ) -> ScanResult:
-    """After SAST, boot sandbox (if possible) and merge DAST findings.
+    """After SAST, boot sandbox (if possible) and merge DAST/pentest findings.
 
     Soft-fails: sandbox/DAST problems never raise; they set meta.sandbox /
     meta.dast status to skipped/failed and leave SAST findings intact.
+
+    ``run_zap`` / ``run_active_pentest`` map to UI checkboxes DAST / Пентест.
     """
     findings: list[Finding] = list(sast_result.findings)
     meta: dict[str, Any] = dict(sast_result.meta or {})
@@ -53,6 +57,8 @@ def merge_dast_via_sandbox(
                     zap_target_url=session.network_url,
                     zap_docker_network=session.network,
                     skip_ssrf=True,
+                    run_zap=run_zap,
+                    run_active_pentest=run_active_pentest,
                 )
                 findings.extend(dast_result.findings)
                 meta["dast"] = (dast_result.meta or {}).get("dast") or {
@@ -104,8 +110,20 @@ def _with_merged(
     *,
     dast_ran: bool,
 ) -> ScanResult:
+    from app.analysis.registry import compose_scan_kind
+
     severity_counts = Counter(f.severity.value for f in findings)
     summary = dict(sast_result.summary or {})
+    runners = meta.get("runners")
+    if isinstance(runners, list):
+        scan_kind = compose_scan_kind([str(r) for r in runners])
+    else:
+        # Legacy jobs: sandbox attempt used to mean the combined SAST+DAST path.
+        prior = str(summary.get("scan_kind") or "sast")
+        if dast_ran or meta.get("sandbox") is not None:
+            scan_kind = "sast+dast"
+        else:
+            scan_kind = prior
     summary.update(
         {
             "total_findings": len(findings),
@@ -113,7 +131,7 @@ def _with_merged(
             "high_or_above": sum(
                 1 for f in findings if f.severity in {Severity.critical, Severity.high}
             ),
-            "scan_kind": "sast+dast" if dast_ran or meta.get("sandbox") else "sast",
+            "scan_kind": scan_kind,
             "dast_findings": sum(
                 1
                 for f in findings
@@ -125,9 +143,6 @@ def _with_merged(
             "pentest_findings": sum(1 for f in findings if f.source == "pentest"),
         }
     )
-    # Prefer sast+dast label whenever we attempted the combined pipeline
-    if meta.get("sandbox") is not None:
-        summary["scan_kind"] = "sast+dast"
 
     return sast_result.model_copy(
         update={
