@@ -1,0 +1,15 @@
+{
+  "app.py::login@40": "route",
+  "app.py::register@56": "route",
+  "app.py::logout@73": "route",
+  "app.py::index@83": "route",
+  "app.py::users@94": "route",
+  "app.py::files@118": "route",
+  "app.py::files_download@127": "route",
+  "app.py::files_upload@138": "route",
+  "app.py::diag@161": "route",
+  "app.py::diag_ssh@168": "route",
+  "app.py::diag_ping@189": "route",
+  "app.py::api_token@206": "route",
+  "app.py::health_proxy@219": "route"
+}

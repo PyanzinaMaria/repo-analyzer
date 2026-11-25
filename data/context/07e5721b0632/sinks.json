@@ -1,0 +1,16 @@
+[
+  {
+    "file": "libdb.py",
+    "line": 9,
+    "callee": "cur.execute",
+    "cwe": "CWE-89",
+    "function_id": "libdb.py::get_user@6"
+  },
+  {
+    "file": "libdb.py",
+    "line": 17,
+    "callee": "cur.execute",
+    "cwe": "CWE-89",
+    "function_id": "libdb.py::search@14"
+  }
+]

@@ -1,0 +1,184 @@
+[
+  {
+    "file": "app.py",
+    "line": 30,
+    "callee": "open",
+    "cwe": "CWE-22",
+    "function_id": "app.py::load_config@28"
+  },
+  {
+    "file": "app.py",
+    "line": 32,
+    "callee": "yaml.load",
+    "cwe": "CWE-502",
+    "function_id": "app.py::load_config@28"
+  },
+  {
+    "file": "app.py",
+    "line": 51,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::login@40"
+  },
+  {
+    "file": "app.py",
+    "line": 67,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::register@56"
+  },
+  {
+    "file": "app.py",
+    "line": 76,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::logout@73"
+  },
+  {
+    "file": "app.py",
+    "line": 86,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::index@83"
+  },
+  {
+    "file": "app.py",
+    "line": 97,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::users@94"
+  },
+  {
+    "file": "app.py",
+    "line": 121,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::files@118"
+  },
+  {
+    "file": "app.py",
+    "line": 122,
+    "callee": "os.makedirs",
+    "cwe": "CWE-22",
+    "function_id": "app.py::files@118"
+  },
+  {
+    "file": "app.py",
+    "line": 130,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::files_download@127"
+  },
+  {
+    "file": "app.py",
+    "line": 134,
+    "callee": "subprocess.call",
+    "cwe": "CWE-78",
+    "function_id": "app.py::files_download@127"
+  },
+  {
+    "file": "app.py",
+    "line": 141,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::files_upload@138"
+  },
+  {
+    "file": "app.py",
+    "line": 144,
+    "callee": "os.makedirs",
+    "cwe": "CWE-22",
+    "function_id": "app.py::files_upload@138"
+  },
+  {
+    "file": "app.py",
+    "line": 154,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::files_upload@138"
+  },
+  {
+    "file": "app.py",
+    "line": 164,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::diag@161"
+  },
+  {
+    "file": "app.py",
+    "line": 171,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::diag_ssh@168"
+  },
+  {
+    "file": "app.py",
+    "line": 192,
+    "callee": "redirect",
+    "cwe": "CWE-601",
+    "function_id": "app.py::diag_ping@189"
+  },
+  {
+    "file": "app.py",
+    "line": 197,
+    "callee": "subprocess.check_output",
+    "cwe": "CWE-78",
+    "function_id": "app.py::diag_ping@189"
+  },
+  {
+    "file": "app.py",
+    "line": 225,
+    "callee": "requests.get",
+    "cwe": "CWE-918",
+    "function_id": "app.py::health_proxy@219"
+  },
+  {
+    "file": "db.py",
+    "line": 14,
+    "callee": "cur.execute",
+    "cwe": "CWE-89",
+    "function_id": "db.py::init_db@11"
+  },
+  {
+    "file": "db.py",
+    "line": 23,
+    "callee": "cur.execute",
+    "cwe": "CWE-89",
+    "function_id": "db.py::init_db@11"
+  },
+  {
+    "file": "db.py",
+    "line": 40,
+    "callee": "cur.execute",
+    "cwe": "CWE-89",
+    "function_id": "db.py::find_user@35"
+  },
+  {
+    "file": "db.py",
+    "line": 51,
+    "callee": "cur.execute",
+    "cwe": "CWE-89",
+    "function_id": "db.py::find_user_by_email@46"
+  },
+  {
+    "file": "db.py",
+    "line": 64,
+    "callee": "cur.execute",
+    "cwe": "CWE-89",
+    "function_id": "db.py::create_user@57"
+  },
+  {
+    "file": "db.py",
+    "line": 74,
+    "callee": "cur.execute",
+    "cwe": "CWE-89",
+    "function_id": "db.py::store_token@71"
+  },
+  {
+    "file": "db.py",
+    "line": 84,
+    "callee": "cur.execute",
+    "cwe": "CWE-89",
+    "function_id": "db.py::list_tokens@81"
+  }
+]

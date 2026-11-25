@@ -1,0 +1,5 @@
+{
+  "repo_demo/app.py::do_login@15": "route",
+  "repo_demo/app.py::do_search@25": "route",
+  "vuln_web_app.py::main@94": "cli_main"
+}
