@@ -219,10 +219,22 @@ _JAVA_WAR_DOCKERFILE = """FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /src
 COPY . /src
 # spotless needs a git repo, which the build context (a detached worktree) is not
-RUN mvn -q -B clean package -DskipTests -Dspotless.skip=true
+RUN mvn -B clean package -DskipTests -Dspotless.skip=true
 
 FROM tomcat:9.0-jdk17-temurin
 COPY --from=build /src/target/*.war /usr/local/tomcat/webapps/
+RUN cd /usr/local/tomcat/webapps && for f in *.war; do [ "$f" = "ROOT.war" ] || mv "$f" ROOT.war; done
+EXPOSE {port}
+CMD ["catalina.sh", "run"]
+"""
+
+_JAVA_WAR_GRADLE_DOCKERFILE = """FROM gradle:7-jdk17 AS build
+WORKDIR /src
+COPY . /src
+RUN gradle war --no-daemon -x test || gradle build --no-daemon -x test
+
+FROM tomcat:9.0-jdk17-temurin
+COPY --from=build /src/build/libs/*.war /usr/local/tomcat/webapps/
 RUN cd /usr/local/tomcat/webapps && for f in *.war; do [ "$f" = "ROOT.war" ] || mv "$f" ROOT.war; done
 EXPOSE {port}
 CMD ["catalina.sh", "run"]
@@ -326,7 +338,9 @@ def _boot_java_war(root: Path, work_dir: Path, container: str, network: str, por
     docker = shutil.which("docker")
     build_dir = work_dir / "realvuln" / container
     build_dir.mkdir(parents=True, exist_ok=True)
-    (build_dir / "Dockerfile").write_text(_JAVA_WAR_DOCKERFILE.format(port=port), encoding="utf-8")
+    template = _JAVA_WAR_GRADLE_DOCKERFILE if (root / "build.gradle").is_file() \
+        else _JAVA_WAR_DOCKERFILE
+    (build_dir / "Dockerfile").write_text(template.format(port=port), encoding="utf-8")
     tag = f"dast-bench:{container}"
     build = subprocess.run([docker, "build", "-f", str(build_dir / "Dockerfile"),
                             "-t", tag, str(root)], capture_output=True, text=True, timeout=3600)
