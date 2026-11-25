@@ -32,17 +32,17 @@ Per-corpus metrics from `results/dast_metrics.json` (`python -m bench dast eval 
 
 ## realvuln
 
-*mode: items · generated: 2026-11-25T10:15:50+00:00 · лимит: 1800 c на тул/цель*
+*mode: items · generated: 2026-11-25T14:55:09+00:00 · лимит: 1800 c на тул/цель*
 
 | tool | items | hit | Recall(items) | TP(findings) | FP | Precision | время |
 |---|---|---|---|---|---|---|---|
-| nikto | 1 | 0 | 0% | 0 | 9 | 0% | 14с |
-| nuclei | 1 | 0 | 0% | 0 | 13 | 0% | 1м42с |
-| offat | 1 | 0 | 0% | 0 | 0 | – | – |
-| wapiti | 1 | 0 | 0% | 0 | 0 | – | 10с |
-| zap | 1 | 1 | 100% | 2 | 46 | 4% | 5м50с |
+| nikto | 5 | 0 | 0% | 0 | 11 | 0% | 33с |
+| nuclei | 5 | 0 | 0% | 0 | 13 | 0% | 8м40с |
+| offat | 5 | 0 | 0% | 0 | 0 | – | – |
+| wapiti | 5 | 0 | 0% | 0 | 0 | – | 2м12с |
+| zap | 5 | 1 | 20% | 2 | 182 | 1% | 30м50с |
 
-*coverage:* nikto: 1 ok · nuclei: 1 ok · offat: 1 skipped · wapiti: 1 ok · zap: 1 ok
+*coverage:* nikto: 2 failed, 3 ok · nuclei: 5 ok · offat: 5 skipped · wapiti: 5 ok · zap: 2 failed, 3 ok
 
 ## Notes
 
