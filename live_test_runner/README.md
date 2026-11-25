@@ -44,7 +44,22 @@ python -m live_test_runner --profile smoke --base-url http://127.0.0.1:5000 --st
 - покрытие: `states`, `transitions`, `proofs`
 - сырые срабатывания: `http_4xx`, `http_5xx`, `missing_security_headers`, `insecure_cookies`, `reflected_input`, `problems_total`
 - дедуп: **`problems_unique`** и `findings[]` (`fingerprint = kind|detail`, `pages`, `occurrences`)
+- код: **`code_vulnerabilities`** (+ `code_vulnerabilities_report` от Bandit по `--source-dir`)
 - разбивка `by_method`, последовательности и графы
+
+```bash
+python -m live_test_runner --profile smoke --base-url http://127.0.0.1:5000 \
+  --source-dir sandbox/dast/targets/purposefully-vulnerable-repo
+```
+
+## Гиперпараметры (Optuna)
+
+Файл [`hyperparams.json`](hyperparams.json) — лучшие Q/GA после Optuna.  
+Цель: `unique_paths + unique_transitions + 20*findings + code_vulnerabilities`.
+
+```bash
+python -m live_test_runner.optuna_tune --trials 36
+```
 
 ## Тесты
 

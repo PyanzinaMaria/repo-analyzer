@@ -39,7 +39,8 @@
 | `live_test_runner/target/app.py` | Учебный HTTP-стенд «буклет» (навигация + формы, слабые headers) |
 | `actions.py` | Извлечение действий; пустой `action` у формы = текущая страница |
 | `graph_trial.py` | Живой граф, бюджет шагов, эпизоды с reset на start URL |
-| `search.py` | Политики Random, Q-learning, Genetic, Q+GA |
+| `search.py` | Политики Random, Q-learning, Genetic, Q+GA (гиперпараметры из `hyperparams.json`) |
+| `optuna_tune.py` | Подбор гиперпараметров Q/GA через Optuna (цель — обогнать Random) |
 | `detectors.py` | Сырые счётчики + дедуп `kind\|detail` → `findings` |
 | `pipeline.py` | Оркестрация методов и запись `metrics.json` |
 
@@ -51,10 +52,12 @@
 
 | Поле | Смысл |
 |---|---|
-| **`problems_unique`** | Сколько **разных** проблем (ключ `kind\|detail`) |
-| **`findings[]`** | Список: fingerprint, pages, occurrences |
+| **`problems_unique`** | Сколько **разных** динамических проблем (ключ `kind\|detail`) |
+| **`findings[]`** | Список динамических находок: fingerprint, pages, occurrences |
+| **`code_vulnerabilities`** | Сколько уязвимостей нашёл **Bandit** в исходниках цели (`--source-dir`) |
+| `code_vulnerabilities_report` | Детализация SAST: severity, test_id, файл/строка |
 | `states` / `transitions` | Насколько далеко залезли в UI |
-| `problems_total` | Сырые срабатывания детекторов (частота, не «число багов») |
+| `problems_total` | Сырые срабатывания HTTP-детекторов (частота, не «число багов») |
 
 Типы в `findings`:
 
@@ -96,6 +99,28 @@ python -m offline_sequence_benchmarks --profile smoke
 ```
 
 Подробности офлайн-стенда: [`offline_sequence_benchmarks/README.md`](../offline_sequence_benchmarks/README.md).
+
+### Подбор гиперпараметров (Optuna)
+
+```bash
+pip install -r live_test_runner/requirements.txt
+python -m live_test_runner.optuna_tune --trials 36 --budget 240 --horizon 24
+```
+
+Optuna (TPE) максимизирует на офлайн-буклете:
+
+```text
+score = unique_paths + unique_transitions + 20 * findings + code_vulnerabilities
+```
+
+- `unique_paths` — число уникальных маршрутов до открытых состояний  
+- `unique_transitions` — число уникальных рёбер графа  
+- `findings` — на буклете: достигнутые proof-страницы (`*-proof`); в live — `problems_unique`  
+- `code_vulnerabilities` — число находок Bandit по `--source-dir` (статический анализ кода)
+
+`code_vulnerabilities` одинаков для всех trial одного source, поэтому на сравнение Q vs GA почти не влияет, но входит в итоговую метрику эксперимента. Разность с Random **не** оптимизируется.
+
+Лучшие параметры пишутся в [`live_test_runner/hyperparams.json`](../live_test_runner/hyperparams.json).
 
 ## Границы и ограничения
 

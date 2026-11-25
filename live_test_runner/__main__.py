@@ -35,6 +35,13 @@ def main(argv=None) -> int:
         default=None,
         help="Defaults to live_test_runner/output/<profile>",
     )
+    parser.add_argument(
+        "--source-dir",
+        type=Path,
+        default=os.environ.get("TARGET_SOURCE_DIR") or None,
+        help="Source tree for Bandit code-vulnerability metric "
+             "(default: live_test_runner/target)",
+    )
     args = parser.parse_args(argv)
     report = run_pipeline(
         args.base_url,
@@ -43,11 +50,13 @@ def main(argv=None) -> int:
         budget=args.budget,
         horizon=args.horizon,
         start_path=args.start_path,
+        source_dir=args.source_dir,
     )
     agg = report["aggregates"]
     print(
         f"problems_total={agg['problems_total']} "
-        f"problems_unique={agg['problems_unique']}"
+        f"problems_unique={agg['problems_unique']} "
+        f"code_vulnerabilities={agg['code_vulnerabilities']}"
     )
     return 0
 

@@ -7,16 +7,18 @@ from pathlib import Path
 from random import Random
 from typing import Any
 
+from .code_scan import scan_code_vulnerabilities
 from .detectors import merge_findings, unique_problem_count
 from .graph_trial import LiveTrial
 from .http_client import LiveClient
-from .search import METHODS, run_method
+from .search import METHODS, load_hyperparams, run_method
 
 
 PROFILES = {
     "smoke": {"budget": 48, "horizon": 8, "seeds": 1, "methods": METHODS},
     "full": {"budget": 200, "horizon": 24, "seeds": 3, "methods": METHODS},
 }
+DEFAULT_SOURCE_DIR = Path(__file__).resolve().parent / "target"
 
 
 def _best_sequences(trial: LiveTrial) -> list[dict[str, Any]]:
@@ -64,15 +66,17 @@ def run_once(
     seed: int,
     budget: int,
     horizon: int,
+    q=None,
+    ga=None,
 ) -> dict[str, Any]:
     trial = LiveTrial(client, budget=budget, horizon=horizon)
     rng = Random(seed)
-    run_method(trial, method, rng)
+    run_method(trial, method, rng, q=q, ga=ga)
     if trial.steps < trial.budget:
         # Exhaust remaining budget with random walk so comparisons stay fair.
-        from .search import online_search
+        from .search import run_random
 
-        online_search(trial, rng, learning=False)
+        run_random(trial, rng)
     assert trial.steps == trial.budget, (trial.steps, trial.budget)
     metrics = trial.metrics()
     return {
@@ -94,6 +98,7 @@ def run_pipeline(
     budget: int | None = None,
     horizon: int | None = None,
     start_path: str = "/",
+    source_dir: Path | str | None = None,
 ) -> dict[str, Any]:
     if profile not in PROFILES:
         raise ValueError(f"Unknown profile: {profile}")
@@ -103,9 +108,23 @@ def run_pipeline(
     if horizon is not None:
         cfg["horizon"] = horizon
     cfg["start_path"] = start_path
+    code_root = Path(source_dir) if source_dir is not None else DEFAULT_SOURCE_DIR
+    cfg["source_dir"] = str(code_root)
 
     output = Path(output_dir or Path(__file__).resolve().parent / "output" / profile)
     output.mkdir(parents=True, exist_ok=True)
+
+    q_cfg, ga_cfg = load_hyperparams()
+    cfg["hyperparams"] = {"q": q_cfg.__dict__, "ga": ga_cfg.__dict__}
+    print(f"Hyperparams Q={cfg['hyperparams']['q']}", flush=True)
+    print(f"Hyperparams GA={cfg['hyperparams']['ga']}", flush=True)
+
+    code_report = scan_code_vulnerabilities(code_root)
+    print(
+        f"Code SAST ({code_report['status']}): "
+        f"code_vulnerabilities={code_report['code_vulnerabilities']}",
+        flush=True,
+    )
 
     results: list[dict[str, Any]] = []
     with LiveClient(base_url, start_path=start_path) as client:
@@ -124,6 +143,8 @@ def run_pipeline(
                         seed=seed + 1000,
                         budget=cfg["budget"],
                         horizon=cfg["horizon"],
+                        q=q_cfg,
+                        ga=ga_cfg,
                     )
                 )
 
@@ -143,6 +164,7 @@ def run_pipeline(
         "proof_reached": sum(r["proof_reached"] for r in results),
         "problems_total": sum(r["problems_total"] for r in results),
         "problems_unique": problems_unique,
+        "code_vulnerabilities": code_report["code_vulnerabilities"],
     }
     by_method = {}
     for method in cfg["methods"]:
@@ -165,6 +187,7 @@ def run_pipeline(
         "config": cfg,
         "aggregates": totals,
         "findings": global_findings,
+        "code_vulnerabilities_report": code_report,
         "by_method": by_method,
         "runs": [
             {k: v for k, v in r.items() if k != "graph"}
@@ -178,7 +201,8 @@ def run_pipeline(
     print(f"Wrote {metrics_path}", flush=True)
     print(
         f"problems_total={totals['problems_total']} "
-        f"problems_unique={totals['problems_unique']}",
+        f"problems_unique={totals['problems_unique']} "
+        f"code_vulnerabilities={totals['code_vulnerabilities']}",
         flush=True,
     )
     print(

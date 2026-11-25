@@ -1,0 +1,52 @@
+{
+  "q": {
+    "alpha": 0.703,
+    "gamma": 0.687,
+    "epsilon": 0.031,
+    "bonus": 2.278,
+    "power": 0.815,
+    "use_time": true
+  },
+  "ga": {
+    "population": 24,
+    "mutation": 0.094,
+    "immigrants": 0.002,
+    "tournament": 5,
+    "scoring": "peak3",
+    "power": 0.417
+  },
+  "meta": {
+    "objective": "unique_paths + unique_transitions + 20.0*findings",
+    "findings_meaning": "On the offline booklet, findings = number of proof pages reached (text/screen/print-proof). Live runs use problems_unique/detectors.",
+    "optuna_trials": 36,
+    "budget": 240,
+    "horizon": 24,
+    "train_seeds": [0, 1, 2, 3, 4],
+    "holdout_seeds": [100, 101, 102, 103, 104, 105, 106, 107],
+    "q_best_train_score": 192.0,
+    "ga_best_train_score": 143.4,
+    "holdout": {
+      "q": {
+        "unique_paths": 55.875,
+        "unique_transitions": 126.125,
+        "findings": 0.375,
+        "states": 56.875,
+        "score": 189.5
+      },
+      "ga": {
+        "unique_paths": 45.875,
+        "unique_transitions": 94.75,
+        "findings": 0.375,
+        "states": 46.875,
+        "score": 148.125
+      },
+      "random_context_only": {
+        "unique_paths": 38.5,
+        "unique_transitions": 87.5,
+        "findings": 0,
+        "states": 39.5,
+        "score": 126.0
+      }
+    }
+  }
+}

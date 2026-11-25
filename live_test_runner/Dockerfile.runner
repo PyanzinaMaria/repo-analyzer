@@ -3,6 +3,7 @@ WORKDIR /workspace
 
 COPY live_test_runner/requirements.txt /workspace/live_test_runner/requirements.txt
 RUN pip install --no-cache-dir -r /workspace/live_test_runner/requirements.txt
+# Optuna is only required for hyperparameter search; runtime uses frozen hyperparams.json.
 
 COPY offline_sequence_benchmarks /workspace/offline_sequence_benchmarks
 COPY live_test_runner /workspace/live_test_runner
