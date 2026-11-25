@@ -48,3 +48,4 @@ realvuln_overrides:
   rv-dvpwa:            {port: 8080}        # compose maps 8080:8080; detection picked the DB port
   rv-dvga:             {port: 5000}        # flask GraphQL, slow first start
   rv-realvuln-altoroj: {java_war: true, port: 8080}
+  rv-realvuln-bank-of-anthos: {port: 8080}  # multi-service compose; frontend serves 8080

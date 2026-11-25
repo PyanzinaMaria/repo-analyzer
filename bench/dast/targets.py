@@ -295,6 +295,24 @@ def _boot_image_override(container: str, image: str, network: str, port: int,
                          f"{(state.stdout or '').strip()[:60]}; logs: "
                          f"{(logs.stdout or logs.stderr or '')[-200:]}")
         return
+    host_url = f"http://127.0.0.1:{host_port}"
+    deadline = time.monotonic() + boot_timeout
+    while time.monotonic() < deadline:
+        try:
+            with httpx.Client(verify=False, timeout=5) as client:
+                if client.get(host_url).status_code < 600:
+                    break
+        except httpx.HTTPError:
+            pass
+        time.sleep(2)
+    else:
+        logs = subprocess.run([docker, "logs", "--tail", "10", container],
+                              capture_output=True, text=True, timeout=60)
+        out["ok"] = False
+        out["reason"] = (f"image {image} not ready after {boot_timeout}s on {port}; logs: "
+                         f"{(logs.stdout or logs.stderr or '')[-200:]}")
+        subprocess.run([docker, "rm", "-f", container], capture_output=True, timeout=60)
+        return
     out.update(ok=True, host_url=host_url + "/", scan_url=f"http://{container}:{port}/",
                network=network, container=container,
                teardown={"method": "docker", "container": container, "image": image})
@@ -354,12 +372,85 @@ def _boot_java_war(root: Path, work_dir: Path, container: str, network: str, por
                teardown={"method": "docker", "container": container, "image": tag})
 
 
+def _boot_compose_local(compose_file: Path, project: str, container: str, network: str,
+                        port: int, boot_timeout: int, out: dict) -> None:
+    """Bench-local `docker compose up` for compose items with a port override: picks the
+    container that serves `port` (the sandbox picks the first published port, which is
+    often the database), joins it to the shared network and waits for readiness."""
+    import httpx
+
+    docker = shutil.which("docker")
+    up = subprocess.run([docker, "compose", "-f", str(compose_file), "-p", project,
+                         "up", "-d", "--build"],
+                        capture_output=True, text=True, timeout=boot_timeout)
+    if up.returncode != 0:
+        out["ok"] = False
+        out["reason"] = f"docker compose up failed: {(up.stderr or up.stdout)[-400:]}"
+        return
+    ids = subprocess.run([docker, "compose", "-f", str(compose_file), "-p", project,
+                          "ps", "-q"], capture_output=True, text=True, timeout=60)
+    picked = None
+    for cid in (ids.stdout or "").split():
+        published = subprocess.run([docker, "port", cid.strip()], capture_output=True,
+                                   text=True, timeout=60)
+        for entry in (published.stdout or "").splitlines():
+            left, sep, right = entry.partition("->")
+            if not sep:
+                continue
+            try:
+                c_port = int(left.split("/", 1)[0])
+                h_port = int(right.strip().rsplit(":", 1)[1])
+            except (ValueError, IndexError):
+                continue
+            if c_port == port and c_port not in _DB_PORTS:
+                picked = (cid.strip(), h_port, c_port)
+                break
+        if picked:
+            break
+    if not picked:
+        subprocess.run([docker, "compose", "-f", str(compose_file), "-p", project,
+                        "down", "-v", "--remove-orphans"], capture_output=True, timeout=120)
+        out["ok"] = False
+        out["reason"] = f"compose started but no container serves port {port}"
+        return
+    cid, host_port, c_port = picked
+    subprocess.run([docker, "network", "connect", network, cid], capture_output=True, timeout=60)
+    cname = subprocess.run([docker, "inspect", cid, "--format", "{{index .Config.Labels \"com.docker.compose.service\"}}"],
+                           capture_output=True, text=True, timeout=60).stdout.strip()
+    scan_name = f"{project}-{cname or 'app'}-1"
+    host_url = f"http://127.0.0.1:{host_port}"
+    deadline = time.monotonic() + boot_timeout
+    while time.monotonic() < deadline:
+        try:
+            with httpx.Client(verify=False, timeout=5) as client:
+                if client.get(host_url).status_code < 600:
+                    break
+        except httpx.HTTPError:
+            pass
+        time.sleep(3)
+    else:
+        logs = subprocess.run([docker, "logs", "--tail", "10", cid],
+                              capture_output=True, text=True, timeout=60)
+        subprocess.run([docker, "compose", "-f", str(compose_file), "-p", project,
+                        "down", "-v", "--remove-orphans"], capture_output=True, timeout=120)
+        out["ok"] = False
+        out["reason"] = (f"compose app not ready after {boot_timeout}s on {port}; logs: "
+                         f"{(logs.stdout or logs.stderr or '')[-200:]}")
+        return
+    out.update(ok=True, host_url=host_url + "/", scan_url=f"http://{scan_name}:{c_port}/",
+               network=network, container=cid,
+               teardown={"method": "compose", "project": project,
+                         "compose_file": str(compose_file), "container": cid})
+
+
 def _boot_one(root_str: str, network: str, out_file: str,
               override_json: str = "{}", work_dir_str: str = "",
               boot_timeout: int = 900) -> None:
-    """Child-process entry: boot one app (sandbox / prebuilt image / java_war) and dump the record."""
+    """Child-process entry: boot one app (sandbox / prebuilt image / java_war / compose)
+    and dump the record as JSON. CWD is switched to the app root so compose `include:`
+    rebasing and relative env_file paths land inside the snapshot."""
     import json as _json
-    import secrets
+    import os
 
     import httpx
 
@@ -371,6 +462,7 @@ def _boot_one(root_str: str, network: str, out_file: str,
     root = Path(root_str)
     token = secrets.token_hex(5)
     try:
+        os.chdir(root)
         if override.get("image"):
             out = {}
             _boot_image_override(f"ra-dast-{token}", override["image"], network,
@@ -415,9 +507,15 @@ def _boot_one(root_str: str, network: str, out_file: str,
         if override.get("port"):
             plan.port = int(override["port"])
         if plan.method == "compose" and plan.compose_file and Path(plan.compose_file).is_file():
-            created = _sanitize_compose_envfiles(Path(plan.compose_file))
-            if created:
-                plan.compose_file = Path(plan.compose_file)
+            _sanitize_compose_envfiles(Path(plan.compose_file))
+        if plan.method == "compose" and override.get("port") and plan.compose_file:
+            # the sandbox picks the first published port (often a database); drive
+            # compose directly and select the container that serves the override port
+            out = {}
+            _boot_compose_local(Path(plan.compose_file), f"ra{token}", f"ra-dast-{token}",
+                                network, int(override["port"]), boot_timeout, out)
+            Path(out_file).write_text(_json.dumps(out, ensure_ascii=False), encoding="utf-8")
+            return
         session = sandbox_runner.start_sandbox(root, cfg=SandboxConfig(network=network,
                                                         boot_timeout_seconds=boot_timeout),
                                 plan=plan)
