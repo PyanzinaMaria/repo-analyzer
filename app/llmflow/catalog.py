@@ -29,7 +29,9 @@ class SdkCall(BaseModel):
     inside_import: list[str] = Field(default_factory=list)   # file must import one of these modules
     require_kwargs: list[str] = Field(default_factory=list)  # call must pass these keyword arguments
     exclude: list[str] = Field(default_factory=list)         # callees this entry must not match
-    receiver_regex: str | None = None   # alternative to inside_import: receiver ($C) text matches this regex
+    receiver_regex: str | None = None   # receiver ($C) text must match (alone, or as an alternative to
+    #                                     inside_import); Semgrep anchors it at the start (re.match)
+    prompt_any: bool = False            # any argument carries the prompt (`chain.predict(question=…)`)
 
 
 class Sdk(BaseModel):
@@ -154,9 +156,14 @@ def _read(path: Path) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
-def load_catalog(root: Path | str = LLMFLOW_DIR) -> Catalog:
+def load_catalog(root: Path | str = LLMFLOW_DIR, frameworks: bool = False) -> Catalog:
+    """SDK entries from sdks/; with `frameworks`, also LLM-framework entries from frameworks/ (LangChain,
+    LlamaIndex, litellm: model output from the framework's own abstractions, matched by receiver names)."""
     root = Path(root)
-    sdks = [Sdk.model_validate(_read(p)) for p in sorted((root / "sdks").glob("*.yaml"))]
+    files = sorted((root / "sdks").glob("*.yaml"))
+    if frameworks:
+        files += sorted((root / "frameworks").glob("*.yaml"))
+    sdks = [Sdk.model_validate(_read(p)) for p in files]
     ids = [c.id for s in sdks for c in s.calls]
     dup = {i for i in ids if ids.count(i) > 1}
     if dup:

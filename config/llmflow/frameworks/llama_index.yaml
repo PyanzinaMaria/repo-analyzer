@@ -1,0 +1,47 @@
+# LlamaIndex (opt-in: `--frameworks`). LLM classes: llm.complete / chat / predict (LLMPredictor,
+# service_context.llm_predictor), streaming variants; engines: query_engine.query / chat_engine.chat.
+sdk: llama_index
+provider: llama_index
+imports: [llama_index]
+calls:
+  - id: llama_index.complete
+    callee: $C.complete
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|predictor)\w*$'
+  - id: llama_index.acomplete
+    callee: $C.acomplete
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|predictor)\w*$'
+  - id: llama_index.predict
+    callee: $C.predict
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|predictor)\w*$'
+  - id: llama_index.apredict
+    callee: $C.apredict
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|predictor)\w*$'
+  - id: llama_index.chat
+    callee: $C.chat
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?_?(llm|predictor|chat_engine)$'
+  - id: llama_index.stream_complete
+    callee: $C.stream_complete
+    model_arg: null
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|predictor)\w*$'
+  - id: llama_index.query
+    callee: $C.query
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?_?(query_engine|chat_engine)$'

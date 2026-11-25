@@ -27,6 +27,7 @@ classes:
       - pattern: exec($X, ...)
       - pattern: compile($X, ...)
       - pattern: runpy.run_path($X, ...)
+      - pattern: numexpr.evaluate($X, ...)       # evaluates via eval() (CVE-2023-39631)
   sql:
     S: 0.9
     cwe: CWE-89

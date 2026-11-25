@@ -87,6 +87,9 @@ def _with_constraints(call: SdkCall, pattern: str, focus: str | None = None, ren
             ]})
         items.append(either)
     items.append({"pattern": rename_mvars(pattern) if rename else pattern})
+    if call.receiver_regex and not call.inside_import:
+        items.append({"metavariable-regex": {"metavariable": "$LS_C" if rename else "$C",
+                                             "regex": call.receiver_regex}})
     for ex in call.exclude:
         # own metavariable names: `$C` here must not be bound to the `$C` of the positive pattern
         items.append({"pattern-not": rename_mvars(f"{ex}(...)", prefix="NOT_")})
@@ -108,6 +111,10 @@ def prompt_sinks(cat: Catalog) -> list[dict]:
             lead = ", ".join(["$_P"] * pos)
             args = f"{lead}, $X, ..." if lead else "$X, ..."
             out.append(_with_constraints(call, f"{call.callee}({args})", "$X"))
+        if call.prompt_any:
+            # no keyword-name metavariables in Semgrep: the whole call is the sink (a sink fires when any
+            # sub-expression is tainted)
+            out.append(_with_constraints(call, f"{call.callee}(...)"))
     return out
 
 
@@ -126,15 +133,31 @@ def sink_class_sinks(sc: SinkClass) -> list[dict]:
     return [_pattern_entry(p, "$X", rename=False) for p in sc.patterns]
 
 
+def _arg_forms(callee: str, t: Target) -> list[str]:
+    pats = []
+    if t.pos is not None:
+        lead = ", ".join(["$_A"] * t.pos)
+        pats.append(f"{callee}({lead + ', ' if lead else ''}$X, ...)")
+    if t.param:
+        pats.append(f"{callee}(..., {t.param}=$X, ...)")
+    return pats
+
+
 def fn_target_sinks(t: Target) -> list[dict]:
-    """Sink patterns for an argument of a wrapper function, called as `f(...)` or `$O.f(...)`."""
+    """Sink patterns for an argument of a wrapper function, called as `f(...)` or `$O.f(...)`.
+
+    A method with a generic name (`run`, `execute`, …) is matched only on receivers built from its class in
+    the same function: `PythonREPL(...).run(x)` or `repl = PythonREPL(...)` … `repl.run(x)`."""
+    if t.cls:
+        out = [{"patterns": [{"pattern": p}, {"focus-metavariable": "$X"}]}
+               for p in _arg_forms(f"{t.cls}(...).{t.name}", t)]
+        for p in _arg_forms(f"$R.{t.name}", t):
+            out.append({"patterns": [{"pattern-inside": f"$R = {t.cls}(...)\n...\n"}, {"pattern": p},
+                                     {"focus-metavariable": "$X"}]})
+        return out
     pats = []
     for callee in (t.name, f"$O.{t.name}"):
-        if t.pos is not None:
-            lead = ", ".join(["$_A"] * t.pos)
-            pats.append(f"{callee}({lead + ', ' if lead else ''}$X, ...)")
-        if t.param:
-            pats.append(f"{callee}(..., {t.param}=$X, ...)")
+        pats += _arg_forms(callee, t)
     return [{"patterns": [{"pattern": p}, {"focus-metavariable": "$X"}]} for p in pats]
 
 
@@ -151,16 +174,23 @@ def target_sinks(cat: Catalog, t: Target) -> list[dict]:
 
 
 def wrapper_sources(names: list[str]) -> list[dict]:
-    names = sorted({n for n in names if n not in GENERIC_NAMES})
-    if not names:
-        return []
-    rx = "^(" + "|".join(re.escape(n) for n in names) + ")$"
-    return [
-        {"patterns": [{"pattern": "$LS_FN(...)"},
-                      {"metavariable-regex": {"metavariable": "$LS_FN", "regex": rx}}]},
-        {"patterns": [{"pattern": "$LS_O.$LS_FN(...)"},
-                      {"metavariable-regex": {"metavariable": "$LS_FN", "regex": rx}}]},
-    ]
+    """Calls to known wrappers as LLM-output sources. Wrappers with generic names (`call`, `run`, …) count only
+    when called on `self` — a method of the same class hierarchy — never as `anything.call(...)`."""
+    def rx(ns: set[str]) -> str:
+        return "^(" + "|".join(re.escape(n) for n in sorted(ns)) + ")$"
+
+    specific = {n for n in names if n not in GENERIC_NAMES}
+    generic = {n for n in names if n in GENERIC_NAMES and not n.startswith("__")}
+    out = []
+    if specific:
+        out += [{"patterns": [{"pattern": "$LS_FN(...)"},
+                              {"metavariable-regex": {"metavariable": "$LS_FN", "regex": rx(specific)}}]},
+                {"patterns": [{"pattern": "$LS_O.$LS_FN(...)"},
+                              {"metavariable-regex": {"metavariable": "$LS_FN", "regex": rx(specific)}}]}]
+    if generic:
+        out.append({"patterns": [{"pattern": "self.$LS_FN(...)"},
+                                 {"metavariable-regex": {"metavariable": "$LS_FN", "regex": rx(generic)}}]})
+    return out
 
 
 PROPAGATORS = [
@@ -190,7 +220,7 @@ def _taint_rule(rid: str, sources: list[dict], sinks: list[dict], message: str, 
 
 def _target_meta(t: Target) -> dict:
     d = {"target_kind": t.kind, "target_name": t.name, "target_param": t.param,
-         "target_pos": t.pos, "target_role": t.role, "target_tid": t.tid}
+         "target_pos": t.pos, "target_role": t.role, "target_cls": t.cls, "target_tid": t.tid}
     return {k: v for k, v in d.items() if v is not None}     # semgrep rejects null values
 
 

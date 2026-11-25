@@ -4,6 +4,7 @@ import subprocess
 import sqlite3
 
 import anthropic
+import numexpr
 import ollama
 from flask import Flask, request
 from markupsafe import Markup
@@ -36,6 +37,8 @@ def llm_to_eval_and_html():
     text = m.content[0].text
     # ruleid: llmflow.o2s.sink.code_eval
     eval(text)
+    # ruleid: llmflow.o2s.sink.code_eval
+    numexpr.evaluate(text)
     # ruleid: llmflow.o2s.sink.html, llmflow.o2s.return
     return Markup(text)
 

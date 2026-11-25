@@ -170,16 +170,41 @@ class Stitcher:
                     return None
         return pos
 
-    def s_facts(self, name: str, param: str | None) -> list[SFact]:
+    @staticmethod
+    def method_class(func_id: str | None) -> str | None:
+        """`pkg/m.py::Outer.PythonREPL.run@12` → `PythonREPL` (None for module-level functions)."""
+        if not func_id or "::" not in func_id:
+            return None
+        qual = func_id.split("::", 1)[1].rsplit("@", 1)[0]
+        parts = qual.split(".")
+        return parts[-2] if len(parts) >= 2 and not parts[-2].startswith("<") else None
+
+    def s_facts(self, name: str, param: str | None, cls: str | None = None) -> list[SFact]:
         out = list(self.facts.S.get((name, param), []))
         for real in sorted(self.aliases.get(name, ())):
             out += self.facts.S.get((real, param), [])
-        return out
+        return [f for f in out if cls is None or self.method_class(f.func) == cls]
 
-    def i_facts(self, name: str, param: str | None) -> list[IFact]:
+    def i_facts(self, name: str, param: str | None, cls: str | None = None) -> list[IFact]:
         out = list(self.facts.I.get((name, param), []))
         for real in sorted(self.aliases.get(name, ())):
             out += self.facts.I.get((real, param), [])
+        return [f for f in out if cls is None or self.method_class(f.func) == cls]
+
+    def targets_for(self, name: str, param: str, facts: list, role: str) -> list[Target]:
+        """Targets for calls into a fragment's function: by name (and aliases) when the name is usable, else —
+        for methods with generic names such as `run` — one class-qualified target per defining class."""
+        if self.usable_name(name):
+            pos = self.consistent_pos(name, param, facts[0].pos)
+            return [Target("fn", n, param, pos, role) for n in [name, *sorted(self.alias_of.get(name, ()))]]
+        if name.startswith("__"):
+            return []
+        out, seen = [], set()
+        for f in facts:
+            cls = self.method_class(f.func)
+            if cls and cls not in seen:
+                seen.add(cls)
+                out.append(Target("fn", name, param, f.pos, role, cls))
         return out
 
     def func_at(self, file: str, line: int) -> FuncInfo | None:
@@ -284,7 +309,7 @@ class Stitcher:
     def _target(self, m: Match) -> Target:
         md = m.meta
         return Target(md["target_kind"], md["target_name"], md.get("target_param"), md.get("target_pos"),
-                      md.get("target_role"))
+                      md.get("target_role"), md.get("target_cls"))
 
     def _o2s(self, m: Match) -> None:
         t = self._target(m)
@@ -298,8 +323,10 @@ class Stitcher:
                 self._flow(RawFlow(t.name, cs_id, channel, chain + [sink]))
             elif t.kind == "return":
                 fn = self.func_at(m.file, m.line)
-                if fn is None or not self.usable_name(fn.simple_name) or fn.id in self.entrypoints:
+                if fn is None or fn.id in self.entrypoints:
                     continue                                # route handlers return responses, not LLM text
+                if not (self.usable_name(fn.simple_name) or self.self_wrapper(fn)):
+                    continue
                 if not self.facts.add(("R", fn.id, cs_id)):
                     continue
                 ret = self.hop(m.file, m.line, "wrapper", f"{fn.simple_name}() returns LLM output")
@@ -307,7 +334,7 @@ class Stitcher:
             elif t.kind == "fn" and t.role == "S":
                 approx = self.ambiguous(t.name)
                 call = self.hop(m.file, m.line, "call", f"→ {t.name}({t.param}=…)", approx=approx)
-                for sf in self.s_facts(t.name, t.param)[:3]:
+                for sf in self.s_facts(t.name, t.param, t.cls)[:3]:
                     if len(chain) + len(sf.chain) + 1 > MAX_HOPS:
                         continue
                     self._flow(RawFlow(sf.sink_class, cs_id, channel, chain + [call] + sf.chain))
@@ -338,13 +365,13 @@ class Stitcher:
             approx = self.ambiguous(t.name)
             call = self.hop(m.file, m.line, "call", f"{param} → {t.name}({t.param}=…)", approx=approx)
             if t.role == "S":
-                for sf in self.s_facts(t.name, t.param)[:3]:
+                for sf in self.s_facts(t.name, t.param, t.cls)[:3]:
                     if len(sf.chain) + 1 > MAX_HOPS or not self.facts.add(("S", fid, param, sf.func, sf.sink_class)):
                         continue
                     self.facts.S[(fname, param)].append(
                         SFact(fid, fname, param, pos, sf.sink_class, [call] + sf.chain))
             else:
-                for inf in self.i_facts(t.name, t.param)[:3]:
+                for inf in self.i_facts(t.name, t.param, t.cls)[:3]:
                     if len(inf.chain) + 1 > MAX_HOPS or not self.facts.add(("I", fid, param, inf.callsite)):
                         continue
                     self.facts.I[(fname, param)].append(
@@ -373,7 +400,7 @@ class Stitcher:
             self._expose(Exposure(cs.id, kind, E, title, [src, prompt]))
         elif t.kind == "fn" and t.role == "I":
             call = self.hop(m.file, m.line, "call", f"→ {t.name}({t.param}=…)", approx=self.ambiguous(t.name))
-            for inf in self.i_facts(t.name, t.param)[:3]:
+            for inf in self.i_facts(t.name, t.param, t.cls)[:3]:
                 if inf.callsite:
                     self._expose(Exposure(inf.callsite, kind, E, title, [src, call] + inf.chain))
 
@@ -428,18 +455,23 @@ class Stitcher:
 
     # ------------------------------------------------------------------ targets for the next pass
 
+    @staticmethod
+    def self_wrapper(fn: FuncInfo) -> bool:
+        """A method with a generic name (`call`, `run`): usable as a wrapper through `self.<name>(...)` only."""
+        return fn.simple_name in GENERIC_NAMES and not fn.simple_name.startswith("__") and "." in fn.name
+
     def wrapper_names(self) -> list[str]:
-        return sorted(n for n in self.facts.R if self.usable_name(n))
+        return sorted(n for n, facts in self.facts.R.items()
+                      if self.usable_name(n) or (n in GENERIC_NAMES and not n.startswith("__")
+                                                 and any(self.method_class(f.func) for f in facts)))
 
     def new_fn_targets(self) -> list[Target]:
         out = []
         for role, table in (("S", self.facts.S), ("I", self.facts.I)):
             for (name, param), facts in table.items():
-                if not self.usable_name(name) or not facts:
+                if not facts:
                     continue
-                pos = self.consistent_pos(name, param, facts[0].pos)
-                for n in [name, *sorted(self.alias_of.get(name, ()))]:
-                    t = Target("fn", n, param, pos, role)
+                for t in self.targets_for(name, param, facts, role):
                     if t.tid in self._targets_done:
                         continue
                     self._targets_done.add(t.tid)
@@ -449,9 +481,8 @@ class Stitcher:
     def all_s_targets(self) -> list[Target]:
         out = []
         for (n, p), fs in self.facts.S.items():
-            if fs and self.usable_name(n):
-                pos = self.consistent_pos(n, p, fs[0].pos)
-                out += [Target("fn", a, p, pos, "S") for a in [n, *sorted(self.alias_of.get(n, ()))]]
+            if fs:
+                out += self.targets_for(n, p, fs, "S")
         return out
 
 

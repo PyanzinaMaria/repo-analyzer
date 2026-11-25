@@ -20,7 +20,7 @@ FAMILIES = {"callsite": ("callsite",), "flows": ("o2s", "i2p", "par"), "gates": 
 
 
 def build_test_dir(dest: Path, cat: Catalog | None = None, tests_dir: Path = LLMFLOW_DIR / "tests") -> list[str]:
-    cat = cat or load_catalog()
+    cat = cat or load_catalog(frameworks=True)   # opt-in framework entries are tested too
     rules = static_rules(cat)
     names = []
     for snippet in sorted(tests_dir.glob("*.py")):

@@ -24,11 +24,12 @@ class Target:
     param: str | None = None
     pos: int | None = None          # positional index, `self`/`cls` excluded
     role: Role | None = None
+    cls: str | None = None          # method with a generic name: only calls on receivers built from this class
 
     @property
     def tid(self) -> str:
         if self.kind == "fn":
-            return f"fn.{self.role}.{self.name}.{self.param}"
+            return f"fn.{self.role}.{self.cls + '.' if self.cls else ''}{self.name}.{self.param}"
         return f"{self.kind}.{self.name}" if self.kind == "sink" else self.kind
 
 

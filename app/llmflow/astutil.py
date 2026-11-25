@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -43,7 +44,9 @@ class SourceCache:
     def tree(self, rel: str) -> ast.Module | None:
         if rel not in self._trees:
             try:
-                self._trees[rel] = ast.parse(self.text(rel))
+                with warnings.catch_warnings():          # invalid escapes etc. in the scanned code
+                    warnings.simplefilter("ignore")
+                    self._trees[rel] = ast.parse(self.text(rel))
             except (SyntaxError, ValueError):
                 self._trees[rel] = None
             parents: dict[int, ast.AST] = {}

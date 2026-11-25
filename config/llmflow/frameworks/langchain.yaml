@@ -1,0 +1,82 @@
+# LangChain (opt-in: `--frameworks`). Model output comes from the framework's own abstractions, so the
+# entries are its documented model-calling methods on receivers named like an LLM / chain:
+#   LLMs & chat models: llm.invoke / predict / predict_messages / generate / call_as_llm / llm(...)
+#   chains & runnables: chain.invoke / run / predict / apply / stream / batch
+# `$C` is the receiver text (`self.llm_chain`, `llm`, `chat_model`, `self.llm`); `receiver_regex` keeps
+# unrelated `predict` (scikit-learn) and `run` (subprocess, asyncio) out.
+sdk: langchain
+provider: langchain
+imports: [langchain, langchain_core, langchain_community, langchain_openai]
+calls:
+  - id: langchain.invoke
+    callee: $C.invoke
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|chain|chat|model|runnable|agent)\w*$'
+  - id: langchain.ainvoke
+    callee: $C.ainvoke
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|chain|chat|model|runnable|agent)\w*$'
+  - id: langchain.predict
+    callee: $C.predict
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|chain|chat)\w*$'
+  - id: langchain.apredict
+    callee: $C.apredict
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|chain|chat)\w*$'
+  - id: langchain.predict_messages
+    callee: $C.predict_messages
+    model_arg: null
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|chat)\w*$'
+  - id: langchain.generate
+    callee: $C.generate
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|chain|chat)\w*$'
+  - id: langchain.call_as_llm
+    callee: $C.call_as_llm
+    model_arg: null
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|chat)\w*$'
+  - id: langchain.chain.run
+    callee: $C.run
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?_?(llm_?chain|chain)$'
+  - id: langchain.chain.arun
+    callee: $C.arun
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?_?(llm_?chain|chain)$'
+  - id: langchain.chain.apply
+    callee: $C.apply
+    model_arg: null
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?_?(llm_?chain|chain)$'
+  - id: langchain.stream
+    callee: $C.stream
+    model_arg: null
+    prompt_any: true
+    receiver_regex: '(?i)^(.*\.)?\w*(llm|chain|chat|model|runnable)\w*$'
+  - id: langchain.llm.call
+    callee: $C.llm
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true
+  - id: langchain.llm.call.bare
+    callee: llm
+    model_arg: null
+    prompt_pos: [0]
+    prompt_any: true

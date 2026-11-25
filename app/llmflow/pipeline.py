@@ -36,6 +36,7 @@ TEST_EXCLUDES = [r"(^|/)(tests?|testing|__tests__)/", r"(^|/)(test_[^/]*|[^/]*_t
 @dataclass
 class Options:
     max_depth: int = 3
+    frameworks: bool = False          # also LangChain / LlamaIndex / litellm sources (config/llmflow/frameworks)
     extra_sinks: set[str] = field(default_factory=set)
     include_tests: bool = False
     excludes: list[str] = field(default_factory=list)
@@ -182,7 +183,7 @@ def run(root: Path | str, out_dir: Path | str, opts: Options | None = None,
     out_dir = Path(out_dir).resolve()
     (out_dir / "rules").mkdir(parents=True, exist_ok=True)
     say = progress or (lambda _m: None)
-    cat = load_catalog()
+    cat = load_catalog(frameworks=opts.frameworks)
     excludes = _semgrep_excludes(opts)
 
     say("indexing code (tree-sitter)…")

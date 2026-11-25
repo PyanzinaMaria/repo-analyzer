@@ -175,6 +175,58 @@ def test_repl_confirmation_across_loop_iterations(tmp_path):
     assert not unsafe.gated and unsafe.priority > safe.priority
 
 
+def test_generic_method_name_is_matched_by_class(tmp_path):
+    """`run` is too generic to match by name, so `repl.run(code)` counts only when `repl = PythonREPL(...)`."""
+    root = write(tmp_path / "repo", {"chain.py": """\
+        from openai import OpenAI
+        client = OpenAI()
+
+
+        class PythonREPL:
+            def run(self, command):
+                exec(command)
+
+
+        class Worker:
+            def run(self, job):
+                return len(job)
+
+
+        def solve(q):
+            code = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": q}])
+            repl = PythonREPL()
+            return repl.run(code.choices[0].message.content)
+
+
+        def count(q):
+            text = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": q}])
+            worker = Worker()
+            return worker.run(text.choices[0].message.content)
+        """})
+    res = scan(root, tmp_path)
+    evals = [f for f in res.flows if f.sink_class == "code_eval"]
+    assert len(evals) == 1
+    assert [h.func_name for h in evals[0].hops if h.role == "call"] == ["solve"]
+    assert evals[0].sink.func_name == "PythonREPL.run"
+
+
+def test_framework_sources_are_opt_in(tmp_path):
+    root = write(tmp_path / "repo", {"math_chain.py": """\
+        from langchain.chains import LLMChain
+
+
+        class MathChain:
+            def answer(self, question):
+                llm_executor = LLMChain(prompt=PROMPT, llm=self.llm)
+                expr = llm_executor.predict(question=question)
+                return eval(expr)
+        """})
+    assert scan(root, tmp_path).flows == []
+    res = scan(root, tmp_path, frameworks=True)
+    (f,) = res.flows
+    assert f.sink_class == "code_eval" and res.callsites[0].sdk == "langchain"
+
+
 def test_no_llm_no_flows(tmp_path):
     root = write(tmp_path / "repo", {"x.py": "import subprocess\n\ndef f(c):\n    subprocess.run(c, shell=True)\n"})
     res = scan(root, tmp_path)

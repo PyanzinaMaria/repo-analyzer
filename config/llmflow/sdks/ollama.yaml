@@ -30,7 +30,7 @@ calls:
     inside_import: [ollama]
     require_kwargs: [model, messages]
     exclude: [ollama.chat]
-    receiver_regex: '(?i)ollama' 
+    receiver_regex: '(?i).*ollama'
   - id: ollama.client.generate
     callee: $C.generate
     channel: completion
@@ -39,4 +39,4 @@ calls:
     inside_import: [ollama]
     require_kwargs: [model, prompt]
     exclude: [ollama.generate]
-    receiver_regex: '(?i)ollama' 
+    receiver_regex: '(?i).*ollama'

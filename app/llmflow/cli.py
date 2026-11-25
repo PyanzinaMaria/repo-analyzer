@@ -36,6 +36,7 @@ def scan(
     top: int = typer.Option(15, help="Flows in the table"),
     details: int = typer.Option(3, help="Flows drawn as full taint paths"),
     max_depth: int = typer.Option(3, help="Stitching passes over wrapper functions"),
+    frameworks: bool = typer.Option(False, help="Also LangChain / LlamaIndex / litellm sources"),
     sinks: Optional[str] = typer.Option(None, help="Extra sink classes to enable, e.g. text"),
     include_tests: bool = typer.Option(False, help="Also analyze tests/ and test_*.py"),
     exclude: list[str] = typer.Option([], help="Extra paths/globs to skip (repeatable)"),
@@ -57,7 +58,7 @@ def scan(
     console = _console()
     root = path.resolve()
     out_dir = (out or REPO_ROOT / "data" / "llmflow" / root.name).resolve()
-    opts = Options(max_depth=max_depth, include_tests=include_tests, excludes=list(exclude),
+    opts = Options(max_depth=max_depth, frameworks=frameworks, include_tests=include_tests, excludes=list(exclude),
                    extra_sinks={s.strip() for s in (sinks or "").split(",") if s.strip()})
     try:
         with console.status("llmflow…") as status:
@@ -77,6 +78,82 @@ def scan(
         json_out.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(out_dir / "findings.json", json_out)
     console.print(f"[dim]outputs: {out_dir}  (inventory.json, findings.json, hygiene.json, summary.json, rules/)[/]")
+
+
+bench_app = typer.Typer(no_args_is_help=True, add_completion=False,
+                        help="Real-vulnerability benchmark (config/llmflow/bench/*.yaml), e.g. TaintP2X's 35 CVEs.")
+app.add_typer(bench_app, name="bench")
+
+
+def _bench_entries(manifest: str, only: Optional[str]):
+    from app.llmflow.bench import load_manifest
+
+    entries = load_manifest(manifest).entries
+    if only:
+        wanted = {s.strip() for s in only.split(",")}
+        entries = [e for e in entries if e.id in wanted or e.cve in wanted]
+    return entries
+
+
+@bench_app.command("fetch")
+def bench_fetch(manifest: str = typer.Option("taintp2x35", help="Manifest name or path"),
+                only: Optional[str] = typer.Option(None, help="Comma-separated entry ids / CVEs")):
+    """Shallow-clone every (repo, ref) of the manifest into data/llmflow/bench/repos/."""
+    from app.llmflow.bench import fetch
+
+    console = _console()
+    done: dict = {}
+    for e in _bench_entries(manifest, only):
+        key = (e.repo, e.ref)
+        if key not in done:
+            done[key] = fetch(e)
+        status = done[key]
+        console.print(f"{e.id} {e.repo}@{e.ref}: " + (f"[green]{status}[/]" if status in ("ok", "cached")
+                                                     else f"[red]{status}[/]"))
+
+
+@bench_app.command("check")
+def bench_check(manifest: str = typer.Option("taintp2x35", help="Manifest name or path"),
+                only: Optional[str] = typer.Option(None, help="Comma-separated entry ids / CVEs")):
+    """Verify that each entry's expected file exists in its checkout."""
+    from app.llmflow.bench import check
+
+    console = _console()
+    bad = 0
+    for e in _bench_entries(manifest, only):
+        files = check(e)
+        bad += not files
+        console.print(f"{e.id} {e.cve}: " + (f"[green]{len(files)} file(s)[/] {', '.join(files[:3])}" if files
+                                            else f"[red]no file matches {e.expect.file} under {e.target}[/]"))
+    raise typer.Exit(1 if bad else 0)
+
+
+@bench_app.command("run")
+def bench_run(manifest: str = typer.Option("taintp2x35", help="Manifest name or path"),
+              only: Optional[str] = typer.Option(None, help="Comma-separated entry ids / CVEs"),
+              rescan: bool = typer.Option(False, help="Ignore cached scans"),
+              frameworks: bool = typer.Option(False, help="Also LangChain / LlamaIndex / litellm sources"),
+              out: Optional[Path] = typer.Option(None, help="Where results.json goes "
+                                                            "(default: data/llmflow/bench/<sdk|fw>)"),
+              md: Optional[Path] = typer.Option(None, help="Also write the comparison table as Markdown")):
+    """Scan every checkout, match findings to the known vulnerabilities, compare with published results."""
+    from app.llmflow.bench import BENCH_DIR, run_bench, write_results
+    from app.llmflow.pipeline import Options
+    from app.llmflow.viz import bench_markdown, bench_table
+
+    console = _console()
+    entries = _bench_entries(manifest, only)
+    out = out or BENCH_DIR / ("fw" if frameworks else "sdk")
+    with console.status("bench…") as status:
+        results = run_bench(entries, Options(frameworks=frameworks),
+                            progress=lambda m: status.update(f"bench · {m}"), rescan=rescan)
+    summ = write_results(results, out)
+    console.print(bench_table(results, summ))
+    if md:
+        md.parent.mkdir(parents=True, exist_ok=True)
+        md.write_text(bench_markdown(results, summ), encoding="utf-8")
+        console.print(f"[dim]markdown: {md}[/]")
+    console.print(f"[dim]results: {out / 'results.json'}[/]")
 
 
 @app.command("rules")

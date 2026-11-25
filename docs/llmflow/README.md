@@ -22,6 +22,7 @@ For example, on Vanna 0.5.5 ([CVE-2024-5565](https://nvd.nist.gov/vuln/detail/CV
 | [scoring.md](scoring.md) | `S · E · R`: the tables, gate factors, a worked example, limits of the heuristic |
 | [stitching.md](stitching.md) | How flows are followed across functions with Semgrep CE (fragments + fixpoint), and what is still missed |
 | [examples.md](examples.md) | Runs on real repositories (Vanna CVE, shell_gpt, ollama-python, anthropic-quickstarts, this repo) |
+| [benchmark.md](benchmark.md) | Evaluation on TaintP2X's 35 real CVEs and comparison with LLMSmith, AgentFuzz and TaintP2X |
 
 ## Quick start
 

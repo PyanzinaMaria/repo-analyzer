@@ -334,3 +334,59 @@ def mermaid_markdown(res: Result, top: int = 5) -> str:
                        f"| {detail}{' (≈)' if h.approx else ''} |")
         out.append("")
     return "\n".join(out)
+
+
+# --------------------------------------------------------------------------- benchmark
+
+
+def _mark(v: str | None) -> Text:
+    return {"Y": Text("✔", "bold green"), "N": Text("✘", "red")}.get(v or "", Text("–", "grey50"))
+
+
+def bench_table(results, summ: dict) -> Group:
+    t = Table(box=box.SIMPLE_HEAVY, header_style="bold", title="[bold]Known P2Xi vulnerabilities[/] "
+              "(TaintP2X ground truth)", title_justify="left")
+    for col in ("id", "CVE", "class", "scope", "repo@ref"):
+        t.add_column(col, overflow="fold", style="dim" if col == "id" else None)
+    for col in ("LLMSmith", "AgentFuzz", "TaintP2X", "llmflow"):
+        t.add_column(col, justify="center")
+    t.add_column("rank / prio", justify="right")
+    for r in results:
+        mine = Text("✔", "bold green") if r.detected else Text("✘" if not r.error else "!", "red")
+        rank = (f"#{r.rank} · {r.priority:.2f}" + (" 🛡" if r.gated else "")) if r.detected else (r.error or "")
+        t.add_row(r.id, r.cve, r.cls.replace("_injection", ""), r.scope, f"{r.repo.split('/')[-1]}@{r.ref[:14]}",
+                  _mark(r.reported.get("llmsmith")), _mark(r.reported.get("agentfuzz")),
+                  _mark(r.reported.get("taintp2x")), mine, Text(rank[:40], style="dim"))
+    s = Table(box=box.SIMPLE, header_style="bold", title="[bold]Recall[/]", title_justify="left")
+    s.add_column("scope")
+    for col in ("LLMSmith", "AgentFuzz", "TaintP2X", "llmflow", "llmflow @1/@3/@10", "S-only @1/@3/@10"):
+        s.add_column(col, justify="right")
+    for scope in ("app", "framework", "all"):
+        d = summ[scope]
+        cell = lambda k: f"{d[k]['hit']}/{d[k]['n']}"  # noqa: E731
+        at = lambda k: "/".join(str(d[k][i]) for i in (1, 3, 10))  # noqa: E731
+        s.add_row(scope, cell("llmsmith"), cell("agentfuzz"), cell("taintp2x"), Text(cell("llmflow"), "bold"),
+                  at("llmflow_at_k"), at("S_only_at_k"))
+    return Group(t, s)
+
+
+def bench_markdown(results, summ: dict) -> str:
+    sym = {"Y": "✔", "N": "✘"}
+    lines = ["| id | CVE | class | scope | repo @ ref | LLMSmith | AgentFuzz | TaintP2X | llmflow | rank · priority |",
+             "|---|---|---|---|---|:-:|:-:|:-:|:-:|---|"]
+    for r in results:
+        mine = "✔" if r.detected else ("!" if r.error else "✘")
+        rank = (f"#{r.rank} · {r.priority:.2f}" + (" 🛡" if r.gated else "")) if r.detected else (r.error or "")
+        lines.append(f"| {r.id} | {r.cve} | {r.cls.replace('_injection', '')} | {r.scope} | "
+                     f"`{r.repo.split('/')[-1]}@{r.ref[:14]}` | {sym.get(r.reported.get('llmsmith'), '–')} | "
+                     f"{sym.get(r.reported.get('agentfuzz'), '–')} | {sym.get(r.reported.get('taintp2x'), '–')} | "
+                     f"**{mine}** | {rank} |")
+    lines += ["", "| scope | LLMSmith | AgentFuzz | TaintP2X | llmflow | llmflow @1/@3/@10 | S-only @1/@3/@10 |",
+              "|---|---|---|---|---|---|---|"]
+    for scope in ("app", "framework", "all"):
+        d = summ[scope]
+        cell = lambda k: f"{d[k]['hit']}/{d[k]['n']}"  # noqa: E731
+        at = lambda k: "/".join(str(d[k][i]) for i in (1, 3, 10))  # noqa: E731
+        lines.append(f"| {scope} | {cell('llmsmith')} | {cell('agentfuzz')} | {cell('taintp2x')} | "
+                     f"**{cell('llmflow')}** | {at('llmflow_at_k')} | {at('S_only_at_k')} |")
+    return "\n".join(lines) + "\n"

@@ -75,10 +75,14 @@ def test_fn_target_sinks_cover_positional_and_keyword():
     assert "$O.run_cmd(..., cmd=$X, ...)" in pats
 
 
-def test_generic_names_are_not_used_as_wrapper_sources():
-    assert wrapper_sources(["get", "run"]) == []
-    src = wrapper_sources(["ask_llm", "get"])
-    assert src and "ask_llm" in yaml.safe_dump(src) and "|get" not in yaml.safe_dump(src)
+def test_generic_wrapper_names_only_through_self():
+    """`call`/`run` wrappers count only as `self.call(...)`, never as `anything.call(...)`."""
+    (only_self,) = wrapper_sources(["call", "run"])
+    assert only_self["patterns"][0] == {"pattern": "self.$LS_FN(...)"}
+    src = wrapper_sources(["ask_llm", "call"])
+    text = yaml.safe_dump(src)
+    assert "^(ask_llm)$" in text and "^(call)$" in text
+    assert [s["patterns"][0]["pattern"] for s in src] == ["$LS_FN(...)", "$LS_O.$LS_FN(...)", "self.$LS_FN(...)"]
 
 
 def test_pass_rules_only_new_targets_when_wrappers_unchanged(cat):
