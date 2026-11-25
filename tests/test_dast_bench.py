@@ -161,14 +161,23 @@ def test_nuclei_parse_line():
 
 def test_nikto_parse_tolerant_json():
     mod = __import__("bench.dast.adapters.nikto", fromlist=["parse"])
+    # nikto 2.5 real shape: top-level ARRAY of host records, item text in `msg`, url is a path
+    text = json.dumps([
+        {"host": "h", "ip": "1.2.3.4", "port": "8080", "vulnerabilities": [
+            {"id": "013587", "msg": "/admin/ found", "method": "GET", "url": "/admin"},
+            {"id": "x", "msg": "cookie without flags", "method": "GET", "url": "/"}]}])
+    fs = mod.parse(json.loads(text))
+    assert len(fs) == 2
+    assert fs[0].cwe == ["CWE-16"] and fs[0].url == "http://h:8080/admin"
+    assert fs[1].url == "http://h:8080/"
+    # old shape / concatenated objects still parse through iter_json_objects
     from bench.dast.adapters.base import iter_json_objects
-    text = '{"vulnerabilities": [{"item": "/admin/ found", "ip": "h", "port": 8080}]}' \
-           '{"vulnerabilities": [{"item": "cookie without flags", "ip": "h", "port": 8080, "ssl": true}]}'
-    payloads = list(iter_json_objects(text))
+    old = '{"vulnerabilities": [{"item": "/admin/ found", "ip": "h", "port": 8080}]}' \
+          '{"vulnerabilities": [{"item": "cookie without flags", "ip": "h", "port": 8080, "ssl": true}]}'
+    payloads = list(iter_json_objects(old))
     assert len(payloads) == 2
-    fs = [f for p in payloads for f in mod.parse(p)]
-    assert fs[0].cwe == ["CWE-16"] and fs[0].url == "http://h:8080/"
-    assert fs[1].url.startswith("https://")
+    fs2 = [f for p in payloads for f in mod.parse(p)]
+    assert fs2[0].cwe == ["CWE-16"] and fs2[1].url.startswith("https://")
 
 
 def test_offat_parse_maps_cwe():
