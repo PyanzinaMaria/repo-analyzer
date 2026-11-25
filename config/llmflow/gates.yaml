@@ -1,0 +1,112 @@
+# Gates (WP5): checks between the LLM and the sink that limit what an attacker can do.
+# A gate applies to a flow when it matches in a function on the flow's path, before the line where the
+# path leaves that function (the sink, or the call to the next hop), and (if it binds $V) $V shares an
+# identifier with the tainted sink argument. `applies_to` lists sink classes ('*' = all).
+# E = base exposure x min(factor of the gates found).
+factors:
+  deterministic: 0.05    # allowlist, escaping, read-only connection: attacker can't leave the box
+  confirmation: 0.3      # a human approves each action
+  weak: 0.6              # prefix / regex checks that are easy to get wrong
+
+gates:
+  - id: allowlist
+    kind: deterministic
+    title: allowlist membership check
+    applies_to: ['*']
+    patterns:
+      - |
+        if $V not in $ALLOW:
+          ...
+      - |
+        if not $V in $ALLOW:
+          ...
+      - |
+        if $V in $ALLOW:
+          ...
+      - |
+        assert $V in $ALLOW
+    regex: {$ALLOW: '(?i)(allow|whitelist|permitted|safe|known|valid|supported)'}
+  - id: shlex-quote
+    kind: deterministic
+    title: shell argument quoting
+    applies_to: [shell]
+    patterns:
+      - shlex.quote($V)
+      - shlex.split($V)
+  - id: html-escape
+    kind: deterministic
+    title: HTML escaping / sanitizing
+    applies_to: [html]
+    patterns:
+      - html.escape($V, ...)
+      - markupsafe.escape($V)
+      - bleach.clean($V, ...)
+      - nh3.clean($V, ...)
+  - id: sql-readonly
+    kind: deterministic
+    title: read-only database connection
+    applies_to: [sql]
+    patterns:
+      - sqlite3.connect("=~/mode=ro/", ...)
+      - $C.execute("=~/(?i)(set\s+(session\s+)?transaction\s+read\s+only|pragma\s+query_only)/")
+      - $C.set_session(..., readonly=True, ...)
+  - id: sql-parse-check
+    kind: deterministic
+    title: SQL statement-type check (parser)
+    applies_to: [sql]
+    patterns:
+      - sqlglot.parse_one($V, ...)
+      - sqlglot.parse($V, ...)
+      - sqlparse.parse($V, ...)
+  - id: path-confine
+    kind: deterministic
+    title: path confinement check
+    applies_to: [file_write]
+    patterns:
+      - $P.is_relative_to(...)
+      - werkzeug.utils.secure_filename($V)
+      - os.path.commonpath(...)
+  - id: schema-validate
+    kind: deterministic
+    title: schema validation of model output
+    applies_to: ['*']
+    patterns:
+      - $M.model_validate_json($V, ...)
+      - $M.model_validate($V, ...)
+      - jsonschema.validate($V, ...)
+  - id: human-confirm
+    kind: confirmation
+    title: human confirmation
+    applies_to: ['*']
+    patterns:
+      - click.confirm(...)
+      - typer.confirm(...)
+      - typer.prompt(...)
+      - rich.prompt.Confirm.ask(...)
+      - rich.prompt.Prompt.ask(...)
+      - questionary.confirm(...)
+      - |
+        if <... input(...) ...>:
+          ...
+      - |
+        $A = input(...)
+        ...
+        if <... $A ...>:
+          ...
+  - id: prefix-check
+    kind: weak
+    title: prefix / keyword check
+    applies_to: ['*']
+    patterns:
+      - $V.startswith(...)
+      - $V.strip().upper().startswith(...)
+      - $V.lower().startswith(...)
+      - $V.upper().startswith(...)
+  - id: regex-check
+    kind: weak
+    title: regex check
+    applies_to: ['*']
+    patterns:
+      - re.match($_, $V, ...)
+      - re.fullmatch($_, $V, ...)
+      - re.search($_, $V, ...)

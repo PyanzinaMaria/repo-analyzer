@@ -83,6 +83,8 @@ docker compose up --build
 - [`docs/SPEC.md`](docs/SPEC.md) — **инженерная спецификация / handoff**: контракты, запуск, чеклист приёмки, что нельзя ломать.
 - [`docs/process.md`](docs/process.md) — смысл процесса для пользователя (методы, форматы, что в отчёте).
 - [`docs/REPORT.md`](docs/REPORT.md) / [`docs/BENCHMARK.md`](docs/BENCHMARK.md) — research-контур secaudit / bench (не UI).
+- [`docs/llmflow/`](docs/llmflow/README.md) — модуль LLM-интегрированного кода (CLI `python -m app llmflow`):
+  потоки «недоверенный ввод → промпт → LLM → опасный сток», ранжирование S·E·R, примеры на реальных репозиториях.
 
 ## Содержание
 

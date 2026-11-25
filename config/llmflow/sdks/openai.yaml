@@ -1,0 +1,55 @@
+# OpenAI Python SDK (v1 client API + the legacy module-level API that many repos still use).
+# `callee` is a Semgrep expression without the argument list; metavariables ($C) match any receiver,
+# e.g. `client`, `self.client`, `OpenAI()`. The rule generator builds `<callee>(...)` (call site, LLM
+# output source) and `<callee>(..., <arg>=$X, ...)` (prompt sink) from it.
+sdk: openai
+provider: openai
+imports: [openai]
+calls:
+  - id: openai.chat
+    callee: $C.chat.completions.create
+    channel: chat
+    model_arg: model
+    prompt_args: [messages]
+    tools_arg: tools
+  - id: openai.chat.parse
+    callee: $C.beta.chat.completions.parse
+    channel: chat
+    model_arg: model
+    prompt_args: [messages]
+    tools_arg: tools
+  - id: openai.chat.stream
+    callee: $C.chat.completions.stream
+    channel: chat
+    model_arg: model
+    prompt_args: [messages]
+    tools_arg: tools
+  - id: openai.responses
+    callee: $C.responses.create
+    channel: responses
+    model_arg: model
+    prompt_args: [input, instructions]
+    tools_arg: tools
+  - id: openai.completions
+    callee: $C.completions.create
+    channel: completion
+    model_arg: model
+    prompt_args: [prompt]
+    exclude: [$C.chat.completions.create]   # `$C` would also match `client.chat`
+  - id: openai.legacy.chat
+    callee: openai.ChatCompletion.create
+    channel: chat
+    model_arg: model
+    prompt_args: [messages]
+    tools_arg: functions
+  - id: openai.legacy.chat.async
+    callee: openai.ChatCompletion.acreate
+    channel: chat
+    model_arg: model
+    prompt_args: [messages]
+    tools_arg: functions
+  - id: openai.legacy.completion
+    callee: openai.Completion.create
+    channel: completion
+    model_arg: model
+    prompt_args: [prompt]
