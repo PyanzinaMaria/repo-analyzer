@@ -101,7 +101,8 @@ def test_submission_without_choices_inherits_config_defaults(client):
     job = json.loads((data_dir / "queue" / f"{scan_id}.json").read_text(encoding="utf-8"))
     # model is absent: the select stays hidden while methods=[sast], so the
     # producer inherits the analyzer-side default model.
-    assert job["options"] == {"methods": ["sast"], "formats": ["html"]}
+    # formats default from frontend/config/reports.yaml → [html, md, pdf]
+    assert job["options"] == {"methods": ["sast"], "formats": ["html", "md", "pdf"]}
 
 
 def test_submission_accepts_pentest_method(client):

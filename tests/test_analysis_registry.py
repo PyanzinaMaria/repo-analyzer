@@ -74,11 +74,18 @@ def test_scan_endpoint_threads_methods(client, tmp_path, monkeypatch):
     # env_file) must not leak into endpoint tests.
     import app.services.scan.orchestrator as orch_mod
 
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(
         orch_mod, "run_ai_analysis",
         lambda *a, **k: ([], {"enabled": True, "status": "skipped", "model": None,
                               "files_sent": 0, "findings_count": 0, "error": "test_stub"}),
+    )
+    monkeypatch.setattr(
+        orch_mod,
+        "run_llm_stage",
+        lambda *a, **k: (
+            {},
+            {"enabled": False, "status": "skipped", "error": "test_stub", "model": None},
+        ),
     )
     sample = _sample_repo(tmp_path / "sample_repo2")
     project_id = client.post(

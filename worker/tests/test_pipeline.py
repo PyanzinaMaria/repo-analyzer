@@ -67,8 +67,8 @@ def test_resolve_options_maps_methods_to_runners(cfg):
 
 def test_resolve_options_rejects_unavailable_and_unknown(cfg):
     pipe = Pipeline(cfg)
-    with pytest.raises(ValueError, match="not available"):
-        pipe._resolve_options({"methods": ["pentest"]})  # planned, available: false
+    runners, _ = pipe._resolve_options({"methods": ["pentest"]})
+    assert runners == ["manual"]  # UI Пентест is available
     with pytest.raises(ValueError, match="not available"):
         pipe._resolve_options({"methods": ["tarot"]})  # unknown
     with pytest.raises(ValueError, match="formats not available"):
