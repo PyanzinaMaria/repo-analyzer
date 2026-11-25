@@ -274,24 +274,26 @@ def _boot_image_override(container: str, image: str, network: str, port: int,
                                capture_output=True, text=True, timeout=60)
     line = (published.stdout or "").strip().splitlines()
     host_port = int(line[0].rsplit(":", 1)[1]) if line and ":" in line[0] else None
-    if host_port is None:
-        out["ok"] = False
-        out["reason"] = f"cannot resolve published port for {port}"
-        return
-    host_url = f"http://127.0.0.1:{host_port}"
-    deadline = time.monotonic() + boot_timeout
-    while time.monotonic() < deadline:
-        try:
-            with httpx.Client(verify=False, timeout=5) as client:
-                if client.get(host_url).status_code < 600:
+    if host_port is None:  # image may publish/serve a different port than requested
+        listed = subprocess.run([docker, "port", container], capture_output=True,
+                                text=True, timeout=60)
+        for entry in (listed.stdout or "").splitlines():
+            left, sep, right = entry.partition("->")
+            if sep and right.strip():
+                try:
+                    host_port = int(right.strip().rsplit(":", 1)[1])
                     break
-        except httpx.HTTPError:
-            pass
-        time.sleep(2)
-    else:
+                except (ValueError, IndexError):
+                    continue
+    if host_port is None:
+        state = subprocess.run([docker, "ps", "-a", "--filter", f"name={container}",
+                                "--format", "{{.Status}}"], capture_output=True, text=True, timeout=60)
+        logs = subprocess.run([docker, "logs", "--tail", "10", container],
+                              capture_output=True, text=True, timeout=60)
         out["ok"] = False
-        out["reason"] = f"image {image} not ready after {boot_timeout}s"
-        subprocess.run([docker, "rm", "-f", container], capture_output=True, timeout=60)
+        out["reason"] = (f"cannot resolve published port for {port}; container: "
+                         f"{(state.stdout or '').strip()[:60]}; logs: "
+                         f"{(logs.stdout or logs.stderr or '')[-200:]}")
         return
     out.update(ok=True, host_url=host_url + "/", scan_url=f"http://{container}:{port}/",
                network=network, container=container,
@@ -340,8 +342,11 @@ def _boot_java_war(root: Path, work_dir: Path, container: str, network: str, por
             pass
         time.sleep(3)
     else:
+        logs = subprocess.run([docker, "logs", "--tail", "10", container],
+                              capture_output=True, text=True, timeout=60)
         out["ok"] = False
-        out["reason"] = f"java_war app not ready after {boot_timeout}s"
+        out["reason"] = (f"image {image} not ready after {boot_timeout}s on {port}; logs: "
+                         f"{(logs.stdout or logs.stderr or '')[-200:]}")
         subprocess.run([docker, "rm", "-f", container], capture_output=True, timeout=60)
         return
     out.update(ok=True, host_url=host_url + "/", scan_url=f"http://{container}:{port}/",
