@@ -4,7 +4,7 @@
 
 scan_timeout_s: 1800          # per tool per target (30 min)
 boot_timeout_s: 900           # per-app readiness budget (sandbox compose/build cap = max(this, 300))
-watchdog_timeout_s: 1500      # hard cap for one boot child process
+watchdog_timeout_s: 1800      # hard cap for one boot child process
 network: repo-analyzer-dast   # shared docker network for dockerized tools and targets
 
 owasp_java:
@@ -49,3 +49,4 @@ realvuln_overrides:
   rv-dvga:             {port: 5000}        # flask GraphQL, slow first start
   rv-realvuln-altoroj: {java_war: true, port: 8080}
   rv-realvuln-bank-of-anthos: {port: 8080}  # multi-service compose; frontend serves 8080
+  rv-fineract:        {boot_timeout_s: 1500}  # maven build of fineract inside compose up
