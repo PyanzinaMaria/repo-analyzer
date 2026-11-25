@@ -13,7 +13,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from bench.dast.adapters.base import iter_json_objects, norm_severity, out_path, result, which_docker
+from bench.dast.adapters.base import iter_json_objects, norm_severity, out_path, result, run_cmd, which_docker
 from bench.dast.config import DastBenchConfig, DastFinding, TargetInfo
 
 # A few Nikto items that carry an identifiable CWE class in their text.
