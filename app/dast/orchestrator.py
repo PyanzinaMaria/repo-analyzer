@@ -195,6 +195,28 @@ class DastOrchestrator:
         )
         findings.extend(zap_findings)
 
+        # Active pentest agent on top of the passive baseline: targeted probes
+        # (SQLi/XSS/traversal/redirect/command injection) + optional LLM planning.
+        pentest_meta: dict[str, object] = {"status": "skipped"}
+        if getattr(cfg, "pentest_enabled", True):
+            try:
+                from app.dast.agent.agent import run_pentest
+
+                pentest_run = run_pentest(
+                    target_url,
+                    use_llm=getattr(cfg, "pentest_use_llm", True),
+                    overrides={
+                        "allow_private_targets": cfg.allow_private_targets,
+                        "max_steps": getattr(cfg, "pentest_max_steps", 12),
+                        "max_seconds": getattr(cfg, "pentest_max_seconds", 120),
+                    },
+                )
+                findings.extend(pentest_run.findings)
+                pentest_meta = {"status": "ok", **pentest_run.meta()}
+            except Exception as exc:  # noqa: BLE001 - agent must not fail the scan
+                logger.exception("pentest agent failed")
+                pentest_meta = {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
+
         language_meta: dict[str, object] = {}
         for handler in matched_handlers:
             try:
@@ -225,6 +247,7 @@ class DastOrchestrator:
             fingerprint=fingerprint,
             preflight=preflight_meta,
             zap=zap_meta,
+            pentest=pentest_meta,
             status=status,
             duration_ms=duration_ms,
             language_meta=language_meta,
@@ -251,6 +274,7 @@ class DastOrchestrator:
             fingerprint={},
             preflight={"ok": False, "reason": reason},
             zap={"status": "skipped", "reason": reason},
+            pentest={"status": "skipped", "reason": reason},
             status=status,
             duration_ms=duration_ms,
         )
@@ -267,6 +291,7 @@ class DastOrchestrator:
         fingerprint: dict,
         preflight: dict,
         zap: dict,
+        pentest: dict | None = None,
         status: str,
         duration_ms: int,
         language_meta: dict | None = None,
@@ -299,6 +324,7 @@ class DastOrchestrator:
                     "languages_matched": matched_ids,
                     "preflight": preflight,
                     "zap": zap,
+                    "pentest": pentest or {},
                     "language_meta": language_meta or {},
                     "duration_ms": duration_ms,
                 }

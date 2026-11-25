@@ -82,6 +82,17 @@ dast:
   # Allow RFC1918 / localhost targets (needed for sandbox/dev). Keep false in prod.
   allow_private_targets: true
 
+  # Passive ZAP baseline needs the ZAP docker image (~1 GB). Disable locally
+  # when it is not pulled; the active pentest agent does not depend on it.
+  zap_enabled: true
+
+  # Active pentest agent on top of the passive ZAP baseline.
+  pentest:
+    enabled: true
+    llm_enabled: true
+    max_steps: 12
+    max_seconds: 120
+
 # Auto-boot web targets in Docker after SAST so DAST can run on the same intake.
 sandbox:
   enabled: true

@@ -6,6 +6,22 @@
 анализа, форматов отчётов и модели ИИ. Связь между сервисами — **только файловый
 контракт** через общее дерево `data/`, никакого прямого HTTP между ними нет.
 
+## Pentest-агент (security pipeline)
+
+В ветке `feature/security-pentest-agent` добавлен активный этап: ревью кода
+строит гипотезы уязвимостей (SAST + LLM + задел под RL), а агент проверяет их
+на живом приложении в песочнице — с плагинами, стратегиями, LLM-judge и отчётом.
+
+![Схема pentest-агента](docs/images/pentest-agent-flow.png)
+
+Кратко: репозиторий → контекст (tree-sitter, граф вызовов, точки входа, sinks) →
+гипотезы → приоритизация → плагины × стратегии → HTTP-проверки → детекторы +
+judge → `Finding` в `security_report`, SARIF и черновик ФСТЭК.
+
+Подробности: [docs/PENTEST_AGENT_OVERVIEW.md](docs/PENTEST_AGENT_OVERVIEW.md) ·
+[docs/SECURITY_PIPELINE.md](docs/SECURITY_PIPELINE.md) ·
+[docs/LLM_PROVIDERS.md](docs/LLM_PROVIDERS.md).
+
 ```
 Браузер ──HTTP──▶ WEB :8000 ──пишет──▶ data/uploads/{id}/  +  data/queue/{id}.json
                                              │

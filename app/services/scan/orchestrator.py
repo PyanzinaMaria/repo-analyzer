@@ -235,6 +235,33 @@ class ScanOrchestrator:
             logger.warning("could not write ranking.json: %s", exc)
 
         findings = ordered(findings)
+
+        # Security review: code -> vulnerability hypotheses (+ review findings).
+        # The hypotheses are stored in meta and verified by DAST against the
+        # sandboxed application (see dast_merge.verify_hypotheses).
+        security_meta: dict = {"status": "disabled"}
+        security_hypotheses: list[dict] = []
+        try:
+            from app.security.config import load_security_config
+            from app.security.pipeline import run_security_scan
+
+            sec_cfg = load_security_config()
+            if (run_static or run_ai) and sec_cfg.enabled and sec_cfg.review_enabled:
+                sec_run = run_security_scan(
+                    root, None, findings=findings, cfg=sec_cfg, use_llm=run_ai,
+                )
+                known = {f.id for f in findings}
+                for finding in sec_run.findings:
+                    if finding.id not in known:
+                        findings.append(finding)
+                        known.add(finding.id)
+                security_hypotheses = [h.model_dump(mode="json") for h in sec_run.hypotheses]
+                security_meta = sec_run.meta
+        except Exception as exc:  # noqa: BLE001 - review must not fail the scan
+            logger.exception("security review failed")
+            security_meta = {"status": "failed", "error": f"{type(exc).__name__}: {exc}"}
+
+        findings = ordered(findings)
         active = [f for f in findings if not (f.extra or {}).get("dismissed")]
 
         severity_counts = Counter(f.severity.value for f in active)
@@ -278,6 +305,10 @@ class ScanOrchestrator:
             "dismissed_by_ai": sum(
                 1 for f in findings if (f.extra or {}).get("dismissed")
             ),
+            "security_hypotheses": len(security_hypotheses),
+            "review_findings": sum(
+                1 for f in active if f.source in {"llm-review", "review-agent"}
+            ),
             "ranking": ranking.config,
             "scan_kind": scan_kind,
         }
@@ -295,6 +326,8 @@ class ScanOrchestrator:
             "ai": ai_meta,
             "llm": llm_meta,
             "ranking": ranking.config,
+            "security": security_meta,
+            "security_hypotheses": security_hypotheses,
             "attack_surface": {
                 "context": audit.context,
                 "entry_points": dict(audit.entry_kinds.most_common(10)),
