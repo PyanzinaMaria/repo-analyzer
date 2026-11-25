@@ -26,7 +26,7 @@ class LiveClient:
         self,
         base_url: str,
         *,
-        timeout: float = 15.0,
+        timeout: float = 8.0,
         start_path: str = "/",
     ) -> None:
         self.base_url = base_url.rstrip("/")
@@ -66,12 +66,10 @@ class LiveClient:
     def reset(self) -> Observation:
         """Clear session and open the configured start page."""
         self._client.cookies.clear()
-        response = self._client.get(self.start_path)
-        return self._observe(response, self.start_path.split("?", 1)[0] or "/")
+        return self._request("GET", self.start_path)
 
     def get(self, path: str) -> Observation:
-        response = self._client.get(path)
-        return self._observe(response, path.split("?", 1)[0] or "/")
+        return self._request("GET", path)
 
     def execute(self, action: Action) -> Observation:
         path = action.path or self.start_path
@@ -81,18 +79,51 @@ class LiveClient:
                 query = "&".join(f"{k}={v}" for k, v in action.fields)
                 sep = "&" if "?" in path else "?"
                 path = f"{path}{sep}{query}" if query else path
-            response = self._client.get(path)
             values = tuple(v for _, v in action.fields)
             if "q=" in path:
                 values = values + tuple(parse_qs(urlparse(path).query).get("q", []))
-            return self._observe(response, path.split("?", 1)[0] or "/", values)
+            return self._request("GET", path, submitted_values=values)
         data = {key: value for key, value in action.fields}
-        response = self._client.post(path, data=data)
-        return self._observe(
-            response,
-            path.split("?", 1)[0] or "/",
-            tuple(data.values()),
+        return self._request(
+            "POST",
+            path,
+            data=data,
+            submitted_values=tuple(data.values()),
         )
+
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        data: dict | None = None,
+        submitted_values: tuple[str, ...] = (),
+    ) -> Observation:
+        page = path.split("?", 1)[0] or "/"
+        try:
+            if method.upper() == "POST":
+                response = self._client.post(path, data=data or {})
+            else:
+                response = self._client.get(path)
+            return self._observe(response, page, submitted_values)
+        except httpx.TimeoutException:
+            return Observation(
+                url=self.absolute(path),
+                status_code=504,
+                headers={},
+                html="<html><body>timeout</body></html>",
+                page_path=page,
+                submitted_values=submitted_values,
+            )
+        except httpx.HTTPError as exc:
+            return Observation(
+                url=self.absolute(path),
+                status_code=502,
+                headers={},
+                html=f"<html><body>error: {exc}</body></html>",
+                page_path=page,
+                submitted_values=submitted_values,
+            )
 
     def absolute(self, path: str) -> str:
         return urljoin(self.base_url + "/", path.lstrip("/"))

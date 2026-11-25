@@ -40,7 +40,7 @@
 | `actions.py` | Извлечение действий; пустой `action` у формы = текущая страница |
 | `graph_trial.py` | Живой граф, бюджет шагов, эпизоды с reset на start URL |
 | `search.py` | Политики Random, Q-learning, Genetic, Q+GA (гиперпараметры из `hyperparams.json`) |
-| `optuna_tune.py` | Подбор гиперпараметров Q/GA через Optuna (цель — обогнать Random) |
+| `optuna_tune.py` | Подбор гиперпараметров Q/GA через Optuna (цель — max `problems_unique`) |
 | `detectors.py` | Сырые счётчики + дедуп `kind\|detail` → `findings` |
 | `pipeline.py` | Оркестрация методов и запись `metrics.json` |
 
@@ -104,21 +104,18 @@ python -m offline_sequence_benchmarks --profile smoke
 
 ```bash
 pip install -r live_test_runner/requirements.txt
-python -m live_test_runner.optuna_tune --trials 36 --budget 240 --horizon 24
+python -m live_test_runner.optuna_tune --trials 24 --budget 100 --horizon 20
 ```
 
-Optuna (TPE) максимизирует на офлайн-буклете:
+Optuna (TPE) максимизирует на **живом** HTTP-буклете:
 
 ```text
-score = unique_paths + unique_transitions + 20 * findings + code_vulnerabilities
+objective = problems_unique
 ```
 
-- `unique_paths` — число уникальных маршрутов до открытых состояний  
-- `unique_transitions` — число уникальных рёбер графа  
-- `findings` — на буклете: достигнутые proof-страницы (`*-proof`); в live — `problems_unique`  
-- `code_vulnerabilities` — число находок Bandit по `--source-dir` (статический анализ кода)
+то есть число **уникальных** динамических находок детекторов (`kind|detail`: headers, cookies, reflection, HTTP-ошибки).
 
-`code_vulnerabilities` одинаков для всех trial одного source, поэтому на сравнение Q vs GA почти не влияет, но входит в итоговую метрику эксперимента. Разность с Random **не** оптимизируется.
+Разность с Random не оптимизируется. `code_vulnerabilities` (Bandit) считается отдельно в live-прогоне и в objective Optuna не входит.
 
 Лучшие параметры пишутся в [`live_test_runner/hyperparams.json`](../live_test_runner/hyperparams.json).
 

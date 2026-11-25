@@ -1,15 +1,17 @@
-"""Optuna hyperparameter search for Q-learning and GA on the offline booklet.
+"""Optuna hyperparameter search for Q-learning and GA.
 
-Maximizes unique paths and findings (proof pages on the booklet stand).
-Does NOT optimize against Random. Writes live_test_runner/hyperparams.json.
+Maximizes ``problems_unique`` (deduplicated dynamic detector findings) on the
+live booklet HTTP stand. Writes live_test_runner/hyperparams.json.
 
-  python -m live_test_runner.optuna_tune --trials 40
+  python -m live_test_runner.optuna_tune --trials 24
 """
 
 from __future__ import annotations
 
 import argparse
+import threading
 from dataclasses import asdict
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 from random import Random
 from statistics import mean
@@ -17,8 +19,8 @@ from statistics import mean
 import optuna
 from optuna.samplers import TPESampler
 
-from offline_sequence_benchmarks.html_fixture import HTMLTrial, PROOFS
-
+from .graph_trial import LiveTrial
+from .http_client import LiveClient
 from .search import (
     GAConfig,
     HYPERPARAMS_PATH,
@@ -28,76 +30,74 @@ from .search import (
     run_random,
     save_hyperparams,
 )
-
-# Weight for rare booklet "findings" (proof pages) vs path coverage.
-FINDINGS_WEIGHT = 20.0
-# Weight for static Bandit findings in the combined experiment score.
-CODE_VULN_WEIGHT = 1.0
+from .target.app import Handler
 
 
-def _metrics(seed: int, budget: int, horizon: int, method: str, cfg) -> dict:
-    trial = HTMLTrial(budget, horizon)
-    rng = Random(seed)
-    if method == "Q":
-        run_q(trial, rng, cfg)
-    elif method == "GA":
-        run_ga(trial, rng, cfg)
-    else:
-        run_random(trial, rng)
-    assert trial.steps == budget
+class _BookletServer:
+    """In-process booklet target shared across Optuna trials."""
 
-    # Unique paths: first discovered route to each non-start state.
-    unique_paths = len(trial.examples)
-    unique_transitions = len(trial.edges)
-    # On the offline booklet, proof pages are the analogue of "findings".
-    findings = sum(
-        1
-        for book, _, _ in trial.nodes.values()
-        if book.page.lstrip("/") in PROOFS
-    )
-    return {
-        "unique_paths": unique_paths,
-        "unique_transitions": unique_transitions,
-        "findings": findings,
-        "states": len(trial.nodes),
-    }
+    def __init__(self) -> None:
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.port = self.server.server_address[1]
+        self.base_url = f"http://127.0.0.1:{self.port}"
+        self._thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+
+    def start(self) -> None:
+        self._thread.start()
+
+    def stop(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
 
 
-def objective_score(row: dict, *, code_vulnerabilities: int = 0) -> float:
-    """Optuna/experiment score: paths + transitions + dynamic findings + code vulns.
-
-    ``code_vulnerabilities`` comes from Bandit on the target source tree. It is
-    the same for every trial of a given source, so it does not change Q vs GA
-    ranking, but is part of the reported experiment metric.
-    """
-    return (
-        float(row["unique_paths"])
-        + float(row["unique_transitions"])
-        + FINDINGS_WEIGHT * float(row["findings"])
-        + CODE_VULN_WEIGHT * float(code_vulnerabilities)
-    )
+def _live_metrics(
+    base_url: str,
+    seed: int,
+    budget: int,
+    horizon: int,
+    method: str,
+    cfg,
+) -> dict:
+    with LiveClient(base_url, timeout=5.0) as client:
+        client.wait_ready(attempts=20)
+        trial = LiveTrial(client, budget=budget, horizon=horizon)
+        rng = Random(seed)
+        if method == "Q":
+            run_q(trial, rng, cfg)
+        elif method == "GA":
+            run_ga(trial, rng, cfg)
+        else:
+            run_random(trial, rng)
+        if trial.steps < trial.budget:
+            run_random(trial, rng)
+        assert trial.steps == trial.budget
+        return {
+            "problems_unique": trial.problems.problems_unique,
+            "problems_total": trial.problems.problems_total,
+            "states": len(trial.nodes),
+            "transitions": len(trial.edges),
+            "unique_paths": len(trial.examples),
+        }
 
 
 def _mean_metrics(
+    base_url: str,
     method: str,
     cfg,
     seeds,
     budget: int,
     horizon: int,
-    *,
-    code_vulnerabilities: int = 0,
 ) -> dict:
-    rows = [_metrics(seed, budget, horizon, method, cfg) for seed in seeds]
+    rows = [
+        _live_metrics(base_url, seed, budget, horizon, method, cfg)
+        for seed in seeds
+    ]
     return {
-        "unique_paths": mean(r["unique_paths"] for r in rows),
-        "unique_transitions": mean(r["unique_transitions"] for r in rows),
-        "findings": mean(r["findings"] for r in rows),
-        "code_vulnerabilities": code_vulnerabilities,
+        "problems_unique": mean(r["problems_unique"] for r in rows),
+        "problems_total": mean(r["problems_total"] for r in rows),
         "states": mean(r["states"] for r in rows),
-        "score": mean(
-            objective_score(r, code_vulnerabilities=code_vulnerabilities)
-            for r in rows
-        ),
+        "transitions": mean(r["transitions"] for r in rows),
+        "unique_paths": mean(r["unique_paths"] for r in rows),
     }
 
 
@@ -127,139 +127,122 @@ def _suggest_ga(trial: optuna.Trial) -> GAConfig:
 
 def tune(
     *,
-    trials: int = 40,
-    budget: int = 240,
-    horizon: int = 24,
-    seeds: tuple[int, ...] = (0, 1, 2, 3, 4),
+    trials: int = 24,
+    budget: int = 100,
+    horizon: int = 20,
+    seeds: tuple[int, ...] = (0, 1, 2),
     output: Path | None = None,
-    source_dir: Path | None = None,
 ) -> dict:
-    from .code_scan import scan_code_vulnerabilities
-    from .pipeline import DEFAULT_SOURCE_DIR
-
     optuna.logging.set_verbosity(optuna.logging.WARNING)
-    code_root = Path(source_dir) if source_dir is not None else DEFAULT_SOURCE_DIR
-    code_report = scan_code_vulnerabilities(code_root)
-    code_vulns = int(code_report.get("code_vulnerabilities") or 0)
+    server = _BookletServer()
+    server.start()
     print(
-        f"Optuna objective: unique_paths + unique_transitions + "
-        f"{FINDINGS_WEIGHT}*findings + {CODE_VULN_WEIGHT}*code_vulnerabilities "
-        f"(code_vulnerabilities={code_vulns} from {code_root}) "
-        f"(budget={budget}, horizon={horizon}, seeds={list(seeds)})",
+        f"Optuna objective: maximize problems_unique "
+        f"(live booklet {server.base_url}; budget={budget}, horizon={horizon}, "
+        f"seeds={list(seeds)}, trials={trials})",
         flush=True,
     )
+    try:
+        def q_objective(trial: optuna.Trial) -> float:
+            cfg = _suggest_q(trial)
+            metrics = _mean_metrics(
+                server.base_url, "Q", cfg, seeds, budget, horizon
+            )
+            trial.set_user_attr("metrics", metrics)
+            return float(metrics["problems_unique"])
 
-    def q_objective(trial: optuna.Trial) -> float:
-        cfg = _suggest_q(trial)
-        return _mean_metrics(
-            "Q", cfg, seeds, budget, horizon, code_vulnerabilities=code_vulns
-        )["score"]
+        def ga_objective(trial: optuna.Trial) -> float:
+            cfg = _suggest_ga(trial)
+            metrics = _mean_metrics(
+                server.base_url, "GA", cfg, seeds, budget, horizon
+            )
+            trial.set_user_attr("metrics", metrics)
+            return float(metrics["problems_unique"])
 
-    def ga_objective(trial: optuna.Trial) -> float:
-        cfg = _suggest_ga(trial)
-        return _mean_metrics(
-            "GA", cfg, seeds, budget, horizon, code_vulnerabilities=code_vulns
-        )["score"]
+        sampler = TPESampler(seed=42)
+        q_study = optuna.create_study(
+            direction="maximize", sampler=sampler, study_name="q-problems-unique"
+        )
+        q_study.optimize(q_objective, n_trials=trials, show_progress_bar=False)
+        ga_study = optuna.create_study(
+            direction="maximize", sampler=sampler, study_name="ga-problems-unique"
+        )
+        ga_study.optimize(ga_objective, n_trials=trials, show_progress_bar=False)
 
-    sampler = TPESampler(seed=42)
-    q_study = optuna.create_study(direction="maximize", sampler=sampler, study_name="q")
-    q_study.optimize(q_objective, n_trials=trials, show_progress_bar=False)
-    ga_study = optuna.create_study(direction="maximize", sampler=sampler, study_name="ga")
-    ga_study.optimize(ga_objective, n_trials=trials, show_progress_bar=False)
+        qp = q_study.best_params
+        gp = ga_study.best_params
+        best_q = QConfig(
+            alpha=qp["q_alpha"],
+            gamma=qp["q_gamma"],
+            epsilon=qp["q_epsilon"],
+            bonus=qp["q_bonus"],
+            power=qp["q_power"],
+            use_time=qp["q_use_time"],
+        )
+        best_ga = GAConfig(
+            population=gp["ga_population"],
+            mutation=gp["ga_mutation"],
+            immigrants=gp["ga_immigrants"],
+            tournament=gp["ga_tournament"],
+            scoring=gp["ga_scoring"],
+            power=gp["ga_power"],
+        )
 
-    qp = q_study.best_params
-    gp = ga_study.best_params
-    best_q = QConfig(
-        alpha=qp["q_alpha"],
-        gamma=qp["q_gamma"],
-        epsilon=qp["q_epsilon"],
-        bonus=qp["q_bonus"],
-        power=qp["q_power"],
-        use_time=qp["q_use_time"],
-    )
-    best_ga = GAConfig(
-        population=gp["ga_population"],
-        mutation=gp["ga_mutation"],
-        immigrants=gp["ga_immigrants"],
-        tournament=gp["ga_tournament"],
-        scoring=gp["ga_scoring"],
-        power=gp["ga_power"],
-    )
+        holdout = tuple(range(100, 105))
+        q_hold = _mean_metrics(
+            server.base_url, "Q", best_q, holdout, budget, horizon
+        )
+        ga_hold = _mean_metrics(
+            server.base_url, "GA", best_ga, holdout, budget, horizon
+        )
+        random_hold = _mean_metrics(
+            server.base_url, "R", None, holdout, budget, horizon
+        )
 
-    holdout = tuple(range(100, 108))
-    q_hold = _mean_metrics(
-        "Q", best_q, holdout, budget, horizon, code_vulnerabilities=code_vulns
-    )
-    ga_hold = _mean_metrics(
-        "GA", best_ga, holdout, budget, horizon, code_vulnerabilities=code_vulns
-    )
-    # Random is reported for context only — not used as the Optuna target.
-    random_hold = _mean_metrics(
-        "R", None, holdout, budget, horizon, code_vulnerabilities=code_vulns
-    )
-
-    meta = {
-        "objective": (
-            "unique_paths + unique_transitions + "
-            f"{FINDINGS_WEIGHT}*findings + "
-            f"{CODE_VULN_WEIGHT}*code_vulnerabilities"
-        ),
-        "findings_meaning": (
-            "On the offline booklet, findings = number of proof pages reached "
-            "(text/screen/print-proof). Live runs use problems_unique/detectors."
-        ),
-        "code_vulnerabilities_meaning": (
-            "Bandit SAST count on --source-dir / TARGET_SOURCE_DIR "
-            "(default: live_test_runner/target)."
-        ),
-        "code_vulnerabilities_report": code_report,
-        "optuna_trials": trials,
-        "budget": budget,
-        "horizon": horizon,
-        "train_seeds": list(seeds),
-        "holdout_seeds": list(holdout),
-        "q_best_train_score": q_study.best_value,
-        "ga_best_train_score": ga_study.best_value,
-        "holdout": {
-            "q": q_hold,
-            "ga": ga_hold,
-            "random_context_only": random_hold,
-        },
-    }
-    path = save_hyperparams(best_q, best_ga, output or HYPERPARAMS_PATH, meta=meta)
-    print(f"Saved {path}", flush=True)
-    print(f"Q config: {asdict(best_q)}", flush=True)
-    print(f"GA config: {asdict(best_ga)}", flush=True)
-    print(
-        f"Hold-out Q: paths={q_hold['unique_paths']:.2f} "
-        f"transitions={q_hold['unique_transitions']:.2f} "
-        f"findings={q_hold['findings']:.2f} "
-        f"code_vulnerabilities={code_vulns} score={q_hold['score']:.2f}",
-        flush=True,
-    )
-    print(
-        f"Hold-out GA: paths={ga_hold['unique_paths']:.2f} "
-        f"transitions={ga_hold['unique_transitions']:.2f} "
-        f"findings={ga_hold['findings']:.2f} "
-        f"code_vulnerabilities={code_vulns} score={ga_hold['score']:.2f}",
-        flush=True,
-    )
-    return {"q": asdict(best_q), "ga": asdict(best_ga), "meta": meta, "path": str(path)}
+        meta = {
+            "objective": "maximize problems_unique",
+            "target": "live booklet HTTP stand",
+            "optuna_trials": trials,
+            "budget": budget,
+            "horizon": horizon,
+            "train_seeds": list(seeds),
+            "holdout_seeds": list(holdout),
+            "q_best_train_problems_unique": q_study.best_value,
+            "ga_best_train_problems_unique": ga_study.best_value,
+            "holdout": {
+                "q": q_hold,
+                "ga": ga_hold,
+                "random_context_only": random_hold,
+            },
+        }
+        path = save_hyperparams(best_q, best_ga, output or HYPERPARAMS_PATH, meta=meta)
+        print(f"Saved {path}", flush=True)
+        print(f"Q config: {asdict(best_q)}", flush=True)
+        print(f"GA config: {asdict(best_ga)}", flush=True)
+        print(
+            f"Hold-out problems_unique: "
+            f"Q={q_hold['problems_unique']:.2f} "
+            f"GA={ga_hold['problems_unique']:.2f} "
+            f"Random={random_hold['problems_unique']:.2f}",
+            flush=True,
+        )
+        return {
+            "q": asdict(best_q),
+            "ga": asdict(best_ga),
+            "meta": meta,
+            "path": str(path),
+        }
+    finally:
+        server.stop()
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--trials", type=int, default=40)
-    parser.add_argument("--budget", type=int, default=240)
-    parser.add_argument("--horizon", type=int, default=24)
-    parser.add_argument("--seeds", type=int, default=5, help="Train seed count starting at 0")
+    parser.add_argument("--trials", type=int, default=24)
+    parser.add_argument("--budget", type=int, default=100)
+    parser.add_argument("--horizon", type=int, default=20)
+    parser.add_argument("--seeds", type=int, default=3, help="Train seed count from 0")
     parser.add_argument("--output", type=Path, default=HYPERPARAMS_PATH)
-    parser.add_argument(
-        "--source-dir",
-        type=Path,
-        default=None,
-        help="Source tree for Bandit code_vulnerabilities metric",
-    )
     args = parser.parse_args(argv)
     if min(args.trials, args.budget, args.horizon, args.seeds) < 1:
         parser.error("trials/budget/horizon/seeds must be positive")
@@ -269,7 +252,6 @@ def main(argv=None) -> int:
         horizon=args.horizon,
         seeds=tuple(range(args.seeds)),
         output=args.output,
-        source_dir=args.source_dir,
     )
     return 0
 

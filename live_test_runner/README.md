@@ -55,10 +55,10 @@ python -m live_test_runner --profile smoke --base-url http://127.0.0.1:5000 \
 ## Гиперпараметры (Optuna)
 
 Файл [`hyperparams.json`](hyperparams.json) — лучшие Q/GA после Optuna.  
-Цель: `unique_paths + unique_transitions + 20*findings + code_vulnerabilities`.
+Цель Optuna: максимизировать **`problems_unique`** на живом буклете.
 
 ```bash
-python -m live_test_runner.optuna_tune --trials 36
+python -m live_test_runner.optuna_tune --trials 24 --budget 100 --horizon 20
 ```
 
 ## Тесты
