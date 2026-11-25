@@ -1,206 +1,197 @@
-# Аудитор кода — монорепозиторий
+# Аудитор репозиториев
 
-Полный конвейер анализа репозиториев: веб-фронтенд приёма заявок, продюсер-воркер
-и анализатор (Bandit + pip-audit + AST, опционально ИИ). Слияние фронтенда и бэкенда
-принято в `master` (PR #1); ветка `feature/scan-options` добавляет выбор методов
-анализа, форматов отчётов и модели ИИ. Связь между сервисами — **только файловый
-контракт** через общее дерево `data/`, никакого прямого HTTP между ними нет.
+Монорепозиторий системы аудита кода: **продуктовый сервис с веб-интерфейсом** и
+**исследовательский CLI/lab-контур** рядом с ним. Связь web ↔ worker — только через
+общее дерево `data/` (без HTTP между сервисами).
 
-## Pentest-агент (security pipeline)
-
-В ветке `feature/pentest-agent-ui` (поверх `feature/security-pentest-agent`)
-галочка **«Пентест»** в форме включает runner `manual`: ревью кода строит
-гипотезы, агент проверяет их на живом приложении в песочнице (плагины,
-стратегии, LLM-judge) и пишет секцию **«Пентест»** в единый отчёт.
-
-![Схема pentest-агента](docs/images/pentest-agent-flow.png)
-
-Кратко: репозиторий → контекст (tree-sitter, граф вызовов, точки входа, sinks) →
-гипотезы → приоритизация → плагины × стратегии → HTTP-проверки → детекторы +
-judge → `Finding` (`source=pentest|llm-review`) в отчёте / SARIF / ФСТЭК.
-
-Подробности: [docs/PENTEST_AGENT_OVERVIEW.md](docs/PENTEST_AGENT_OVERVIEW.md) ·
-[docs/SECURITY_PIPELINE.md](docs/SECURITY_PIPELINE.md) ·
-[docs/LLM_PROVIDERS.md](docs/LLM_PROVIDERS.md) ·
-[docs/process.md](docs/process.md) (галочки UI и артефакты).
-
-```
-Браузер ──HTTP──▶ WEB :8000 ──пишет──▶ data/uploads/{id}/  +  data/queue/{id}.json
-                                             │
-WORKER ──поллинг queue/──▶ CLAIM (rename .claimed)
-   │  вызывает библиотеку ANALYZATOR (IngestService → ScanOrchestrator)
-   │  bandit / pip-audit / AST — субпроцессы; GitHub-ссылки клонируются (git --depth 1)
-   ▼
-data/reports/{id}/  ◀──пишет WORKER──  manifest.json · summary.json · report.html · {doc,fstec}.{html,md,pdf} · codedocs.zip
-                                             │
-Браузер ◀──HTMX-поллинг /scan/{id}/body── WEB читает manifest/summary и раздаёт артефакты
-```
-
-- **Веб-фронтенд** (`frontend/`) — приём репозитория (zip / файлы / ссылка GitHub-GitLab),
-  выбор методов анализа, форматов результатов и модели ИИ, защита от zip-бомб на входе,
-  страница статуса с таймингами, просмотр и скачивание готовых артефактов.
-  Подробнее: [`frontend/README.md`](frontend/README.md).
-- **Воркер** (`worker/`) — продюсер: забирает задачи из `data/queue/`, сверяет выбранное
-  с контрактными конфигами (`frontend/config/analysis.yaml`, `reports.yaml`), запускает
-  анализ, рендерит документы в выбранных форматах, пишет `summary.json` (donut + тайминги)
-  и `manifest.json` (этапы статуса).
-- **Анализатор** (`app/`) — библиотека для воркера и самостоятельный HTTP-сервис
-  (`/api/v1/...`) для отладки; оригинальные README-разделы ниже.
-
-## Файловый контракт (единственная точка интеграции)
-
-| Дерево | Кто пишет | Кто читает |
+| Контур | Как пользоваться | Куда смотреть |
 |---|---|---|
-| `data/queue/{scan_id}.json` | web (при подаче заявки): `{scan_id, created_at, source, options}` | worker (забирает rename'ом в `.claimed`) |
-| `data/uploads/{scan_id}/repo/` | web (распакованный payload; **одинаковый layout для zip и отдельных файлов**) | worker (для zip/файлов; клонирование — на воркере) |
-| `data/reports/{scan_id}/manifest.json` | worker: `stages: {analysis, report}` + список артефактов | web: слияние со статусом + HTMX-поллинг |
-| `data/reports/{scan_id}/summary.json` | worker: `{"severities": {...}, "timing": {...}}` | web: donut-виджет (тайминги — машинные данные, UI их не показывает) |
-| `data/reports/{scan_id}/{document}.{format}` | worker: `report.html`, `doc` и `fstec` в HTML, Markdown или PDF, `codedocs.zip` | web: sandboxed iframe + скачивание |
-| `data/workspaces/{project_id}/` | анализатор (своё хранилище) | — |
+| **Продукт** | Форма в браузере → галочки методов → единый отчёт | этот README § «Продукт», [`docs/process.md`](docs/process.md) |
+| **Research** | CLI / lab-скрипты, без формы скана | § «Исследовательская часть», [`docs/REPORT.md`](docs/REPORT.md), [`docs/LIVE_SEQUENCE_RUNNER.md`](docs/LIVE_SEQUENCE_RUNNER.md), [`docs/llmflow/`](docs/llmflow/README.md) |
 
-Этап `intake` принадлежит веб-фронтенду и в манифестах воркера не участвует.
-При сбое воркер помечает `fail` текущий и все последующие этапы — страница статуса
-останавливает поллинг только когда все этапы терминальны.
+---
 
-## Быстрый старт (без Docker, два процесса)
+## Продукт: запуск через интерфейс
 
-Требования: Python 3.11+, git (для клонирования ссылок), сеть для pip-audit и GitHub.
+Принимает репозиторий (GitHub/GitLab или zip/файлы), по галочкам гоняет выбранные
+методы и отдаёт **единый отчёт аудита** + **документацию ФСТЭК** в выбранных форматах.
 
-```bash
-# Windows; venv один на всё
-py -3.12 -m venv .venv
-.venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\pip install -r frontend\web\requirements.lock
-
-# 1) веб-фронтенд
-set SIRIUS_DATA_DIR=%cd%\data
-.venv\Scripts\python -m uvicorn app.main:app --app-dir frontend\web --port 8000
-
-# 2) воркер (второй терминал, из корня репозитория)
-.venv\Scripts\python -m worker
+```
+Браузер ──HTTP──▶ WEB :8000 ──▶ data/uploads/{id}/ + data/queue/{id}.json
+                                      │
+WORKER ──поллинг queue/──▶ claim → IngestService → ScanOrchestrator (app/)
+   ▼
+data/reports/{id}/  ◀── report.* · doc.* · manifest.json · summary.json
+                                      │
+Браузер ◀── HTMX /scan/{id} ── WEB читает reports/
 ```
 
-Открыть http://127.0.0.1:8000/ , подать репозиторий (ссылка или zip) — статус,
-отчёт и документация появятся автоматически после завершения анализа.
+| Компонент | Путь | Роль |
+|---|---|---|
+| Web | `frontend/web` | Форма, intake, статус, раздача артефактов |
+| Worker | `worker/` | Очередь, анализ, рендер отчётов |
+| Analyzer | `app/` | Библиотека раннеров (SAST / LLM / DAST / пентест) |
 
-Linux/macOS: те же команды с `python3 -m venv .venv`, `export SIRIUS_DATA_DIR=$PWD/data`,
-пути `frontend/web` через `/`.
+Подробный смысл для пользователя: [`docs/process.md`](docs/process.md).  
+Инженерный handoff (контракты, что нельзя ломать): [`docs/SPEC.md`](docs/SPEC.md).
 
-## Docker
+### Методы в форме
+
+Источник выбора — [`frontend/config/analysis.yaml`](frontend/config/analysis.yaml):
+
+| Галочка | Runner | Что делает |
+|---|---|---|
+| **SAST** | `static` | Bandit + Semgrep + pip-audit + контекст кода |
+| **LLM-агент** | `ai` | Triage / discovery / review поверх статики |
+| **DAST** | `dynamic` | Песочница Docker + preflight + ZAP |
+| **Пентест** | `manual` | Гипотезы по коду → проверка на живом приложении → активный агент |
+
+По умолчанию включён только SAST. Методы можно комбинировать. Неотмеченный метод
+просто пропускается. Служебные артефакты (`secaudit/`, SARIF и т.п.) на страницу
+скана кнопками не выводятся.
+
+Форматы отчёта — [`frontend/config/reports.yaml`](frontend/config/reports.yaml)
+(`report.*`, `doc.*`; опционально LLM-доки `fstec.*` / `codedocs.zip` по
+`worker/config/worker.yaml` → `ai_documents`).
+
+Пентест-агент (схема и доки): [`docs/PENTEST_AGENT_OVERVIEW.md`](docs/PENTEST_AGENT_OVERVIEW.md) ·
+[`docs/SECURITY_PIPELINE.md`](docs/SECURITY_PIPELINE.md) ·
+[`docs/LLM_PROVIDERS.md`](docs/LLM_PROVIDERS.md).
+
+### Быстрый старт продукта
+
+**Docker** (web :8000 + worker, общий `./data`):
 
 ```bash
 docker compose up --build
 ```
 
-Два сервиса: `web` (:8000) и `worker`, общий volume `./data`. Конфиг воркера —
-`worker/config/worker.yaml`, переопределения через env: `WORKER_DATA_DIR`,
-`WORKER_POLL_INTERVAL_SECONDS`, `WORKER_ENABLE_AI` (+ `AI_API_KEY` для ИИ-анализа).
+**Локально** (два процесса, Python 3.11+, git):
 
-## Документация для передачи
+```bash
+# Windows; один venv на всё
+py -3.12 -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\pip install -r frontend\web\requirements.lock
 
-- [`docs/SPEC.md`](docs/SPEC.md) — **инженерная спецификация / handoff**: контракты, запуск, чеклист приёмки, что нельзя ломать.
-- [`docs/process.md`](docs/process.md) — смысл процесса для пользователя (методы, форматы, что в отчёте).
-- [`docs/REPORT.md`](docs/REPORT.md) / [`docs/BENCHMARK.md`](docs/BENCHMARK.md) — research-контур secaudit / bench (не UI).
-- [`docs/LIVE_SEQUENCE_RUNNER.md`](docs/LIVE_SEQUENCE_RUNNER.md) — live HTTP-обход + GA/Q-learning (lab, не UI).
+# 1) веб
+set SIRIUS_DATA_DIR=%cd%\data
+.venv\Scripts\python -m uvicorn app.main:app --app-dir frontend\web --port 8000
 
-## Содержание
+# 2) воркер (второй терминал, из корня)
+.venv\Scripts\python -m worker
+```
 
-- [Быстрый старт](#быстрый-старт-без-docker-два-процесса)
-- [Файловый контракт](#файловый-контракт-единственная-точка-интеграции)
-- [Анализатор: API](#анализатор-api)
-- [Анализатор: языковые плагины](#языковые-плагины)
-- [Анализатор: ИИ-анализ](#ии-анализ)
-- [Структура](#структура)
-- [Тесты](#тесты)
+Открыть http://127.0.0.1:8000/ — подать репозиторий, выбрать методы и форматы.
+`SIRIUS_DATA_DIR` и `WORKER_DATA_DIR` должны указывать на **один** абсолютный путь,
+иначе заявка «зависнет» после intake.
+
+Linux/macOS: `python3 -m venv .venv`, `export SIRIUS_DATA_DIR=$PWD/data`, пути через `/`.
+
+Env воркера: `WORKER_DATA_DIR`, `WORKER_POLL_INTERVAL_SECONDS`, `WORKER_ENABLE_AI`
+(+ `AI_API_KEY` для LLM-метода). ИИ-модель клиенту не выбирается — берётся из
+`config/settings.yaml` / `AI_MODEL`.
+
+### Файловый контракт (кратко)
+
+| Дерево | Кто пишет | Кто читает |
+|---|---|---|
+| `data/queue/{scan_id}.json` | web | worker (claim → `.claimed`) |
+| `data/uploads/{scan_id}/repo/` | web | worker |
+| `data/reports/{scan_id}/manifest.json` | worker | web (статус) |
+| `data/reports/{scan_id}/summary.json` | worker | web (donut) |
+| `data/reports/{scan_id}/{document}.{format}` | worker | web (просмотр / скачивание) |
+
+Полная таблица и чеклист приёмки — в [`docs/SPEC.md`](docs/SPEC.md).
 
 ---
 
-## Анализатор: API
+## Исследовательская часть
 
-Сервис запускается отдельно для отладки (`uvicorn app.main:app --port 8000`, Swagger `/docs`).
-Воркер использует те же классы напрямую как библиотеку.
+Всё ниже **не** является методом формы скана и **не** подменяет UI-отчёт.
+Нужно для экспериментов, бенчмарков и CLI-отладки анализатора.
 
-| Источник | Запрос |
-|---|---|
-| Локальный путь | `POST /api/v1/projects` → `{"source_type":"local_path","local_path":"C:/path/to/repo"}` |
-| GitHub | `POST /api/v1/projects` → `{"source_type":"github","github_url":"https://github.com/org/repo"}` |
-| ZIP | `POST /api/v1/projects/upload` — multipart |
+| Инструмент | Запуск | Зачем |
+|---|---|---|
+| **secaudit / bench** | `python -m app`, `python -m bench` | Research-контур аудита и оценка на CVE-бенчмарке (165 items) |
+| **llmflow** | `python -m app llmflow …` | Потоки «недоверенный ввод → промпт → LLM → опасный сток», ранжирование S·E·R |
+| **Live sequence runner** | `live_test_runner/` | Lab HTTP-обход живого приложения: GA / Q-learning / покрытие UI |
+| **Offline sequence benchmarks** | `offline_sequence_benchmarks/` | Офлайн-бенчмарки тех же алгоритмов на синтетическом графе / HTML |
+| **Sandbox / стенды** | `sandbox/` | Учебные и уязвимые цели для DAST/пентеста |
 
-Скан: `POST /api/v1/projects/{id}/scans` (тело необязательно). Тело — переопределения
-на один скан: `{"enable_ai": true}`, `{"methods": ["static", "ai"]}` (ключи раннеров,
-см. `app/analysis/registry.py` и `methods:` в `config/settings.yaml`).
-Модель ИИ клиенту не выбирается — всегда `ai.model` из settings.yaml (или `AI_MODEL`).
-Отчёты: `GET …/reports/security?format=markdown|json`, `GET …/reports/fstec?format=markdown`.
-Результат целиком: `GET /api/v1/projects/{id}/scans/{scan_id}/result`.
+Документация research:
 
-> Черновик ФСТЭК **не является** полным сертифицированным комплектом по приказу №76.
+- [`docs/REPORT.md`](docs/REPORT.md) — как устроен secaudit-контур и что он находит
+- [`docs/BENCHMARK.md`](docs/BENCHMARK.md) — статистика CVE-бенчмарка
+- [`docs/llmflow/`](docs/llmflow/README.md) — модуль LLM-потоков (каталог SDK, stitching, примеры, бенч на TaintP2X)
+- [`docs/LIVE_SEQUENCE_RUNNER.md`](docs/LIVE_SEQUENCE_RUNNER.md) — live HTTP + GA/Q-learning
+- [`offline_sequence_benchmarks/`](offline_sequence_benchmarks/) — офлайн-варианты тех же идей
 
-## Языковые плагины
+Пример llmflow (когда модуль в дереве):
 
-В [`config/settings.yaml`](config/settings.yaml):
-
-```yaml
-enabled_languages:
-  - python
-  # - javascript   # stub, пока не реализован
+```powershell
+python -m app llmflow test-rules
+python -m app llmflow scan path\to\repo --svg report.svg --mermaid graphs.md
 ```
 
-- Контракт: [`app/languages/base.py`](app/languages/base.py) — `detect` / `analyze`.
-- **Python:** Bandit + pip-audit + инвентаризация модулей/классов/функций/импортов.
+Артефакты llmflow пишутся в `data/llmflow/` (в `.gitignore`).
 
-## ИИ-анализ
+---
 
-Post-scan review отобранных файлов через OpenAI-compatible API, `source=ai` у находок.
-Не заменяет Bandit/pip-audit; ошибка LLM не валит скан.
+## Анализатор как библиотека / API
 
-1. `ai.enabled: true` в [`config/settings.yaml`](config/settings.yaml) (или `WORKER_ENABLE_AI=true` у воркера)
-2. `AI_API_KEY=…` (обязательно), опционально `AI_BASE_URL`, `AI_MODEL`
+Воркер вызывает `app/` напрямую. Отдельный HTTP-сервис нужен для отладки:
 
-Без ключа модуль тихо пропускается (`meta.ai.status=skipped`). Модель ИИ клиенту
-не выбирается — используется `ai.model` из settings.yaml (или `AI_MODEL` из env);
-использованная модель видна в `meta.ai.model`.
+```bash
+uvicorn app.main:app --port 8001
+```
 
-## Методы анализа и форматы результатов
+Swagger: `/docs`. Скан: `POST /api/v1/projects` → `POST …/scans` с
+`{"methods": ["static", "ai", …]}` (ключи раннеров, см. `app/analysis/registry.py`).
 
-Выбор клиента живёт в двух контрактных конфигах — их читают и форма, и воркер:
+Языки: [`config/settings.yaml`](config/settings.yaml) → `enabled_languages`
+(сейчас полноценно — Python). Контракт плагина: `app/languages/base.py`.
 
-- [`frontend/config/analysis.yaml`](frontend/config/analysis.yaml) — методы анализа
-  (`sast`, `llm_agentic`, `dast`, `pentest`; у `pentest` сейчас `available: true`,
-  runner `manual`). Методы с `available: false` видны отключёнными («запланировано»)
-  и отклоняются API. Воркер мапит id → runners (`static` / `ai` / `dynamic` /
-  `manual`) и передаёт список в `ScanOrchestrator`. Модель ИИ клиенту не выбирается.
-- [`frontend/config/reports.yaml`](frontend/config/reports.yaml) задаёт форматы
-  артефактов. Отчёт аудита (`report.*`) и `doc.*` публикуются **сразу** после
-  анализа; LLM-документы `fstec.*` и `codedocs.zip` дописываются после (лимиты
-  промпта и таймауты — в `worker/config/worker.yaml` → `ai_documents`).
+> Черновик ФСТЭК **не** является сертифицированным комплектом по приказу №76.
 
-Движки форматов включаются в `worker/config/worker.yaml` (`formats:`). PDF —
-WeasyPrint, DOCX — python-docx + htmldocx; зависимости импортируются лениво,
-поэтому сканы без «тяжёлых» форматов работают без установленных пакетов.
-WeasyPrint требует runtime GTK/Pango (в Linux-образах есть; на Windows без него
-PDF-этап завершится ошибкой отчёта).
+---
 
-## Структура
+## Структура репозитория
 
 ```text
-app/              # анализатор (библиотека + HTTP-сервис)
-  analysis/       # реестр раннеров анализа (methods → static/ai/…)
+frontend/         # веб-UI (форма, статус, артефакты)
+  config/         # analysis.yaml, reports.yaml — контракт галочек
+worker/           # очередь → анализ → отчёты
+app/              # анализатор: SAST / AI / DAST / security / llmflow
 config/           # settings.yaml анализатора
-templates/        # Jinja2 markdown-шаблоны анализатора
-worker/           # продюсер: queue → analyzer → отчёты фронтенду
-  config/worker.yaml
-  formats.py      # обработчики форматов (md/pdf/docx)
-  templates/      # report.html.j2, doc.html.j2
-frontend/         # веб-фронтенд (см. frontend/README.md)
-  config/analysis.yaml   # методы анализа + модели ИИ (контракт)
-  config/reports.yaml    # форматы × документы (контракт)
-data/             # runtime: queue/ uploads/ reports/ workspaces/ (gitignored)
+bench/            # research CLI и CVE-бенчмарк
+live_test_runner/ # lab HTTP-обход
+offline_sequence_benchmarks/
+sandbox/          # цели для динамических проверок
+docs/             # process, SPEC, research-доки
+data/             # runtime queue/uploads/reports (gitignored)
 ```
+
+---
 
 ## Тесты
 
 ```bash
-.venv/Scripts/python -m pytest worker/tests -q                  # воркер (офлайн; pdf-тест требует weasyprint)
-cd frontend/web && ../../.venv/Scripts/python -m pytest     # фронтенд
-pytest -q                                                       # анализатор (pip-audit требует сеть)
+.venv/Scripts/python -m pytest worker/tests -q
+cd frontend/web && ../../.venv/Scripts/python -m pytest
+pytest -q                                          # анализатор (pip-audit — сеть)
 ```
+
+---
+
+## Документация
+
+| Документ | Для кого |
+|---|---|
+| [`docs/process.md`](docs/process.md) | Пользователь / продукт: галочки, порядок анализа, что в отчёте |
+| [`docs/SPEC.md`](docs/SPEC.md) | Инженер: контракты, запуск, приёмка |
+| [`frontend/README.md`](frontend/README.md) | Детали фронтенда |
+| [`docs/REPORT.md`](docs/REPORT.md) / [`docs/BENCHMARK.md`](docs/BENCHMARK.md) | Research secaudit / bench |
+| [`docs/llmflow/`](docs/llmflow/README.md) | Research llmflow |
+| [`docs/LIVE_SEQUENCE_RUNNER.md`](docs/LIVE_SEQUENCE_RUNNER.md) | Research live HTTP runner |
+| [`docs/PENTEST_AGENT_OVERVIEW.md`](docs/PENTEST_AGENT_OVERVIEW.md) | Пентест в продуктовом контуре |
