@@ -106,7 +106,8 @@ def read_manifest(settings: Settings, scan_id: str) -> dict[str, Any] | None:
     if not path.is_file():
         return None
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        # utf-8-sig: tolerate BOM from editors / PowerShell Set-Content.
+        return json.loads(path.read_text(encoding="utf-8-sig"))
     except json.JSONDecodeError:
         return None
 
@@ -116,7 +117,7 @@ def read_summary(settings: Settings, scan_id: str) -> dict[str, Any] | None:
     if not path.is_file():
         return None
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(path.read_text(encoding="utf-8-sig"))
     except json.JSONDecodeError:
         return None
 

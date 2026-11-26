@@ -32,6 +32,6 @@ methods:
     description_key: methods.dast.description
   - id: pentest
     runner: manual
-    available: false
+    available: true
     label_key: methods.pentest.label
     description_key: methods.pentest.description

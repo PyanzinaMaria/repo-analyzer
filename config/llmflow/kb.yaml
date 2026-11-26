@@ -1,0 +1,38 @@
+# Model knowledge base (WP7). Features and status only; R (how likely the model follows an injection
+# through a channel) stays at the default until robustness numbers exist. R is clamped to [min, max].
+defaults:
+  R: 0.5
+  min: 0.3
+  max: 0.9
+
+models:
+  - id: gpt-4o
+    provider: openai
+    aliases: ['^(openai/)?gpt-4o(-\d{4}-\d{2}-\d{2})?$', '^chatgpt-4o']
+    status: active
+    features: {tools: true, json_mode: true, system_prompt: true, vision: true}
+    R: {default: 0.5, channels: {chat: 0.5, tool_call: 0.5, completion: 0.5, responses: 0.5}}
+  - id: gpt-4o-mini
+    provider: openai
+    aliases: ['^(openai/)?gpt-4o-mini']
+    status: active
+    features: {tools: true, json_mode: true, system_prompt: true, vision: true}
+    R: {default: 0.5, channels: {}}
+  - id: claude-sonnet
+    provider: anthropic
+    aliases: ['^(anthropic/)?claude-(3-5-|3-7-)?sonnet', '^(anthropic/)?claude-sonnet-']
+    status: active
+    features: {tools: true, json_mode: false, system_prompt: true, vision: true}
+    R: {default: 0.5, channels: {}}
+  - id: llama3
+    provider: ollama
+    aliases: ['^(meta-llama/)?llama-?3(\.\d)?']
+    status: active
+    features: {tools: true, json_mode: true, system_prompt: true, vision: false}
+    R: {default: 0.5, channels: {}}
+  - id: qwen2.5
+    provider: ollama
+    aliases: ['^(qwen/)?qwen-?2\.5']
+    status: active
+    features: {tools: true, json_mode: true, system_prompt: true, vision: false}
+    R: {default: 0.5, channels: {}}

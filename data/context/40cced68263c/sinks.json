@@ -1,0 +1,30 @@
+[
+  {
+    "file": "repo_demo/libdb.py",
+    "line": 9,
+    "callee": "cur.execute",
+    "cwe": "CWE-89",
+    "function_id": "repo_demo/libdb.py::get_user@6"
+  },
+  {
+    "file": "repo_demo/libdb.py",
+    "line": 17,
+    "callee": "cur.execute",
+    "cwe": "CWE-89",
+    "function_id": "repo_demo/libdb.py::search@14"
+  },
+  {
+    "file": "vuln_web_app.py",
+    "line": 63,
+    "callee": "conn.execute",
+    "cwe": "CWE-89",
+    "function_id": "vuln_web_app.py::Handler.do_GET@44"
+  },
+  {
+    "file": "vuln_web_app.py",
+    "line": 64,
+    "callee": "conn.execute",
+    "cwe": "CWE-89",
+    "function_id": "vuln_web_app.py::Handler.do_GET@44"
+  }
+]

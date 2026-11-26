@@ -1,0 +1,107 @@
+# Dangerous sinks for LLM output (WP4). S = how bad the sink is if the attacker controls the value.
+# Every pattern must bind $X to the dangerous argument (the generator focuses the taint sink on it).
+# `regex` adds metavariable-regex constraints; `not` adds pattern-not exclusions.
+# Seeded from config/sinks.yaml (python section), rewritten as Semgrep patterns.
+classes:
+  shell:
+    S: 1.0
+    cwe: CWE-78
+    title: OS command execution
+    patterns:
+      - pattern: os.system($X)
+      - pattern: os.popen($X, ...)
+      - pattern: subprocess.$FN($X, ...)
+        regex: {$FN: '^(run|call|check_call|check_output|Popen|getoutput|getstatusoutput)$'}
+      - pattern: subprocess.$FN(..., args=$X, ...)
+        regex: {$FN: '^(run|call|check_call|check_output|Popen)$'}
+      - pattern: asyncio.create_subprocess_shell($X, ...)
+      - pattern: asyncio.create_subprocess_exec($X, ...)
+      - pattern: pexpect.spawn($X, ...)
+      - pattern: pexpect.run($X, ...)
+  code_eval:
+    S: 1.0
+    cwe: CWE-94
+    title: Code evaluation
+    patterns:
+      - pattern: eval($X, ...)
+      - pattern: exec($X, ...)
+      - pattern: compile($X, ...)
+      - pattern: runpy.run_path($X, ...)
+      - pattern: numexpr.evaluate($X, ...)       # evaluates via eval() (CVE-2023-39631)
+  sql:
+    S: 0.9
+    cwe: CWE-89
+    title: SQL execution
+    patterns:
+      - pattern: $C.execute($X, ...)
+      - pattern: $C.executemany($X, ...)
+      - pattern: $C.executescript($X)
+      - pattern: sqlalchemy.text($X)
+      - pattern: pandas.read_sql($X, ...)
+      - pattern: pandas.read_sql_query($X, ...)
+      - pattern: $C.sql($X, ...)
+        regex: {$C: '^(duckdb|con|conn|connection|spark|session)$'}
+  deserialize:
+    S: 0.9
+    cwe: CWE-502
+    title: Unsafe deserialization
+    patterns:
+      - pattern: pickle.loads($X, ...)
+      - pattern: yaml.load($X, ...)
+        not: ['yaml.load($X, Loader=yaml.SafeLoader)', 'yaml.load($X, Loader=SafeLoader)']
+      - pattern: yaml.unsafe_load($X, ...)
+      - pattern: dill.loads($X, ...)
+  file_write:
+    S: 0.8
+    cwe: CWE-22
+    title: File system path control
+    # the model chooses *which* file is opened / removed / overwritten; content written to a fixed path is
+    # in `text` below
+    patterns:
+      - pattern: open($X, ...)
+      - pattern: pathlib.Path($X)
+      - pattern: os.remove($X)
+      - pattern: os.unlink($X)
+      - pattern: shutil.rmtree($X, ...)
+      - pattern: shutil.copy($_, $X, ...)
+      - pattern: shutil.move($_, $X, ...)
+  http:
+    S: 0.7
+    cwe: CWE-918
+    title: Outbound HTTP request
+    patterns:
+      - pattern: requests.$FN($X, ...)
+        regex: {$FN: '^(get|post|put|patch|delete|head|options)$'}
+      - pattern: requests.request($_, $X, ...)
+      - pattern: httpx.$FN($X, ...)
+        regex: {$FN: '^(get|post|put|patch|delete|head|options)$'}
+      - pattern: urllib.request.urlopen($X, ...)
+      - pattern: urllib.request.Request($X, ...)
+  html:
+    S: 0.5
+    cwe: CWE-79
+    title: HTML / Markdown rendering
+    patterns:
+      - pattern: markupsafe.Markup($X)
+      - pattern: flask.Markup($X)
+      - pattern: flask.render_template_string($X, ...)
+      - pattern: django.utils.safestring.mark_safe($X)
+      - pattern: markdown.markdown($X, ...)
+      - pattern: fastapi.responses.HTMLResponse($X, ...)
+      - pattern: streamlit.markdown($X, ..., unsafe_allow_html=True, ...)
+      - pattern: streamlit.html($X, ...)
+      - pattern: gradio.HTML($X, ...)
+  text:
+    S: 0.1
+    cwe: CWE-117
+    title: Plain text output
+    # Off by default: almost every LLM app prints model output; enable with --sinks text
+    enabled: false
+    patterns:
+      - pattern: print($X, ...)
+      - pattern: logging.$FN($X, ...)
+        regex: {$FN: '^(debug|info|warning|error|critical)$'}
+      - pattern: $F.write($X)
+        not: ['sys.stdout.write($X)', 'sys.stderr.write($X)']
+      - pattern: $P.write_text($X, ...)
+      - pattern: $P.write_bytes($X, ...)

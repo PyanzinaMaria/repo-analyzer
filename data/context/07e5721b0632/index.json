@@ -1,0 +1,174 @@
+{
+  "root": "C:\\Users\\m11yrr\\Desktop\\repo-analyzer\\tests\\fixtures\\repo_demo",
+  "language": "python",
+  "files": {
+    "app.py": {
+      "file": "app.py",
+      "language": "python",
+      "loc": 20,
+      "imports": [
+        "from flask import Flask, request",
+        "import libdb"
+      ],
+      "exports": [],
+      "functions": [
+        {
+          "id": "app.py::do_login@15",
+          "file": "app.py",
+          "name": "do_login",
+          "start": 15,
+          "end": 22,
+          "header": "@app.route(\"/login\", methods=[\"POST\"])\ndef do_login():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 15,
+              "args": "(\"/login\", methods=[\"POST\"])"
+            },
+            {
+              "callee": "request.form.get",
+              "name": "get",
+              "line": 17,
+              "args": "(\"username\")"
+            },
+            {
+              "callee": "request.form.get",
+              "name": "get",
+              "line": 18,
+              "args": "(\"password\")"
+            },
+            {
+              "callee": "libdb.get_user",
+              "name": "get_user",
+              "line": 19,
+              "args": "(username)"
+            }
+          ]
+        },
+        {
+          "id": "app.py::do_search@25",
+          "file": "app.py",
+          "name": "do_search",
+          "start": 25,
+          "end": 28,
+          "header": "@app.route(\"/search\")\ndef do_search():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 25,
+              "args": "(\"/search\")"
+            },
+            {
+              "callee": "request.args.get",
+              "name": "get",
+              "line": 27,
+              "args": "(\"q\")"
+            },
+            {
+              "callee": "\"\".join",
+              "name": "join",
+              "line": 28,
+              "args": "(libdb.search(q))"
+            },
+            {
+              "callee": "libdb.search",
+              "name": "search",
+              "line": 28,
+              "args": "(q)"
+            }
+          ]
+        }
+      ],
+      "module_calls": [
+        {
+          "callee": "Flask",
+          "name": "Flask",
+          "line": 12,
+          "args": "(__name__)"
+        }
+      ]
+    },
+    "libdb.py": {
+      "file": "libdb.py",
+      "language": "python",
+      "loc": 13,
+      "imports": [
+        "import sqlite3"
+      ],
+      "exports": [],
+      "functions": [
+        {
+          "id": "libdb.py::get_user@6",
+          "file": "libdb.py",
+          "name": "get_user",
+          "start": 6,
+          "end": 11,
+          "header": "def get_user(name):",
+          "calls": [
+            {
+              "callee": "sqlite3.connect",
+              "name": "connect",
+              "line": 7,
+              "args": "(\"users.sqlite\")"
+            },
+            {
+              "callee": "conn.cursor",
+              "name": "cursor",
+              "line": 8,
+              "args": "()"
+            },
+            {
+              "callee": "cur.execute",
+              "name": "execute",
+              "line": 9,
+              "args": "(\"SELECT * FROM users WHERE name = '%s'\" % name)"
+            },
+            {
+              "callee": "cur.fetchone",
+              "name": "fetchone",
+              "line": 10,
+              "args": "()"
+            }
+          ]
+        },
+        {
+          "id": "libdb.py::search@14",
+          "file": "libdb.py",
+          "name": "search",
+          "start": 14,
+          "end": 18,
+          "header": "def search(term):",
+          "calls": [
+            {
+              "callee": "sqlite3.connect",
+              "name": "connect",
+              "line": 15,
+              "args": "(\"users.sqlite\")"
+            },
+            {
+              "callee": "conn.cursor",
+              "name": "cursor",
+              "line": 16,
+              "args": "()"
+            },
+            {
+              "callee": "cur.execute",
+              "name": "execute",
+              "line": 17,
+              "args": "(\"SELECT name FROM users WHERE name LIKE '%%%s%%'\" % term)"
+            },
+            {
+              "callee": "cur.fetchall",
+              "name": "fetchall",
+              "line": 18,
+              "args": "()"
+            }
+          ]
+        }
+      ],
+      "module_calls": []
+    }
+  }
+}

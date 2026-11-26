@@ -163,6 +163,19 @@
       {% if section.dast.target_url %} · цель: {{ section.dast.target_url }}{% endif %}
     </p>
     {% endif %}
+    {% if section.id == 'pentest' %}
+    <p class="section-note">
+      {% if section.security and section.security.status %}
+        Ревью гипотез: <b>{{ section.security.status }}</b>
+        {% if section.security.hypotheses is defined %} · гипотез: {{ section.security.hypotheses }}{% endif %}
+      {% endif %}
+      {% if section.pentest and section.pentest.status %}
+        {% if section.security and section.security.status %} · {% endif %}
+        Активный агент: <b>{{ section.pentest.status }}</b>
+        {% if section.pentest.mode %} ({{ section.pentest.mode }}){% endif %}
+      {% endif %}
+    </p>
+    {% endif %}
     {% if section.attack_surface %}
     <p class="section-note">
       {% if section.ranking %}Ранжирование: <b>{{ section.ranking }}</b> · {% endif %}

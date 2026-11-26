@@ -101,11 +101,20 @@ def load_config(path: Path | None = None) -> WorkerConfig:
     ai_docs_enabled = os.environ.get(
         "WORKER_ENABLE_AI_DOCUMENTS", str(raw_ai_docs.get("enabled", False))
     ).strip().lower() in {"1", "true", "yes"}
-    ai_documents = {
-        str(doc_id): dict(spec)
-        for doc_id, spec in raw_ai_docs.items()
-        if isinstance(spec, dict)
-    }
+    # Cap per-doc LLM waits so a stuck free-tier call cannot hold the worker
+    # for a quarter of an hour (report stage already publishes earlier).
+    _AI_DOC_TIMEOUT_CAP = 180
+    ai_documents: dict[str, dict[str, Any]] = {}
+    for doc_id, spec in raw_ai_docs.items():
+        if not isinstance(spec, dict):
+            continue
+        cleaned = dict(spec)
+        try:
+            timeout = int(cleaned.get("timeout_seconds") or 120)
+        except (TypeError, ValueError):
+            timeout = 120
+        cleaned["timeout_seconds"] = max(15, min(timeout, _AI_DOC_TIMEOUT_CAP))
+        ai_documents[str(doc_id)] = cleaned
 
     # The frontend contract is required: without it the worker cannot map
     # method ids to runners nor decide which artifacts to produce.

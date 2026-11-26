@@ -75,8 +75,9 @@ class ScanCreate(BaseModel):
     """Optional per-scan overrides. Empty body keeps yaml/env defaults.
 
     ``methods`` holds runner keys (see ``app/analysis/registry.py``):
-    ``static``, ``ai``, ... The frontend's method ids (sast, llm_agentic, ...)
-    are mapped to runner keys by the worker via frontend/config/analysis.yaml.
+    ``static``, ``ai``, ``dynamic``, ``manual``, ... The frontend's method ids
+    (sast, llm_agentic, dast, pentest) are mapped to runner keys by the worker
+    via frontend/config/analysis.yaml.
     """
 
     enable_ai: bool | None = None

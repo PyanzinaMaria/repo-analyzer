@@ -1,0 +1,19 @@
+# litellm gateway (opt-in: `--frameworks`): OpenAI-format calls to any provider.
+sdk: litellm
+provider: litellm
+imports: [litellm]
+calls:
+  - id: litellm.completion
+    callee: litellm.completion
+    model_arg: model
+    prompt_args: [messages]
+    tools_arg: tools
+  - id: litellm.acompletion
+    callee: litellm.acompletion
+    model_arg: model
+    prompt_args: [messages]
+    tools_arg: tools
+  - id: litellm.text_completion
+    callee: litellm.text_completion
+    model_arg: model
+    prompt_args: [prompt]

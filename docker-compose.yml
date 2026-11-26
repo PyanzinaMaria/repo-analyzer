@@ -12,10 +12,17 @@ services:
       SIRIUS_DATA_DIR: /srv/data
       SIRIUS_APP_TITLE: ${SIRIUS_APP_TITLE:-}
       SIRIUS_MAX_BODY_BYTES: ${SIRIUS_MAX_BODY_BYTES:-}
+      SIRIUS_COMPANY_REPORT_URL: http://company-report:8000
     volumes:
       # The worker consumes data/queue and drops reports into data/reports
       # without a rebuild; both services see the same tree.
       - ./data:/srv/data
+    restart: unless-stopped
+
+  company-report:
+    build:
+      context: ./frontend
+      dockerfile: company_report/Dockerfile
     restart: unless-stopped
 
   worker:

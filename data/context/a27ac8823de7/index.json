@@ -1,0 +1,1139 @@
+{
+  "root": "C:\\Users\\m11yrr\\Desktop\\repo-analyzer\\data\\workspaces\\0939bfb46cfb487f99da7344015ba718\\workspace",
+  "language": "python",
+  "files": {
+    "app.py": {
+      "file": "app.py",
+      "language": "python",
+      "loc": 191,
+      "imports": [
+        "import os",
+        "import subprocess",
+        "import paramiko",
+        "import requests",
+        "import yaml",
+        "from PIL import Image",
+        "from flask import (Flask, flash, redirect, render_template, request, session, url_for, jsonify)",
+        "import db",
+        "import utils"
+      ],
+      "exports": [],
+      "functions": [
+        {
+          "id": "app.py::load_config@28",
+          "file": "app.py",
+          "name": "load_config",
+          "start": 28,
+          "end": 33,
+          "header": "def load_config(path=\"config.yaml\"):",
+          "calls": [
+            {
+              "callee": "os.path.exists",
+              "name": "exists",
+              "line": 29,
+              "args": "(path)"
+            },
+            {
+              "callee": "open",
+              "name": "open",
+              "line": 30,
+              "args": "(path)"
+            },
+            {
+              "callee": "yaml.load",
+              "name": "load",
+              "line": 32,
+              "args": "(f)"
+            }
+          ]
+        },
+        {
+          "id": "app.py::login@40",
+          "file": "app.py",
+          "name": "login",
+          "start": 40,
+          "end": 53,
+          "header": "@app.route(\"/login\", methods=[\"GET\", \"POST\"])\ndef login():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 40,
+              "args": "(\"/login\", methods=[\"GET\", \"POST\"])"
+            },
+            {
+              "callee": "db.find_user",
+              "name": "find_user",
+              "line": 46,
+              "args": "(username)"
+            },
+            {
+              "callee": "utils.verify_password",
+              "name": "verify_password",
+              "line": 47,
+              "args": "(password, user[2])"
+            },
+            {
+              "callee": "bool",
+              "name": "bool",
+              "line": 50,
+              "args": "(user[4])"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 51,
+              "args": "(url_for(\"index\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 51,
+              "args": "(\"index\")"
+            },
+            {
+              "callee": "render_template",
+              "name": "render_template",
+              "line": 53,
+              "args": "(\"login.html\", error=error)"
+            }
+          ]
+        },
+        {
+          "id": "app.py::register@56",
+          "file": "app.py",
+          "name": "register",
+          "start": 56,
+          "end": 70,
+          "header": "@app.route(\"/register\", methods=[\"GET\", \"POST\"])\ndef register():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 56,
+              "args": "(\"/register\", methods=[\"GET\", \"POST\"])"
+            },
+            {
+              "callee": "request.form.get",
+              "name": "get",
+              "line": 62,
+              "args": "(\"email\", \"\")"
+            },
+            {
+              "callee": "utils.hash_password",
+              "name": "hash_password",
+              "line": 63,
+              "args": "(password)"
+            },
+            {
+              "callee": "db.create_user",
+              "name": "create_user",
+              "line": 65,
+              "args": "(username, pw_hash, email)"
+            },
+            {
+              "callee": "flash",
+              "name": "flash",
+              "line": 66,
+              "args": "(\"Account created. Please log in.\")"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 67,
+              "args": "(url_for(\"login\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 67,
+              "args": "(\"login\")"
+            },
+            {
+              "callee": "str",
+              "name": "str",
+              "line": 69,
+              "args": "(e)"
+            },
+            {
+              "callee": "render_template",
+              "name": "render_template",
+              "line": 70,
+              "args": "(\"register.html\", error=error)"
+            }
+          ]
+        },
+        {
+          "id": "app.py::logout@73",
+          "file": "app.py",
+          "name": "logout",
+          "start": 73,
+          "end": 76,
+          "header": "@app.route(\"/logout\")\ndef logout():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 73,
+              "args": "(\"/logout\")"
+            },
+            {
+              "callee": "session.clear",
+              "name": "clear",
+              "line": 75,
+              "args": "()"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 76,
+              "args": "(url_for(\"login\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 76,
+              "args": "(\"login\")"
+            }
+          ]
+        },
+        {
+          "id": "app.py::index@83",
+          "file": "app.py",
+          "name": "index",
+          "start": 83,
+          "end": 87,
+          "header": "@app.route(\"/\")\ndef index():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 83,
+              "args": "(\"/\")"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 86,
+              "args": "(url_for(\"login\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 86,
+              "args": "(\"login\")"
+            },
+            {
+              "callee": "render_template",
+              "name": "render_template",
+              "line": 87,
+              "args": "(\"index.html\", username=session.get(\"username\"))"
+            },
+            {
+              "callee": "session.get",
+              "name": "get",
+              "line": 87,
+              "args": "(\"username\")"
+            }
+          ]
+        },
+        {
+          "id": "app.py::users@94",
+          "file": "app.py",
+          "name": "users",
+          "start": 94,
+          "end": 111,
+          "header": "@app.route(\"/users\")\ndef users():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 94,
+              "args": "(\"/users\")"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 97,
+              "args": "(url_for(\"login\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 97,
+              "args": "(\"login\")"
+            },
+            {
+              "callee": "request.args.get",
+              "name": "get",
+              "line": 98,
+              "args": "(\"q\", \"\")"
+            },
+            {
+              "callee": "db.find_user",
+              "name": "find_user",
+              "line": 102,
+              "args": "(q)"
+            },
+            {
+              "callee": "request.args.get",
+              "name": "get",
+              "line": 106,
+              "args": "(\"email\", \"\")"
+            },
+            {
+              "callee": "db.find_user_by_email",
+              "name": "find_user_by_email",
+              "line": 108,
+              "args": "(eq)"
+            },
+            {
+              "callee": "render_template",
+              "name": "render_template",
+              "line": 111,
+              "args": "(\"users.html\", results=results, email_results=email_results, q=q, eq=eq)"
+            }
+          ]
+        },
+        {
+          "id": "app.py::files@118",
+          "file": "app.py",
+          "name": "files",
+          "start": 118,
+          "end": 124,
+          "header": "@app.route(\"/files\")\ndef files():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 118,
+              "args": "(\"/files\")"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 121,
+              "args": "(url_for(\"login\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 121,
+              "args": "(\"login\")"
+            },
+            {
+              "callee": "os.makedirs",
+              "name": "makedirs",
+              "line": 122,
+              "args": "(\"uploads\", exist_ok=True)"
+            },
+            {
+              "callee": "os.listdir",
+              "name": "listdir",
+              "line": 123,
+              "args": "(\"uploads\")"
+            },
+            {
+              "callee": "render_template",
+              "name": "render_template",
+              "line": 124,
+              "args": "(\"files.html\", files=file_list)"
+            }
+          ]
+        },
+        {
+          "id": "app.py::files_download@127",
+          "file": "app.py",
+          "name": "files_download",
+          "start": 127,
+          "end": 135,
+          "header": "@app.route(\"/files/download\")\ndef files_download():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 127,
+              "args": "(\"/files/download\")"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 130,
+              "args": "(url_for(\"login\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 130,
+              "args": "(\"login\")"
+            },
+            {
+              "callee": "request.args.get",
+              "name": "get",
+              "line": 131,
+              "args": "(\"file\", \"\")"
+            },
+            {
+              "callee": "os.path.join",
+              "name": "join",
+              "line": 133,
+              "args": "(\"uploads\", filename)"
+            },
+            {
+              "callee": "subprocess.call",
+              "name": "call",
+              "line": 134,
+              "args": "([\"sh\", \"-c\", \"cat \" + filepath], shell=True)"
+            }
+          ]
+        },
+        {
+          "id": "app.py::files_upload@138",
+          "file": "app.py",
+          "name": "files_upload",
+          "start": 138,
+          "end": 154,
+          "header": "@app.route(\"/files/upload\", methods=[\"POST\"])\ndef files_upload():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 138,
+              "args": "(\"/files/upload\", methods=[\"POST\"])"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 141,
+              "args": "(url_for(\"login\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 141,
+              "args": "(\"login\")"
+            },
+            {
+              "callee": "request.files.get",
+              "name": "get",
+              "line": 142,
+              "args": "(\"file\")"
+            },
+            {
+              "callee": "os.makedirs",
+              "name": "makedirs",
+              "line": 144,
+              "args": "(\"uploads\", exist_ok=True)"
+            },
+            {
+              "callee": "os.path.join",
+              "name": "join",
+              "line": 146,
+              "args": "(\"uploads\", f.filename)"
+            },
+            {
+              "callee": "f.save",
+              "name": "save",
+              "line": 147,
+              "args": "(save_path)"
+            },
+            {
+              "callee": "Image.open",
+              "name": "open",
+              "line": 149,
+              "args": "(save_path)"
+            },
+            {
+              "callee": "img.thumbnail",
+              "name": "thumbnail",
+              "line": 150,
+              "args": "((128, 128))"
+            },
+            {
+              "callee": "flash",
+              "name": "flash",
+              "line": 153,
+              "args": "(f\"Uploaded {f.filename}\")"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 154,
+              "args": "(url_for(\"files\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 154,
+              "args": "(\"files\")"
+            }
+          ]
+        },
+        {
+          "id": "app.py::diag@161",
+          "file": "app.py",
+          "name": "diag",
+          "start": 161,
+          "end": 165,
+          "header": "@app.route(\"/diag\")\ndef diag():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 161,
+              "args": "(\"/diag\")"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 164,
+              "args": "(url_for(\"login\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 164,
+              "args": "(\"login\")"
+            },
+            {
+              "callee": "render_template",
+              "name": "render_template",
+              "line": 165,
+              "args": "(\"diag.html\")"
+            }
+          ]
+        },
+        {
+          "id": "app.py::diag_ssh@168",
+          "file": "app.py",
+          "name": "diag_ssh",
+          "start": 168,
+          "end": 186,
+          "header": "@app.route(\"/diag/ssh\", methods=[\"GET\", \"POST\"])\ndef diag_ssh():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 168,
+              "args": "(\"/diag/ssh\", methods=[\"GET\", \"POST\"])"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 171,
+              "args": "(url_for(\"login\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 171,
+              "args": "(\"login\")"
+            },
+            {
+              "callee": "request.form.get",
+              "name": "get",
+              "line": 174,
+              "args": "(\"host\", \"\")"
+            },
+            {
+              "callee": "request.form.get",
+              "name": "get",
+              "line": 175,
+              "args": "(\"username\", \"\")"
+            },
+            {
+              "callee": "request.form.get",
+              "name": "get",
+              "line": 176,
+              "args": "(\"password\", \"\")"
+            },
+            {
+              "callee": "paramiko.SSHClient",
+              "name": "SSHClient",
+              "line": 178,
+              "args": "()"
+            },
+            {
+              "callee": "client.set_missing_host_key_policy",
+              "name": "set_missing_host_key_policy",
+              "line": 179,
+              "args": "(paramiko.AutoAddPolicy())"
+            },
+            {
+              "callee": "paramiko.AutoAddPolicy",
+              "name": "AutoAddPolicy",
+              "line": 179,
+              "args": "()"
+            },
+            {
+              "callee": "client.connect",
+              "name": "connect",
+              "line": 180,
+              "args": "(host, username=username, password=password, timeout=5)"
+            },
+            {
+              "callee": "client.exec_command",
+              "name": "exec_command",
+              "line": 181,
+              "args": "(\"whoami\")"
+            },
+            {
+              "callee": "stdout.read().decode",
+              "name": "decode",
+              "line": 182,
+              "args": "()"
+            },
+            {
+              "callee": "stdout.read",
+              "name": "read",
+              "line": 182,
+              "args": "()"
+            },
+            {
+              "callee": "client.close",
+              "name": "close",
+              "line": 183,
+              "args": "()"
+            },
+            {
+              "callee": "render_template",
+              "name": "render_template",
+              "line": 186,
+              "args": "(\"diag.html\", ssh_output=output)"
+            }
+          ]
+        },
+        {
+          "id": "app.py::diag_ping@189",
+          "file": "app.py",
+          "name": "diag_ping",
+          "start": 189,
+          "end": 199,
+          "header": "@app.route(\"/diag/ping\", methods=[\"GET\", \"POST\"])\ndef diag_ping():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 189,
+              "args": "(\"/diag/ping\", methods=[\"GET\", \"POST\"])"
+            },
+            {
+              "callee": "redirect",
+              "name": "redirect",
+              "line": 192,
+              "args": "(url_for(\"login\"))"
+            },
+            {
+              "callee": "url_for",
+              "name": "url_for",
+              "line": 192,
+              "args": "(\"login\")"
+            },
+            {
+              "callee": "request.form.get",
+              "name": "get",
+              "line": 195,
+              "args": "(\"host\", \"\")"
+            },
+            {
+              "callee": "subprocess.check_output(\"ping -c 1 \" + host, shell=True, stderr=subprocess.STDOU…",
+              "name": "STDOU",
+              "line": 197,
+              "args": "()"
+            },
+            {
+              "callee": "subprocess.check_output",
+              "name": "check_output",
+              "line": 197,
+              "args": "(\"ping -c 1 \" + host, shell=True, stderr=subprocess.STDOUT)"
+            },
+            {
+              "callee": "render_template",
+              "name": "render_template",
+              "line": 199,
+              "args": "(\"diag.html\", output=output)"
+            }
+          ]
+        },
+        {
+          "id": "app.py::api_token@206",
+          "file": "app.py",
+          "name": "api_token",
+          "start": 206,
+          "end": 212,
+          "header": "@app.route(\"/api/token\")\ndef api_token():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 206,
+              "args": "(\"/api/token\")"
+            },
+            {
+              "callee": "jsonify",
+              "name": "jsonify",
+              "line": 209,
+              "args": "({\"error\": \"unauthenticated\"})"
+            },
+            {
+              "callee": "utils.generate_token",
+              "name": "generate_token",
+              "line": 210,
+              "args": "()"
+            },
+            {
+              "callee": "db.store_token",
+              "name": "store_token",
+              "line": 211,
+              "args": "(session[\"user_id\"], token)"
+            },
+            {
+              "callee": "jsonify",
+              "name": "jsonify",
+              "line": 212,
+              "args": "({\"token\": token})"
+            }
+          ]
+        },
+        {
+          "id": "app.py::health_proxy@219",
+          "file": "app.py",
+          "name": "health_proxy",
+          "start": 219,
+          "end": 228,
+          "header": "@app.route(\"/health\")\ndef health_proxy():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 219,
+              "args": "(\"/health\")"
+            },
+            {
+              "callee": "load_config",
+              "name": "load_config",
+              "line": 222,
+              "args": "()"
+            },
+            {
+              "callee": "cfg.get",
+              "name": "get",
+              "line": 223,
+              "args": "(\"upstream_health_url\", \"http://localhost:5001/health\")"
+            },
+            {
+              "callee": "requests.get",
+              "name": "get",
+              "line": 225,
+              "args": "(upstream, timeout=3)"
+            },
+            {
+              "callee": "jsonify",
+              "name": "jsonify",
+              "line": 226,
+              "args": "({\"status\": resp.status_code, \"body\": resp.text[:200]})"
+            },
+            {
+              "callee": "jsonify",
+              "name": "jsonify",
+              "line": 228,
+              "args": "({\"error\": str(e)})"
+            },
+            {
+              "callee": "str",
+              "name": "str",
+              "line": 228,
+              "args": "(e)"
+            }
+          ]
+        }
+      ],
+      "module_calls": [
+        {
+          "callee": "Flask",
+          "name": "Flask",
+          "line": 14,
+          "args": "(__name__)"
+        },
+        {
+          "callee": "db.init_db",
+          "name": "init_db",
+          "line": 234,
+          "args": "()"
+        },
+        {
+          "callee": "app.run",
+          "name": "run",
+          "line": 235,
+          "args": "(debug=True, host=\"0.0.0.0\", port=5000)"
+        }
+      ]
+    },
+    "db.py": {
+      "file": "db.py",
+      "language": "python",
+      "loc": 72,
+      "imports": [
+        "import sqlite3"
+      ],
+      "exports": [],
+      "functions": [
+        {
+          "id": "db.py::get_conn@7",
+          "file": "db.py",
+          "name": "get_conn",
+          "start": 7,
+          "end": 8,
+          "header": "def get_conn():",
+          "calls": [
+            {
+              "callee": "sqlite3.connect",
+              "name": "connect",
+              "line": 8,
+              "args": "(DB_PATH)"
+            }
+          ]
+        },
+        {
+          "id": "db.py::init_db@11",
+          "file": "db.py",
+          "name": "init_db",
+          "start": 11,
+          "end": 32,
+          "header": "def init_db():",
+          "calls": [
+            {
+              "callee": "get_conn",
+              "name": "get_conn",
+              "line": 12,
+              "args": "()"
+            },
+            {
+              "callee": "conn.cursor",
+              "name": "cursor",
+              "line": 13,
+              "args": "()"
+            },
+            {
+              "callee": "cur.execute",
+              "name": "execute",
+              "line": 14,
+              "args": "(\"\"\" CREATE TABLE IF NOT EXISTS users ( id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, pw_hash TEXT NOT NULL, email TEXT, is_admin INTEGER DEFAULT 0 ) \"\"\")"
+            },
+            {
+              "callee": "cur.execute",
+              "name": "execute",
+              "line": 23,
+              "args": "(\"\"\" CREATE TABLE IF NOT EXISTS tokens ( id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, token TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ) \"\"\")"
+            },
+            {
+              "callee": "conn.commit",
+              "name": "commit",
+              "line": 31,
+              "args": "()"
+            },
+            {
+              "callee": "conn.close",
+              "name": "close",
+              "line": 32,
+              "args": "()"
+            }
+          ]
+        },
+        {
+          "id": "db.py::find_user@35",
+          "file": "db.py",
+          "name": "find_user",
+          "start": 35,
+          "end": 43,
+          "header": "def find_user(username):",
+          "calls": [
+            {
+              "callee": "get_conn",
+              "name": "get_conn",
+              "line": 36,
+              "args": "()"
+            },
+            {
+              "callee": "conn.cursor",
+              "name": "cursor",
+              "line": 37,
+              "args": "()"
+            },
+            {
+              "callee": "cur.execute",
+              "name": "execute",
+              "line": 40,
+              "args": "(query)"
+            },
+            {
+              "callee": "cur.fetchone",
+              "name": "fetchone",
+              "line": 41,
+              "args": "()"
+            },
+            {
+              "callee": "conn.close",
+              "name": "close",
+              "line": 42,
+              "args": "()"
+            }
+          ]
+        },
+        {
+          "id": "db.py::find_user_by_email@46",
+          "file": "db.py",
+          "name": "find_user_by_email",
+          "start": 46,
+          "end": 54,
+          "header": "def find_user_by_email(email):",
+          "calls": [
+            {
+              "callee": "get_conn",
+              "name": "get_conn",
+              "line": 47,
+              "args": "()"
+            },
+            {
+              "callee": "conn.cursor",
+              "name": "cursor",
+              "line": 48,
+              "args": "()"
+            },
+            {
+              "callee": "cur.execute",
+              "name": "execute",
+              "line": 51,
+              "args": "(query)"
+            },
+            {
+              "callee": "cur.fetchone",
+              "name": "fetchone",
+              "line": 52,
+              "args": "()"
+            },
+            {
+              "callee": "conn.close",
+              "name": "close",
+              "line": 53,
+              "args": "()"
+            }
+          ]
+        },
+        {
+          "id": "db.py::create_user@57",
+          "file": "db.py",
+          "name": "create_user",
+          "start": 57,
+          "end": 68,
+          "header": "def create_user(username, pw_hash, email):",
+          "calls": [
+            {
+              "callee": "get_conn",
+              "name": "get_conn",
+              "line": 58,
+              "args": "()"
+            },
+            {
+              "callee": "conn.cursor",
+              "name": "cursor",
+              "line": 59,
+              "args": "()"
+            },
+            {
+              "callee": "\"INSERT INTO users (username, pw_hash, email) VALUES ('{}', '{}', '{}')\".format",
+              "name": "format",
+              "line": 61,
+              "args": "( username, pw_hash, email )"
+            },
+            {
+              "callee": "cur.execute",
+              "name": "execute",
+              "line": 64,
+              "args": "(query)"
+            },
+            {
+              "callee": "conn.commit",
+              "name": "commit",
+              "line": 65,
+              "args": "()"
+            },
+            {
+              "callee": "conn.close",
+              "name": "close",
+              "line": 67,
+              "args": "()"
+            }
+          ]
+        },
+        {
+          "id": "db.py::store_token@71",
+          "file": "db.py",
+          "name": "store_token",
+          "start": 71,
+          "end": 78,
+          "header": "def store_token(user_id, token):",
+          "calls": [
+            {
+              "callee": "get_conn",
+              "name": "get_conn",
+              "line": 72,
+              "args": "()"
+            },
+            {
+              "callee": "conn.cursor",
+              "name": "cursor",
+              "line": 73,
+              "args": "()"
+            },
+            {
+              "callee": "cur.execute",
+              "name": "execute",
+              "line": 74,
+              "args": "( \"INSERT INTO tokens (user_id, token) VALUES (?, ?)\", (user_id, token) )"
+            },
+            {
+              "callee": "conn.commit",
+              "name": "commit",
+              "line": 77,
+              "args": "()"
+            },
+            {
+              "callee": "conn.close",
+              "name": "close",
+              "line": 78,
+              "args": "()"
+            }
+          ]
+        },
+        {
+          "id": "db.py::list_tokens@81",
+          "file": "db.py",
+          "name": "list_tokens",
+          "start": 81,
+          "end": 87,
+          "header": "def list_tokens(user_id):",
+          "calls": [
+            {
+              "callee": "get_conn",
+              "name": "get_conn",
+              "line": 82,
+              "args": "()"
+            },
+            {
+              "callee": "conn.cursor",
+              "name": "cursor",
+              "line": 83,
+              "args": "()"
+            },
+            {
+              "callee": "cur.execute",
+              "name": "execute",
+              "line": 84,
+              "args": "(\"SELECT token, created_at FROM tokens WHERE user_id = ?\", (user_id,))"
+            },
+            {
+              "callee": "cur.fetchall",
+              "name": "fetchall",
+              "line": 85,
+              "args": "()"
+            },
+            {
+              "callee": "conn.close",
+              "name": "close",
+              "line": 86,
+              "args": "()"
+            }
+          ]
+        }
+      ],
+      "module_calls": []
+    },
+    "utils.py": {
+      "file": "utils.py",
+      "language": "python",
+      "loc": 12,
+      "imports": [
+        "import hashlib",
+        "import random",
+        "import string"
+      ],
+      "exports": [],
+      "functions": [
+        {
+          "id": "utils.py::hash_password@6",
+          "file": "utils.py",
+          "name": "hash_password",
+          "start": 6,
+          "end": 8,
+          "header": "def hash_password(password):",
+          "calls": [
+            {
+              "callee": "hashlib.md5(password.encode()).hexdigest",
+              "name": "hexdigest",
+              "line": 8,
+              "args": "()"
+            },
+            {
+              "callee": "hashlib.md5",
+              "name": "md5",
+              "line": 8,
+              "args": "(password.encode())"
+            },
+            {
+              "callee": "password.encode",
+              "name": "encode",
+              "line": 8,
+              "args": "()"
+            }
+          ]
+        },
+        {
+          "id": "utils.py::verify_password@11",
+          "file": "utils.py",
+          "name": "verify_password",
+          "start": 11,
+          "end": 12,
+          "header": "def verify_password(password, hashed):",
+          "calls": [
+            {
+              "callee": "hash_password",
+              "name": "hash_password",
+              "line": 12,
+              "args": "(password)"
+            }
+          ]
+        },
+        {
+          "id": "utils.py::generate_token@15",
+          "file": "utils.py",
+          "name": "generate_token",
+          "start": 15,
+          "end": 18,
+          "header": "def generate_token(length=32):",
+          "calls": [
+            {
+              "callee": "''.join",
+              "name": "join",
+              "line": 18,
+              "args": "(random.choice(chars) for _ in range(length))"
+            },
+            {
+              "callee": "random.choice",
+              "name": "choice",
+              "line": 18,
+              "args": "(chars)"
+            },
+            {
+              "callee": "range",
+              "name": "range",
+              "line": 18,
+              "args": "(length)"
+            }
+          ]
+        }
+      ],
+      "module_calls": []
+    }
+  }
+}

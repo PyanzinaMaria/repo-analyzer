@@ -109,6 +109,8 @@ def _finding_method(source: str | None) -> str:
         return "llm"
     if src.startswith("dast") or src in {"zap-baseline", "zap"}:
         return "dast"
+    if src in {"pentest", "llm-review", "review-agent"} or src.startswith("pentest"):
+        return "pentest"
     return "sast"
 
 
@@ -184,10 +186,16 @@ SECTION_LABELS = {
     "sast": "SAST — статический анализ",
     "llm": "LLM-агент",
     "dast": "DAST — динамический анализ",
+    "pentest": "Пентест",
 }
 
 # Runner keys from orchestrator meta.runners → section ids.
-_RUNNER_TO_SECTION = {"static": "sast", "ai": "llm", "dynamic": "dast"}
+_RUNNER_TO_SECTION = {
+    "static": "sast",
+    "ai": "llm",
+    "dynamic": "dast",
+    "manual": "pentest",
+}
 
 
 def _active_sections(result) -> list[str]:
@@ -208,17 +216,26 @@ def _active_sections(result) -> list[str]:
     ai = meta.get("ai") or {}
     if ai.get("enabled") or any(_finding_method(f.source) == "llm" for f in result.findings):
         sections.append("llm")
-    if (
-        meta.get("dast")
-        or summary.get("scan_kind") in {"dast", "sast+dast"}
-        or any(_finding_method(f.source) == "dast" for f in result.findings)
-    ):
+    kind = str(summary.get("scan_kind") or "")
+    dast_meta = meta.get("dast") or {}
+    zap = dast_meta.get("zap") if isinstance(dast_meta.get("zap"), dict) else {}
+    zap_ran = bool(zap) and zap.get("status") not in {None, "skipped"}
+    has_dast_findings = any(_finding_method(f.source) == "dast" for f in result.findings)
+    if has_dast_findings or zap_ran or kind in {"dast", "sast+dast"}:
         sections.append("dast")
+    has_pentest_findings = any(_finding_method(f.source) == "pentest" for f in result.findings)
+    security_status = (meta.get("security") or {}).get("status")
+    if (
+        "pentest" in kind
+        or has_pentest_findings
+        or security_status not in {None, "disabled", "skipped"}
+    ):
+        sections.append("pentest")
     return sections
 
 
 def _method_sections(result) -> list[dict]:
-    """Findings grouped under SAST / LLM / DAST for the unified report."""
+    """Findings grouped under SAST / LLM / DAST / Пентест for the unified report."""
     rows = [r for r in _finding_rows(result) if not r.get("dismissed")]
     by_method: dict[str, list[dict]] = {key: [] for key in SECTION_LABELS}
     for row in rows:
@@ -235,6 +252,10 @@ def _method_sections(result) -> list[dict]:
             "label": SECTION_LABELS[section_id],
             "findings": by_method.get(section_id, []),
             "dast": dast_meta if section_id == "dast" else None,
+            "pentest": (dast_meta.get("pentest") if isinstance(dast_meta, dict) else None)
+            if section_id == "pentest"
+            else None,
+            "security": meta.get("security") if section_id == "pentest" else None,
             "attack_surface": attack if section_id == "sast" and attack else None,
             "ranking": ranking if section_id in {"sast", "llm"} else None,
             "llm_meta": (meta.get("llm") or meta.get("ai") or {}) if section_id == "llm" else None,
@@ -264,12 +285,27 @@ def _meta_lines(result) -> list[str]:
             text += f" ({ai['error']})"
         lines.append(text)
     dast = meta.get("dast") or {}
-    if dast:
+    runners = meta.get("runners") or []
+    show_dast = "dast" in sections or "dynamic" in runners
+    if show_dast and dast:
         status = dast.get("status", "unknown")
         text = f"DAST: {status}"
         if dast.get("target_url"):
             text += f", цель {dast['target_url']}"
         lines.append(text)
+    if "pentest" in sections:
+        pentest = dast.get("pentest") if isinstance(dast, dict) else None
+        security = meta.get("security") or {}
+        if isinstance(pentest, dict) and pentest.get("status"):
+            text = f"Пентест: {pentest.get('status')}"
+            if pentest.get("mode"):
+                text += f", режим {pentest.get('mode')}"
+            lines.append(text)
+        elif security.get("status") and security.get("status") != "disabled":
+            lines.append(f"Пентест (ревью): {security.get('status')}")
+        target = dast.get("target_url") if isinstance(dast, dict) else None
+        if target and not show_dast:
+            lines.append(f"Цель проверки: {target}")
     return lines
 
 

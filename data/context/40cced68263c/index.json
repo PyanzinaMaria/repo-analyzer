@@ -1,0 +1,489 @@
+{
+  "root": "C:\\Users\\m11yrr\\Desktop\\repo-analyzer\\tests\\fixtures",
+  "language": "python",
+  "files": {
+    "repo_demo/app.py": {
+      "file": "repo_demo/app.py",
+      "language": "python",
+      "loc": 20,
+      "imports": [
+        "from flask import Flask, request",
+        "import libdb"
+      ],
+      "exports": [],
+      "functions": [
+        {
+          "id": "repo_demo/app.py::do_login@15",
+          "file": "repo_demo/app.py",
+          "name": "do_login",
+          "start": 15,
+          "end": 22,
+          "header": "@app.route(\"/login\", methods=[\"POST\"])\ndef do_login():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 15,
+              "args": "(\"/login\", methods=[\"POST\"])"
+            },
+            {
+              "callee": "request.form.get",
+              "name": "get",
+              "line": 17,
+              "args": "(\"username\")"
+            },
+            {
+              "callee": "request.form.get",
+              "name": "get",
+              "line": 18,
+              "args": "(\"password\")"
+            },
+            {
+              "callee": "libdb.get_user",
+              "name": "get_user",
+              "line": 19,
+              "args": "(username)"
+            }
+          ]
+        },
+        {
+          "id": "repo_demo/app.py::do_search@25",
+          "file": "repo_demo/app.py",
+          "name": "do_search",
+          "start": 25,
+          "end": 28,
+          "header": "@app.route(\"/search\")\ndef do_search():",
+          "calls": [
+            {
+              "callee": "app.route",
+              "name": "route",
+              "line": 25,
+              "args": "(\"/search\")"
+            },
+            {
+              "callee": "request.args.get",
+              "name": "get",
+              "line": 27,
+              "args": "(\"q\")"
+            },
+            {
+              "callee": "\"\".join",
+              "name": "join",
+              "line": 28,
+              "args": "(libdb.search(q))"
+            },
+            {
+              "callee": "libdb.search",
+              "name": "search",
+              "line": 28,
+              "args": "(q)"
+            }
+          ]
+        }
+      ],
+      "module_calls": [
+        {
+          "callee": "Flask",
+          "name": "Flask",
+          "line": 12,
+          "args": "(__name__)"
+        }
+      ]
+    },
+    "repo_demo/libdb.py": {
+      "file": "repo_demo/libdb.py",
+      "language": "python",
+      "loc": 13,
+      "imports": [
+        "import sqlite3"
+      ],
+      "exports": [],
+      "functions": [
+        {
+          "id": "repo_demo/libdb.py::get_user@6",
+          "file": "repo_demo/libdb.py",
+          "name": "get_user",
+          "start": 6,
+          "end": 11,
+          "header": "def get_user(name):",
+          "calls": [
+            {
+              "callee": "sqlite3.connect",
+              "name": "connect",
+              "line": 7,
+              "args": "(\"users.sqlite\")"
+            },
+            {
+              "callee": "conn.cursor",
+              "name": "cursor",
+              "line": 8,
+              "args": "()"
+            },
+            {
+              "callee": "cur.execute",
+              "name": "execute",
+              "line": 9,
+              "args": "(\"SELECT * FROM users WHERE name = '%s'\" % name)"
+            },
+            {
+              "callee": "cur.fetchone",
+              "name": "fetchone",
+              "line": 10,
+              "args": "()"
+            }
+          ]
+        },
+        {
+          "id": "repo_demo/libdb.py::search@14",
+          "file": "repo_demo/libdb.py",
+          "name": "search",
+          "start": 14,
+          "end": 18,
+          "header": "def search(term):",
+          "calls": [
+            {
+              "callee": "sqlite3.connect",
+              "name": "connect",
+              "line": 15,
+              "args": "(\"users.sqlite\")"
+            },
+            {
+              "callee": "conn.cursor",
+              "name": "cursor",
+              "line": 16,
+              "args": "()"
+            },
+            {
+              "callee": "cur.execute",
+              "name": "execute",
+              "line": 17,
+              "args": "(\"SELECT name FROM users WHERE name LIKE '%%%s%%'\" % term)"
+            },
+            {
+              "callee": "cur.fetchall",
+              "name": "fetchall",
+              "line": 18,
+              "args": "()"
+            }
+          ]
+        }
+      ],
+      "module_calls": []
+    },
+    "vuln_web_app.py": {
+      "file": "vuln_web_app.py",
+      "language": "python",
+      "loc": 90,
+      "imports": [
+        "from __future__ import annotations",
+        "import argparse",
+        "import sqlite3",
+        "import traceback",
+        "from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer",
+        "from urllib.parse import parse_qs, urlparse"
+      ],
+      "exports": [],
+      "functions": [
+        {
+          "id": "vuln_web_app.py::Handler.log_message@30",
+          "file": "vuln_web_app.py",
+          "name": "Handler.log_message",
+          "start": 30,
+          "end": 31,
+          "header": "    def log_message(self, fmt, *args):  # keep the test output clean\n        pass",
+          "calls": []
+        },
+        {
+          "id": "vuln_web_app.py::Handler._send@33",
+          "file": "vuln_web_app.py",
+          "name": "Handler._send",
+          "start": 33,
+          "end": 42,
+          "header": "    def _send(self, code: int, body: str, ctype: str = \"text/html; charset=utf-8\",\n              headers: dict[str, str] | None = None) -> None:",
+          "calls": [
+            {
+              "callee": "body.encode",
+              "name": "encode",
+              "line": 35,
+              "args": "()"
+            },
+            {
+              "callee": "self.send_response",
+              "name": "send_response",
+              "line": 36,
+              "args": "(code)"
+            },
+            {
+              "callee": "self.send_header",
+              "name": "send_header",
+              "line": 37,
+              "args": "(\"Content-Type\", ctype)"
+            },
+            {
+              "callee": "self.send_header",
+              "name": "send_header",
+              "line": 38,
+              "args": "(\"Content-Length\", str(len(data)))"
+            },
+            {
+              "callee": "str",
+              "name": "str",
+              "line": 38,
+              "args": "(len(data))"
+            },
+            {
+              "callee": "len",
+              "name": "len",
+              "line": 38,
+              "args": "(data)"
+            },
+            {
+              "callee": "(headers or {}).items",
+              "name": "items",
+              "line": 39,
+              "args": "()"
+            },
+            {
+              "callee": "self.send_header",
+              "name": "send_header",
+              "line": 40,
+              "args": "(k, v)"
+            },
+            {
+              "callee": "self.end_headers",
+              "name": "end_headers",
+              "line": 41,
+              "args": "()"
+            },
+            {
+              "callee": "self.wfile.write",
+              "name": "write",
+              "line": 42,
+              "args": "(data)"
+            }
+          ]
+        },
+        {
+          "id": "vuln_web_app.py::Handler.do_GET@44",
+          "file": "vuln_web_app.py",
+          "name": "Handler.do_GET",
+          "start": 44,
+          "end": 91,
+          "header": "    def do_GET(self) -> None:  # noqa: N802\n        parsed = urlparse(self.path)\n        qs = {k: v[0] for k, v in parse_qs(parsed.query).items()}\n        path = parsed.path\n\n        if path == \"/\":",
+          "calls": [
+            {
+              "callee": "urlparse",
+              "name": "urlparse",
+              "line": 45,
+              "args": "(self.path)"
+            },
+            {
+              "callee": "parse_qs(parsed.query).items",
+              "name": "items",
+              "line": 46,
+              "args": "()"
+            },
+            {
+              "callee": "parse_qs",
+              "name": "parse_qs",
+              "line": 46,
+              "args": "(parsed.query)"
+            },
+            {
+              "callee": "self._send",
+              "name": "_send",
+              "line": 50,
+              "args": "(200, \"\"\"<html><body> <a href=\"/search?q=cron\">search</a> <a href=\"/hello?name=guest\">hello</a> <a href=\"/file?path=readme.txt\">file</a> <a href=\"/redirect?next=/home\">redirect</a> <a href=\"/run?cmd=i…"
+            },
+            {
+              "callee": "qs.get",
+              "name": "get",
+              "line": 60,
+              "args": "(\"q\", \"\")"
+            },
+            {
+              "callee": "sqlite3.connect",
+              "name": "connect",
+              "line": 62,
+              "args": "(\":memory:\")"
+            },
+            {
+              "callee": "conn.execute",
+              "name": "execute",
+              "line": 63,
+              "args": "(\"CREATE TABLE t(x)\")"
+            },
+            {
+              "callee": "conn.execute(f\"SELECT * FROM t WHERE x = '{q}'\").fetchall",
+              "name": "fetchall",
+              "line": 64,
+              "args": "()"
+            },
+            {
+              "callee": "conn.execute",
+              "name": "execute",
+              "line": 64,
+              "args": "(f\"SELECT * FROM t WHERE x = '{q}'\")"
+            },
+            {
+              "callee": "self._send",
+              "name": "_send",
+              "line": 65,
+              "args": "(200, f\"<html><body>results for {q}</body></html>\")"
+            },
+            {
+              "callee": "self._send",
+              "name": "_send",
+              "line": 67,
+              "args": "(500, f\"<html><body>sqlite3.OperationalError: {exc}</body></html>\")"
+            },
+            {
+              "callee": "qs.get",
+              "name": "get",
+              "line": 69,
+              "args": "(\"name\", \"\")"
+            },
+            {
+              "callee": "self._send",
+              "name": "_send",
+              "line": 70,
+              "args": "(200, f\"<html><body><h1>Hello, {name}</h1></body></html>\")"
+            },
+            {
+              "callee": "qs.get",
+              "name": "get",
+              "line": 72,
+              "args": "(\"path\", \"\")"
+            },
+            {
+              "callee": "target.replace",
+              "name": "replace",
+              "line": 73,
+              "args": "(\"\\\\\", \"/\")"
+            },
+            {
+              "callee": "self._send",
+              "name": "_send",
+              "line": 74,
+              "args": "(200, _PASSWD, \"text/plain\")"
+            },
+            {
+              "callee": "self._send",
+              "name": "_send",
+              "line": 76,
+              "args": "(404, \"not found\", \"text/plain\")"
+            },
+            {
+              "callee": "qs.get",
+              "name": "get",
+              "line": 78,
+              "args": "(\"next\", \"/\")"
+            },
+            {
+              "callee": "self._send",
+              "name": "_send",
+              "line": 79,
+              "args": "(302, \"\", headers={\"Location\": nxt})"
+            },
+            {
+              "callee": "qs.get",
+              "name": "get",
+              "line": 81,
+              "args": "(\"cmd\", \"\")"
+            },
+            {
+              "callee": "self._send",
+              "name": "_send",
+              "line": 83,
+              "args": "(200, f\"<html><body>{out}</body></html>\")"
+            },
+            {
+              "callee": "ValueError",
+              "name": "ValueError",
+              "line": 86,
+              "args": "(\"boom\")"
+            },
+            {
+              "callee": "traceback.format_exc",
+              "name": "format_exc",
+              "line": 88,
+              "args": "()"
+            },
+            {
+              "callee": "self._send",
+              "name": "_send",
+              "line": 89,
+              "args": "(500, f\"<html><body><pre>{tb}</pre></body></html>\")"
+            },
+            {
+              "callee": "self._send",
+              "name": "_send",
+              "line": 91,
+              "args": "(404, \"not found\")"
+            }
+          ]
+        },
+        {
+          "id": "vuln_web_app.py::main@94",
+          "file": "vuln_web_app.py",
+          "name": "main",
+          "start": 94,
+          "end": 101,
+          "header": "def main() -> None:",
+          "calls": [
+            {
+              "callee": "argparse.ArgumentParser",
+              "name": "ArgumentParser",
+              "line": 95,
+              "args": "()"
+            },
+            {
+              "callee": "ap.add_argument",
+              "name": "add_argument",
+              "line": 96,
+              "args": "(\"--port\", type=int, default=5001)"
+            },
+            {
+              "callee": "ap.add_argument",
+              "name": "add_argument",
+              "line": 97,
+              "args": "(\"--host\", default=\"127.0.0.1\")"
+            },
+            {
+              "callee": "ap.parse_args",
+              "name": "parse_args",
+              "line": 98,
+              "args": "()"
+            },
+            {
+              "callee": "ThreadingHTTPServer",
+              "name": "ThreadingHTTPServer",
+              "line": 99,
+              "args": "((args.host, args.port), Handler)"
+            },
+            {
+              "callee": "print",
+              "name": "print",
+              "line": 100,
+              "args": "(f\"vuln demo on http://{args.host}:{args.port}\", flush=True)"
+            },
+            {
+              "callee": "srv.serve_forever",
+              "name": "serve_forever",
+              "line": 101,
+              "args": "()"
+            }
+          ]
+        }
+      ],
+      "module_calls": [
+        {
+          "callee": "main",
+          "name": "main",
+          "line": 105,
+          "args": "()"
+        }
+      ]
+    }
+  }
+}

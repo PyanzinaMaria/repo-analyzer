@@ -1,0 +1,19 @@
+{
+  "edges": [
+    [
+      "repo_demo/app.py::do_login@15",
+      "repo_demo/libdb.py::get_user@6",
+      19
+    ],
+    [
+      "repo_demo/app.py::do_search@25",
+      "repo_demo/libdb.py::search@14",
+      28
+    ],
+    [
+      "vuln_web_app.py::Handler.do_GET@44",
+      "vuln_web_app.py::Handler._send@33",
+      91
+    ]
+  ]
+}

@@ -1,0 +1,132 @@
+# LLM hygiene rules (WP4): raw Semgrep rules, reported separately from the ranked flows.
+# Tested by config/llmflow/tests/hygiene.py (`python -m app llmflow test-rules`).
+rules:
+  - id: llmflow.hygiene.hardcoded-api-key
+    languages: [python]
+    severity: ERROR
+    message: LLM API key is hard-coded in the source
+    metadata: {cwe: CWE-798, category: llm-hygiene}
+    pattern-either:
+      - pattern: openai.OpenAI(..., api_key="$KEY", ...)
+      - pattern: openai.AsyncOpenAI(..., api_key="$KEY", ...)
+      - pattern: anthropic.Anthropic(..., api_key="$KEY", ...)
+      - pattern: anthropic.AsyncAnthropic(..., api_key="$KEY", ...)
+      - pattern: openai.api_key = "$KEY"
+  - id: llmflow.hygiene.client-no-timeout
+    languages: [python]
+    severity: INFO
+    message: LLM client is created without an explicit timeout
+    metadata: {cwe: CWE-400, category: llm-hygiene}
+    patterns:
+      - pattern-either:
+          - pattern: openai.OpenAI(...)
+          - pattern: openai.AsyncOpenAI(...)
+          - pattern: anthropic.Anthropic(...)
+          - pattern: anthropic.AsyncAnthropic(...)
+          - pattern: ollama.Client(...)
+      - pattern-not: $CLS(..., timeout=$T, ...)
+  - id: llmflow.hygiene.untrusted-in-system-role
+    languages: [python]
+    severity: WARNING
+    message: Untrusted input is placed in the system prompt, where it carries the most authority
+    metadata: {cwe: CWE-1427, category: llm-hygiene}
+    mode: taint
+    pattern-sources:
+      - pattern: flask.request.$A
+      - pattern: input(...)
+      - pattern: streamlit.text_input(...)
+      - pattern: streamlit.chat_input(...)
+    pattern-sinks:
+      - patterns:
+          - pattern: '{"role": "system", "content": $X}'
+          - focus-metavariable: $X
+      - patterns:
+          - pattern: $C.messages.create(..., system=$X, ...)
+          - focus-metavariable: $X
+  - id: llmflow.hygiene.response-logged
+    languages: [python]
+    severity: INFO
+    message: Model output is written to the application log (may leak prompts, PII or secrets)
+    metadata: {cwe: CWE-532, category: llm-hygiene}
+    patterns:
+      - pattern: $L.$FN(..., <... $R.choices ...>, ...)
+      - metavariable-regex: {metavariable: $L, regex: '(?i)(log|logger|logging)$'}
+      - metavariable-regex: {metavariable: $FN, regex: '^(debug|info|warning|warn|error|critical|exception)$'}
+  - id: llmflow.hygiene.tls-verify-disabled
+    languages: [python]
+    severity: WARNING
+    message: TLS verification is disabled for the HTTP client used by the LLM SDK
+    metadata: {cwe: CWE-295, category: llm-hygiene}
+    pattern-either:
+      - pattern: openai.OpenAI(..., http_client=httpx.Client(..., verify=False, ...), ...)
+      - pattern: anthropic.Anthropic(..., http_client=httpx.Client(..., verify=False, ...), ...)
+      - pattern: openai.DefaultHttpxClient(..., verify=False, ...)
+  - id: llmflow.hygiene.no-max-tokens
+    languages: [python]
+    severity: INFO
+    message: Chat completion without a max_tokens limit (cost / denial-of-wallet)
+    metadata: {cwe: CWE-770, category: llm-hygiene}
+    patterns:
+      - pattern: $C.chat.completions.create(...)
+      - pattern-not: $C.chat.completions.create(..., max_tokens=$N, ...)
+      - pattern-not: $C.chat.completions.create(..., max_completion_tokens=$N, ...)
+      - pattern-not: $C.chat.completions.create(..., **$KW)
+  - id: llmflow.hygiene.tool-args-unvalidated
+    languages: [python]
+    severity: WARNING
+    message: Tool-call arguments chosen by the model are passed to a function without schema validation
+    metadata: {cwe: CWE-20, category: llm-hygiene}
+    pattern-either:
+      - pattern: $F(**json.loads($TC.function.arguments))
+      - pattern: $F(**$TC.function.arguments)
+      - pattern: $F(**$TC.input)
+  - id: llmflow.hygiene.user-controlled-model
+    languages: [python]
+    severity: WARNING
+    message: The model name comes from the request; users can switch to a weaker or costlier model
+    metadata: {cwe: CWE-15, category: llm-hygiene}
+    mode: taint
+    pattern-sources:
+      - pattern: flask.request.$A
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: $C.chat.completions.create(..., model=$X, ...)
+              - pattern: $C.messages.create(..., model=$X, ...)
+              - pattern: ollama.chat(..., model=$X, ...)
+          - focus-metavariable: $X
+  - id: llmflow.hygiene.shell-true-in-llm-module
+    languages: [python]
+    severity: WARNING
+    message: shell=True in a module that talks to an LLM; model output must never reach this call
+    metadata: {cwe: CWE-78, category: llm-hygiene}
+    patterns:
+      - pattern-either:
+          - pattern-inside: |
+              import openai
+              ...
+          - pattern-inside: |
+              from openai import $X
+              ...
+          - pattern-inside: |
+              import anthropic
+              ...
+          - pattern-inside: |
+              from anthropic import $X
+              ...
+          - pattern-inside: |
+              import ollama
+              ...
+          - pattern-inside: |
+              from ollama import $X
+              ...
+      - pattern: subprocess.$FN(..., shell=True, ...)
+  - id: llmflow.hygiene.plaintext-base-url
+    languages: [python]
+    severity: WARNING
+    message: LLM endpoint over plain HTTP on a non-local host (prompts and keys sent in clear text)
+    metadata: {cwe: CWE-319, category: llm-hygiene}
+    pattern-either:
+      - pattern: openai.OpenAI(..., base_url="=~/^http:\/\/(?!localhost|127\.|0\.0\.0\.0|\[::1\])/", ...)
+      - pattern: anthropic.Anthropic(..., base_url="=~/^http:\/\/(?!localhost|127\.|0\.0\.0\.0|\[::1\])/", ...)
+      - pattern: ollama.Client(host="=~/^http:\/\/(?!localhost|127\.|0\.0\.0\.0|\[::1\])/", ...)

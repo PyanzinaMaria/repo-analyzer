@@ -1,0 +1,14 @@
+{
+  "edges": [
+    [
+      "app.py::do_login@15",
+      "libdb.py::get_user@6",
+      19
+    ],
+    [
+      "app.py::do_search@25",
+      "libdb.py::search@14",
+      28
+    ]
+  ]
+}

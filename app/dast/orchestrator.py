@@ -75,6 +75,8 @@ class DastOrchestrator:
         zap_target_url: str | None = None,
         zap_docker_network: str | None = None,
         skip_ssrf: bool = False,
+        run_zap: bool = True,
+        run_active_pentest: bool | None = None,
     ) -> ScanResult:
         """Run DAST and return ScanResult without requiring prior API scan row.
 
@@ -82,6 +84,10 @@ class DastOrchestrator:
         ``zap_target_url`` / ``zap_docker_network`` let sandbox scans point ZAP
         at a container DNS name on a shared Docker network while preflight uses
         the host-published ``body.target_url``.
+
+        ``run_zap`` / ``run_active_pentest`` gate passive ZAP vs the active
+        pentest agent (UI: DAST vs Пентест). ``run_active_pentest=None``
+        keeps ``dast.pentest.enabled`` from config.
         """
         sid = scan_id or uuid.uuid4().hex
         return self._run(
@@ -90,6 +96,8 @@ class DastOrchestrator:
             zap_target_url=zap_target_url,
             zap_docker_network=zap_docker_network,
             skip_ssrf=skip_ssrf,
+            run_zap=run_zap,
+            run_active_pentest=run_active_pentest,
         )
 
     def _run(
@@ -100,6 +108,8 @@ class DastOrchestrator:
         zap_target_url: str | None = None,
         zap_docker_network: str | None = None,
         skip_ssrf: bool = False,
+        run_zap: bool = True,
+        run_active_pentest: bool | None = None,
     ) -> ScanResult:
         started = time.perf_counter()
         target_url = str(body.target_url)
@@ -127,7 +137,20 @@ class DastOrchestrator:
                 allowed_schemes=cfg.allowed_schemes,
                 allow_private_targets=cfg.allow_private_targets,
                 work_dir=cfg.work_dir,
+                docker_volume=cfg.docker_volume,
+                zap_enabled=cfg.zap_enabled,
+                pentest_enabled=cfg.pentest_enabled,
+                pentest_use_llm=cfg.pentest_use_llm,
+                pentest_max_steps=cfg.pentest_max_steps,
+                pentest_max_seconds=cfg.pentest_max_seconds,
             )
+
+        do_zap = bool(run_zap) and bool(getattr(cfg, "zap_enabled", True))
+        do_pentest = (
+            bool(getattr(cfg, "pentest_enabled", True))
+            if run_active_pentest is None
+            else bool(run_active_pentest) and bool(getattr(cfg, "pentest_enabled", True))
+        )
 
         if not skip_ssrf:
             try:
@@ -156,6 +179,7 @@ class DastOrchestrator:
                 fingerprint=fingerprint,
                 preflight=preflight_meta,
                 zap={"status": "skipped", "reason": "preflight failed"},
+                pentest={"status": "skipped", "reason": "preflight failed"},
                 status="failed",
                 duration_ms=duration_ms,
             )
@@ -177,23 +201,50 @@ class DastOrchestrator:
                 if f.source == "dast-preflight":
                     f.language = language_tag
 
-        zap_url = zap_target_url or target_url
-        zap_work_dir = None
-        if cfg.work_dir:
-            # Pre-create through the worker's own mount so the volume
-            # subpath exists for the daemon-side --mount below. The ZAP
-            # image runs as a non-root user, so the dir must be writable.
-            zap_work_dir = Path(cfg.work_dir) / scan_id
-            zap_work_dir.mkdir(parents=True, exist_ok=True)
-            zap_work_dir.chmod(0o777)
-        zap_findings, zap_meta = run_zap_baseline(
-            zap_url,
-            cfg,
-            language=language_tag,
-            work_dir=zap_work_dir,
-            docker_network=zap_docker_network,
-        )
-        findings.extend(zap_findings)
+        zap_meta: dict[str, object]
+        if do_zap:
+            zap_url = zap_target_url or target_url
+            zap_work_dir = None
+            if cfg.work_dir:
+                # Pre-create through the worker's own mount so the volume
+                # subpath exists for the daemon-side --mount below. The ZAP
+                # image runs as a non-root user, so the dir must be writable.
+                zap_work_dir = Path(cfg.work_dir) / scan_id
+                zap_work_dir.mkdir(parents=True, exist_ok=True)
+                zap_work_dir.chmod(0o777)
+            zap_findings, zap_meta = run_zap_baseline(
+                zap_url,
+                cfg,
+                language=language_tag,
+                work_dir=zap_work_dir,
+                docker_network=zap_docker_network,
+            )
+            findings.extend(zap_findings)
+        else:
+            zap_meta = {"status": "skipped", "reason": "zap not requested"}
+
+        # Active pentest agent: targeted probes (SQLi/XSS/traversal/…) + optional LLM.
+        pentest_meta: dict[str, object] = {"status": "skipped"}
+        if do_pentest:
+            try:
+                from app.dast.agent.agent import run_pentest
+
+                pentest_run = run_pentest(
+                    target_url,
+                    use_llm=getattr(cfg, "pentest_use_llm", True),
+                    overrides={
+                        "allow_private_targets": cfg.allow_private_targets,
+                        "max_steps": getattr(cfg, "pentest_max_steps", 12),
+                        "max_seconds": getattr(cfg, "pentest_max_seconds", 120),
+                    },
+                )
+                findings.extend(pentest_run.findings)
+                pentest_meta = {"status": "ok", **pentest_run.meta()}
+            except Exception as exc:  # noqa: BLE001 - agent must not fail the scan
+                logger.exception("pentest agent failed")
+                pentest_meta = {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
+        else:
+            pentest_meta = {"status": "skipped", "reason": "pentest not requested"}
 
         language_meta: dict[str, object] = {}
         for handler in matched_handlers:
@@ -225,6 +276,7 @@ class DastOrchestrator:
             fingerprint=fingerprint,
             preflight=preflight_meta,
             zap=zap_meta,
+            pentest=pentest_meta,
             status=status,
             duration_ms=duration_ms,
             language_meta=language_meta,
@@ -251,6 +303,7 @@ class DastOrchestrator:
             fingerprint={},
             preflight={"ok": False, "reason": reason},
             zap={"status": "skipped", "reason": reason},
+            pentest={"status": "skipped", "reason": reason},
             status=status,
             duration_ms=duration_ms,
         )
@@ -267,6 +320,7 @@ class DastOrchestrator:
         fingerprint: dict,
         preflight: dict,
         zap: dict,
+        pentest: dict | None = None,
         status: str,
         duration_ms: int,
         language_meta: dict | None = None,
@@ -299,6 +353,7 @@ class DastOrchestrator:
                     "languages_matched": matched_ids,
                     "preflight": preflight,
                     "zap": zap,
+                    "pentest": pentest or {},
                     "language_meta": language_meta or {},
                     "duration_ms": duration_ms,
                 }

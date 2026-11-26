@@ -20,10 +20,11 @@ def main() -> int:
     cfg = load_config()
     queue_dir = cfg.queue_dir
     logger.info(
-        "Worker started: data_dir=%s poll=%.1fs enable_ai=%s",
+        "Worker started: data_dir=%s poll=%.1fs enable_ai=%s ai_documents=%s",
         cfg.data_dir,
         cfg.poll_interval_seconds,
         cfg.enable_ai,
+        cfg.ai_documents_enabled,
     )
 
     jobs_pipeline = pipeline.Pipeline(cfg)
