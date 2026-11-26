@@ -1,0 +1,246 @@
+<svg class="rich-terminal" viewBox="0 0 1726 1123.6" xmlns="http://www.w3.org/2000/svg">
+    <!-- Generated with Rich https://www.textualize.io -->
+    <style>
+
+    @font-face {
+        font-family: "Fira Code";
+        src: local("FiraCode-Regular"),
+                url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2") format("woff2"),
+                url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff") format("woff");
+        font-style: normal;
+        font-weight: 400;
+    }
+    @font-face {
+        font-family: "Fira Code";
+        src: local("FiraCode-Bold"),
+                url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2") format("woff2"),
+                url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Bold.woff") format("woff");
+        font-style: bold;
+        font-weight: 700;
+    }
+
+    .terminal-1812868586-matrix {
+        font-family: Fira Code, monospace;
+        font-size: 20px;
+        line-height: 24.4px;
+        font-variant-east-asian: full-width;
+    }
+
+    .terminal-1812868586-title {
+        font-size: 18px;
+        font-weight: bold;
+        font-family: arial;
+    }
+
+    .terminal-1812868586-r1 { fill: #98729f }
+.terminal-1812868586-r2 { fill: #98729f;font-weight: bold }
+.terminal-1812868586-r3 { fill: #c5c8c6 }
+.terminal-1812868586-r4 { fill: #868887 }
+.terminal-1812868586-r5 { fill: #c5c8c6;font-weight: bold }
+.terminal-1812868586-r6 { fill: #d0b344;font-weight: bold }
+.terminal-1812868586-r7 { fill: #68a0b3;font-weight: bold }
+.terminal-1812868586-r8 { fill: #cc555a;font-weight: bold }
+.terminal-1812868586-r9 { fill: #98a84b;font-weight: bold }
+.terminal-1812868586-r10 { fill: #808080 }
+.terminal-1812868586-r11 { fill: #68a0b3 }
+.terminal-1812868586-r12 { fill: #868887;font-style: italic; }
+.terminal-1812868586-r13 { fill: #98a84b }
+.terminal-1812868586-r14 { fill: #d0b344 }
+.terminal-1812868586-r15 { fill: #c5c8c6;font-weight: bold;font-style: italic; }
+.terminal-1812868586-r16 { fill: #c5c8c6;font-style: italic; }
+.terminal-1812868586-r17 { fill: #9e9e9e }
+    </style>
+
+    <defs>
+    <clipPath id="terminal-1812868586-clip-terminal">
+      <rect x="0" y="0" width="1707.0" height="1072.6" />
+    </clipPath>
+    <clipPath id="terminal-1812868586-line-0">
+    <rect x="0" y="1.5" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-1">
+    <rect x="0" y="25.9" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-2">
+    <rect x="0" y="50.3" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-3">
+    <rect x="0" y="74.7" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-4">
+    <rect x="0" y="99.1" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-5">
+    <rect x="0" y="123.5" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-6">
+    <rect x="0" y="147.9" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-7">
+    <rect x="0" y="172.3" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-8">
+    <rect x="0" y="196.7" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-9">
+    <rect x="0" y="221.1" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-10">
+    <rect x="0" y="245.5" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-11">
+    <rect x="0" y="269.9" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-12">
+    <rect x="0" y="294.3" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-13">
+    <rect x="0" y="318.7" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-14">
+    <rect x="0" y="343.1" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-15">
+    <rect x="0" y="367.5" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-16">
+    <rect x="0" y="391.9" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-17">
+    <rect x="0" y="416.3" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-18">
+    <rect x="0" y="440.7" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-19">
+    <rect x="0" y="465.1" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-20">
+    <rect x="0" y="489.5" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-21">
+    <rect x="0" y="513.9" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-22">
+    <rect x="0" y="538.3" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-23">
+    <rect x="0" y="562.7" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-24">
+    <rect x="0" y="587.1" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-25">
+    <rect x="0" y="611.5" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-26">
+    <rect x="0" y="635.9" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-27">
+    <rect x="0" y="660.3" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-28">
+    <rect x="0" y="684.7" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-29">
+    <rect x="0" y="709.1" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-30">
+    <rect x="0" y="733.5" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-31">
+    <rect x="0" y="757.9" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-32">
+    <rect x="0" y="782.3" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-33">
+    <rect x="0" y="806.7" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-34">
+    <rect x="0" y="831.1" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-35">
+    <rect x="0" y="855.5" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-36">
+    <rect x="0" y="879.9" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-37">
+    <rect x="0" y="904.3" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-38">
+    <rect x="0" y="928.7" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-39">
+    <rect x="0" y="953.1" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-40">
+    <rect x="0" y="977.5" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-41">
+    <rect x="0" y="1001.9" width="1708" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-1812868586-line-42">
+    <rect x="0" y="1026.3" width="1708" height="24.65"/>
+            </clipPath>
+    </defs>
+
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1724" height="1121.6" rx="8"/><text class="terminal-1812868586-title" fill="#c5c8c6" text-anchor="middle" x="862" y="27">llmflow&#160;·&#160;anthropic-quickstarts</text>
+            <g transform="translate(26,22)">
+            <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
+            <circle cx="22" cy="0" r="7" fill="#febc2e"/>
+            <circle cx="44" cy="0" r="7" fill="#28c840"/>
+            </g>
+        
+    <g transform="translate(9, 41)" clip-path="url(#terminal-1812868586-clip-terminal)">
+    
+    <g class="terminal-1812868586-matrix">
+    <text class="terminal-1812868586-r1" x="0" y="20" textLength="24.4" clip-path="url(#terminal-1812868586-line-0)">┌─</text><text class="terminal-1812868586-r1" x="24.4" y="20" textLength="561.2" clip-path="url(#terminal-1812868586-line-0)">──────────────────────────────────────────────</text><text class="terminal-1812868586-r2" x="597.8" y="20" textLength="219.6" clip-path="url(#terminal-1812868586-line-0)">LLM&#160;attack&#160;surface</text><text class="terminal-1812868586-r1" x="817.4" y="20" textLength="305" clip-path="url(#terminal-1812868586-line-0)">&#160;·&#160;anthropic-quickstarts&#160;</text><text class="terminal-1812868586-r1" x="1122.4" y="20" textLength="561.2" clip-path="url(#terminal-1812868586-line-0)">──────────────────────────────────────────────</text><text class="terminal-1812868586-r1" x="1683.6" y="20" textLength="24.4" clip-path="url(#terminal-1812868586-line-0)">─┐</text><text class="terminal-1812868586-r3" x="1708" y="20" textLength="12.2" clip-path="url(#terminal-1812868586-line-0)">
+</text><text class="terminal-1812868586-r1" x="0" y="44.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-1)">│</text><text class="terminal-1812868586-r4" x="24.4" y="44.4" textLength="170.8" clip-path="url(#terminal-1812868586-line-1)">🔌&#160;call&#160;sites&#160;&#160;</text><text class="terminal-1812868586-r5" x="207.4" y="44.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-1)">6</text><text class="terminal-1812868586-r4" x="256.2" y="44.4" textLength="122" clip-path="url(#terminal-1812868586-line-1)">🤖&#160;models&#160;&#160;</text><text class="terminal-1812868586-r2" x="390.4" y="44.4" textLength="244" clip-path="url(#terminal-1812868586-line-1)">?,&#160;claude-sonnet-5-5</text><text class="terminal-1812868586-r4" x="671" y="44.4" textLength="109.8" clip-path="url(#terminal-1812868586-line-1)">🛠&#160;tools&#160;&#160;</text><text class="terminal-1812868586-r6" x="780.8" y="44.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-1)">1</text><text class="terminal-1812868586-r4" x="829.6" y="44.4" textLength="231.8" clip-path="url(#terminal-1812868586-line-1)">🌐&#160;exposed&#160;prompts&#160;&#160;</text><text class="terminal-1812868586-r7" x="1073.6" y="44.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-1)">1</text><text class="terminal-1812868586-r1" x="1695.8" y="44.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-1)">│</text><text class="terminal-1812868586-r3" x="1708" y="44.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-1)">
+</text><text class="terminal-1812868586-r1" x="0" y="68.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-2)">│</text><text class="terminal-1812868586-r4" x="24.4" y="68.8" textLength="109.8" clip-path="url(#terminal-1812868586-line-2)">💥&#160;flows&#160;&#160;</text><text class="terminal-1812868586-r8" x="146.4" y="68.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-2)">0</text><text class="terminal-1812868586-r4" x="256.2" y="68.8" textLength="97.6" clip-path="url(#terminal-1812868586-line-2)">ungated&#160;</text><text class="terminal-1812868586-r8" x="353.8" y="68.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-2)">0</text><text class="terminal-1812868586-r4" x="366" y="68.8" textLength="97.6" clip-path="url(#terminal-1812868586-line-2)">&#160;&#160;gated&#160;</text><text class="terminal-1812868586-r9" x="463.6" y="68.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-2)">0</text><text class="terminal-1812868586-r3" x="671" y="68.8" textLength="122" clip-path="url(#terminal-1812868586-line-2)">—&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r4" x="829.6" y="68.8" textLength="134.2" clip-path="url(#terminal-1812868586-line-2)">🧹&#160;hygiene&#160;&#160;</text><text class="terminal-1812868586-r5" x="976" y="68.8" textLength="24.4" clip-path="url(#terminal-1812868586-line-2)">18</text><text class="terminal-1812868586-r1" x="1695.8" y="68.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-2)">│</text><text class="terminal-1812868586-r3" x="1708" y="68.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-2)">
+</text><text class="terminal-1812868586-r1" x="0" y="93.2" textLength="12.2" clip-path="url(#terminal-1812868586-line-3)">│</text><text class="terminal-1812868586-r4" x="24.4" y="93.2" textLength="1134.6" clip-path="url(#terminal-1812868586-line-3)">119&#160;files&#160;·&#160;803&#160;functions&#160;·&#160;semgrep&#160;passes&#160;p0:263&#160;→&#160;p1:58&#160;→&#160;p2:23&#160;→&#160;p3:3&#160;·&#160;wrappers&#160;4&#160;·&#160;60.5s</text><text class="terminal-1812868586-r1" x="1695.8" y="93.2" textLength="12.2" clip-path="url(#terminal-1812868586-line-3)">│</text><text class="terminal-1812868586-r3" x="1708" y="93.2" textLength="12.2" clip-path="url(#terminal-1812868586-line-3)">
+</text><text class="terminal-1812868586-r1" x="0" y="117.6" textLength="1708" clip-path="url(#terminal-1812868586-line-4)">└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘</text><text class="terminal-1812868586-r3" x="1708" y="117.6" textLength="12.2" clip-path="url(#terminal-1812868586-line-4)">
+</text><text class="terminal-1812868586-r5" x="0" y="142" textLength="195.2" clip-path="url(#terminal-1812868586-line-5)">🔌&#160;LLM&#160;call&#160;sites</text><text class="terminal-1812868586-r3" x="1708" y="142" textLength="12.2" clip-path="url(#terminal-1812868586-line-5)">
+</text><text class="terminal-1812868586-r10" x="0" y="166.4" textLength="48.8" clip-path="url(#terminal-1812868586-line-6)">├──&#160;</text><text class="terminal-1812868586-r2" x="48.8" y="166.4" textLength="109.8" clip-path="url(#terminal-1812868586-line-6)">anthropic</text><text class="terminal-1812868586-r11" x="183" y="166.4" textLength="231.8" clip-path="url(#terminal-1812868586-line-6)">agents/agent.py:113</text><text class="terminal-1812868586-r4" x="414.8" y="166.4" textLength="61" clip-path="url(#terminal-1812868586-line-6)">&#160;&#160;in&#160;</text><text class="terminal-1812868586-r3" x="475.8" y="166.4" textLength="207.4" clip-path="url(#terminal-1812868586-line-6)">Agent._agent_loop</text><text class="terminal-1812868586-r4" x="683.2" y="166.4" textLength="97.6" clip-path="url(#terminal-1812868586-line-6)">&#160;&#160;[chat]</text><text class="terminal-1812868586-r3" x="1708" y="166.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-6)">
+</text><text class="terminal-1812868586-r10" x="0" y="190.8" textLength="48.8" clip-path="url(#terminal-1812868586-line-7)">│&#160;&#160;&#160;</text><text class="terminal-1812868586-r10" x="48.8" y="190.8" textLength="48.8" clip-path="url(#terminal-1812868586-line-7)">└──&#160;</text><text class="terminal-1812868586-r3" x="97.6" y="190.8" textLength="24.4" clip-path="url(#terminal-1812868586-line-7)">🤖&#160;</text><text class="terminal-1812868586-r12" x="134.2" y="190.8" textLength="158.6" clip-path="url(#terminal-1812868586-line-7)">unknown&#160;model</text><text class="terminal-1812868586-r4" x="292.8" y="190.8" textLength="439.2" clip-path="url(#terminal-1812868586-line-7)">&#160;&#160;(unknown&#160;·&#160;not&#160;passed&#160;(**kwargs?))</text><text class="terminal-1812868586-r4" x="732" y="190.8" textLength="85.4" clip-path="url(#terminal-1812868586-line-7)">&#160;&#160;KB:&#160;—</text><text class="terminal-1812868586-r3" x="1708" y="190.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-7)">
+</text><text class="terminal-1812868586-r10" x="0" y="215.2" textLength="48.8" clip-path="url(#terminal-1812868586-line-8)">├──&#160;</text><text class="terminal-1812868586-r2" x="48.8" y="215.2" textLength="109.8" clip-path="url(#terminal-1812868586-line-8)">anthropic</text><text class="terminal-1812868586-r11" x="183" y="215.2" textLength="549" clip-path="url(#terminal-1812868586-line-8)">browser-use-demo/browser_use_demo/loop.py:137</text><text class="terminal-1812868586-r4" x="732" y="215.2" textLength="61" clip-path="url(#terminal-1812868586-line-8)">&#160;&#160;in&#160;</text><text class="terminal-1812868586-r3" x="793" y="215.2" textLength="158.6" clip-path="url(#terminal-1812868586-line-8)">sampling_loop</text><text class="terminal-1812868586-r4" x="951.6" y="215.2" textLength="97.6" clip-path="url(#terminal-1812868586-line-8)">&#160;&#160;[chat]</text><text class="terminal-1812868586-r3" x="1708" y="215.2" textLength="12.2" clip-path="url(#terminal-1812868586-line-8)">
+</text><text class="terminal-1812868586-r10" x="0" y="239.6" textLength="48.8" clip-path="url(#terminal-1812868586-line-9)">│&#160;&#160;&#160;</text><text class="terminal-1812868586-r10" x="48.8" y="239.6" textLength="48.8" clip-path="url(#terminal-1812868586-line-9)">└──&#160;</text><text class="terminal-1812868586-r3" x="97.6" y="239.6" textLength="24.4" clip-path="url(#terminal-1812868586-line-9)">🤖&#160;</text><text class="terminal-1812868586-r12" x="134.2" y="239.6" textLength="158.6" clip-path="url(#terminal-1812868586-line-9)">unknown&#160;model</text><text class="terminal-1812868586-r4" x="292.8" y="239.6" textLength="439.2" clip-path="url(#terminal-1812868586-line-9)">&#160;&#160;(unknown&#160;·&#160;not&#160;passed&#160;(**kwargs?))</text><text class="terminal-1812868586-r4" x="732" y="239.6" textLength="85.4" clip-path="url(#terminal-1812868586-line-9)">&#160;&#160;KB:&#160;—</text><text class="terminal-1812868586-r3" x="1708" y="239.6" textLength="12.2" clip-path="url(#terminal-1812868586-line-9)">
+</text><text class="terminal-1812868586-r10" x="0" y="264" textLength="48.8" clip-path="url(#terminal-1812868586-line-10)">├──&#160;</text><text class="terminal-1812868586-r2" x="48.8" y="264" textLength="109.8" clip-path="url(#terminal-1812868586-line-10)">anthropic</text><text class="terminal-1812868586-r11" x="183" y="264" textLength="549" clip-path="url(#terminal-1812868586-line-10)">browser-use-demo/browser_use_demo/loop.py:140</text><text class="terminal-1812868586-r4" x="732" y="264" textLength="61" clip-path="url(#terminal-1812868586-line-10)">&#160;&#160;in&#160;</text><text class="terminal-1812868586-r3" x="793" y="264" textLength="158.6" clip-path="url(#terminal-1812868586-line-10)">sampling_loop</text><text class="terminal-1812868586-r4" x="951.6" y="264" textLength="97.6" clip-path="url(#terminal-1812868586-line-10)">&#160;&#160;[chat]</text><text class="terminal-1812868586-r3" x="1708" y="264" textLength="12.2" clip-path="url(#terminal-1812868586-line-10)">
+</text><text class="terminal-1812868586-r10" x="0" y="288.4" textLength="48.8" clip-path="url(#terminal-1812868586-line-11)">│&#160;&#160;&#160;</text><text class="terminal-1812868586-r10" x="48.8" y="288.4" textLength="48.8" clip-path="url(#terminal-1812868586-line-11)">└──&#160;</text><text class="terminal-1812868586-r3" x="97.6" y="288.4" textLength="24.4" clip-path="url(#terminal-1812868586-line-11)">🤖&#160;</text><text class="terminal-1812868586-r12" x="134.2" y="288.4" textLength="158.6" clip-path="url(#terminal-1812868586-line-11)">unknown&#160;model</text><text class="terminal-1812868586-r4" x="292.8" y="288.4" textLength="439.2" clip-path="url(#terminal-1812868586-line-11)">&#160;&#160;(unknown&#160;·&#160;not&#160;passed&#160;(**kwargs?))</text><text class="terminal-1812868586-r4" x="732" y="288.4" textLength="85.4" clip-path="url(#terminal-1812868586-line-11)">&#160;&#160;KB:&#160;—</text><text class="terminal-1812868586-r3" x="1708" y="288.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-11)">
+</text><text class="terminal-1812868586-r10" x="0" y="312.8" textLength="48.8" clip-path="url(#terminal-1812868586-line-12)">├──&#160;</text><text class="terminal-1812868586-r2" x="48.8" y="312.8" textLength="109.8" clip-path="url(#terminal-1812868586-line-12)">anthropic</text><text class="terminal-1812868586-r11" x="183" y="312.8" textLength="658.8" clip-path="url(#terminal-1812868586-line-12)">browser-use-demo/browser_use_demo/tools/browser.py:948</text><text class="terminal-1812868586-r4" x="841.8" y="312.8" textLength="61" clip-path="url(#terminal-1812868586-line-12)">&#160;&#160;in&#160;</text><text class="terminal-1812868586-r3" x="902.8" y="312.8" textLength="207.4" clip-path="url(#terminal-1812868586-line-12)">BrowserTool._find</text><text class="terminal-1812868586-r4" x="1110.2" y="312.8" textLength="97.6" clip-path="url(#terminal-1812868586-line-12)">&#160;&#160;[chat]</text><text class="terminal-1812868586-r3" x="1708" y="312.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-12)">
+</text><text class="terminal-1812868586-r10" x="0" y="337.2" textLength="48.8" clip-path="url(#terminal-1812868586-line-13)">│&#160;&#160;&#160;</text><text class="terminal-1812868586-r10" x="48.8" y="337.2" textLength="48.8" clip-path="url(#terminal-1812868586-line-13)">└──&#160;</text><text class="terminal-1812868586-r3" x="97.6" y="337.2" textLength="24.4" clip-path="url(#terminal-1812868586-line-13)">🤖&#160;</text><text class="terminal-1812868586-r5" x="134.2" y="337.2" textLength="207.4" clip-path="url(#terminal-1812868586-line-13)">claude-sonnet-5-5</text><text class="terminal-1812868586-r4" x="341.6" y="337.2" textLength="134.2" clip-path="url(#terminal-1812868586-line-13)">&#160;&#160;(literal)</text><text class="terminal-1812868586-r13" x="475.8" y="337.2" textLength="231.8" clip-path="url(#terminal-1812868586-line-13)">&#160;&#160;KB:&#160;claude-sonnet</text><text class="terminal-1812868586-r3" x="1708" y="337.2" textLength="12.2" clip-path="url(#terminal-1812868586-line-13)">
+</text><text class="terminal-1812868586-r10" x="0" y="361.6" textLength="48.8" clip-path="url(#terminal-1812868586-line-14)">├──&#160;</text><text class="terminal-1812868586-r2" x="48.8" y="361.6" textLength="109.8" clip-path="url(#terminal-1812868586-line-14)">anthropic</text><text class="terminal-1812868586-r11" x="183" y="361.6" textLength="805.2" clip-path="url(#terminal-1812868586-line-14)">computer-use-best-practices/dev_ui/localization_demo/server.py:128</text><text class="terminal-1812868586-r4" x="988.2" y="361.6" textLength="61" clip-path="url(#terminal-1812868586-line-14)">&#160;&#160;in&#160;</text><text class="terminal-1812868586-r3" x="1049.2" y="361.6" textLength="97.6" clip-path="url(#terminal-1812868586-line-14)">localize</text><text class="terminal-1812868586-r4" x="1146.8" y="361.6" textLength="97.6" clip-path="url(#terminal-1812868586-line-14)">&#160;&#160;[chat]</text><text class="terminal-1812868586-r3" x="1708" y="361.6" textLength="12.2" clip-path="url(#terminal-1812868586-line-14)">
+</text><text class="terminal-1812868586-r10" x="0" y="386" textLength="48.8" clip-path="url(#terminal-1812868586-line-15)">│&#160;&#160;&#160;</text><text class="terminal-1812868586-r10" x="48.8" y="386" textLength="48.8" clip-path="url(#terminal-1812868586-line-15)">├──&#160;</text><text class="terminal-1812868586-r3" x="97.6" y="386" textLength="24.4" clip-path="url(#terminal-1812868586-line-15)">🤖&#160;</text><text class="terminal-1812868586-r12" x="134.2" y="386" textLength="158.6" clip-path="url(#terminal-1812868586-line-15)">unknown&#160;model</text><text class="terminal-1812868586-r4" x="292.8" y="386" textLength="292.8" clip-path="url(#terminal-1812868586-line-15)">&#160;&#160;(unknown&#160;·&#160;name&#160;model)</text><text class="terminal-1812868586-r4" x="585.6" y="386" textLength="85.4" clip-path="url(#terminal-1812868586-line-15)">&#160;&#160;KB:&#160;—</text><text class="terminal-1812868586-r3" x="1708" y="386" textLength="12.2" clip-path="url(#terminal-1812868586-line-15)">
+</text><text class="terminal-1812868586-r10" x="0" y="410.4" textLength="48.8" clip-path="url(#terminal-1812868586-line-16)">│&#160;&#160;&#160;</text><text class="terminal-1812868586-r10" x="48.8" y="410.4" textLength="48.8" clip-path="url(#terminal-1812868586-line-16)">├──&#160;</text><text class="terminal-1812868586-r3" x="97.6" y="410.4" textLength="24.4" clip-path="url(#terminal-1812868586-line-16)">🛠&#160;</text><text class="terminal-1812868586-r14" x="122" y="410.4" textLength="61" clip-path="url(#terminal-1812868586-line-16)">tools</text><text class="terminal-1812868586-r3" x="1708" y="410.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-16)">
+</text><text class="terminal-1812868586-r10" x="0" y="434.8" textLength="48.8" clip-path="url(#terminal-1812868586-line-17)">│&#160;&#160;&#160;</text><text class="terminal-1812868586-r10" x="48.8" y="434.8" textLength="48.8" clip-path="url(#terminal-1812868586-line-17)">│&#160;&#160;&#160;</text><text class="terminal-1812868586-r10" x="97.6" y="434.8" textLength="48.8" clip-path="url(#terminal-1812868586-line-17)">└──&#160;</text><text class="terminal-1812868586-r6" x="146.4" y="434.8" textLength="97.6" clip-path="url(#terminal-1812868586-line-17)">point_at</text><text class="terminal-1812868586-r4" x="244" y="434.8" textLength="48.8" clip-path="url(#terminal-1812868586-line-17)">&#160;&#160;→&#160;</text><text class="terminal-1812868586-r12" x="292.8" y="434.8" textLength="85.4" clip-path="url(#terminal-1812868586-line-17)">unbound</text><text class="terminal-1812868586-r3" x="1708" y="434.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-17)">
+</text><text class="terminal-1812868586-r10" x="0" y="459.2" textLength="48.8" clip-path="url(#terminal-1812868586-line-18)">│&#160;&#160;&#160;</text><text class="terminal-1812868586-r10" x="48.8" y="459.2" textLength="48.8" clip-path="url(#terminal-1812868586-line-18)">└──&#160;</text><text class="terminal-1812868586-r3" x="97.6" y="459.2" textLength="24.4" clip-path="url(#terminal-1812868586-line-18)">🌐&#160;</text><text class="terminal-1812868586-r11" x="134.2" y="459.2" textLength="317.2" clip-path="url(#terminal-1812868586-line-18)">reached&#160;by&#160;untrusted&#160;input</text><text class="terminal-1812868586-r3" x="1708" y="459.2" textLength="12.2" clip-path="url(#terminal-1812868586-line-18)">
+</text><text class="terminal-1812868586-r10" x="0" y="483.6" textLength="48.8" clip-path="url(#terminal-1812868586-line-19)">│&#160;&#160;&#160;</text><text class="terminal-1812868586-r10" x="97.6" y="483.6" textLength="48.8" clip-path="url(#terminal-1812868586-line-19)">└──&#160;</text><text class="terminal-1812868586-r11" x="146.4" y="483.6" textLength="183" clip-path="url(#terminal-1812868586-line-19)">Route&#160;parameter</text><text class="terminal-1812868586-r5" x="329.4" y="483.6" textLength="85.4" clip-path="url(#terminal-1812868586-line-19)">&#160;&#160;E=1.0</text><text class="terminal-1812868586-r4" x="414.8" y="483.6" textLength="878.4" clip-path="url(#terminal-1812868586-line-19)">&#160;&#160;from&#160;computer-use-best-practices/dev_ui/localization_demo/server.py:98</text><text class="terminal-1812868586-r3" x="1708" y="483.6" textLength="12.2" clip-path="url(#terminal-1812868586-line-19)">
+</text><text class="terminal-1812868586-r10" x="0" y="508" textLength="48.8" clip-path="url(#terminal-1812868586-line-20)">└──&#160;</text><text class="terminal-1812868586-r2" x="48.8" y="508" textLength="109.8" clip-path="url(#terminal-1812868586-line-20)">anthropic</text><text class="terminal-1812868586-r11" x="183" y="508" textLength="573.4" clip-path="url(#terminal-1812868586-line-20)">managed-agents/knowledge-wiki/utilities.py:2021</text><text class="terminal-1812868586-r4" x="756.4" y="508" textLength="61" clip-path="url(#terminal-1812868586-line-20)">&#160;&#160;in&#160;</text><text class="terminal-1812868586-r3" x="817.4" y="508" textLength="158.6" clip-path="url(#terminal-1812868586-line-20)">normalize_pdf</text><text class="terminal-1812868586-r4" x="976" y="508" textLength="97.6" clip-path="url(#terminal-1812868586-line-20)">&#160;&#160;[chat]</text><text class="terminal-1812868586-r3" x="1708" y="508" textLength="12.2" clip-path="url(#terminal-1812868586-line-20)">
+</text><text class="terminal-1812868586-r10" x="48.8" y="532.4" textLength="48.8" clip-path="url(#terminal-1812868586-line-21)">└──&#160;</text><text class="terminal-1812868586-r3" x="97.6" y="532.4" textLength="24.4" clip-path="url(#terminal-1812868586-line-21)">🤖&#160;</text><text class="terminal-1812868586-r12" x="134.2" y="532.4" textLength="158.6" clip-path="url(#terminal-1812868586-line-21)">unknown&#160;model</text><text class="terminal-1812868586-r4" x="292.8" y="532.4" textLength="292.8" clip-path="url(#terminal-1812868586-line-21)">&#160;&#160;(unknown&#160;·&#160;name&#160;model)</text><text class="terminal-1812868586-r4" x="585.6" y="532.4" textLength="85.4" clip-path="url(#terminal-1812868586-line-21)">&#160;&#160;KB:&#160;—</text><text class="terminal-1812868586-r3" x="1708" y="532.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-21)">
+</text><text class="terminal-1812868586-r3" x="1708" y="556.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-22)">
+</text><text class="terminal-1812868586-r13" x="0" y="581.2" textLength="695.4" clip-path="url(#terminal-1812868586-line-23)">No&#160;flow&#160;from&#160;an&#160;LLM&#160;call&#160;into&#160;a&#160;dangerous&#160;sink&#160;was&#160;found.</text><text class="terminal-1812868586-r3" x="1708" y="581.2" textLength="12.2" clip-path="url(#terminal-1812868586-line-23)">
+</text><text class="terminal-1812868586-r15" x="0" y="605.6" textLength="158.6" clip-path="url(#terminal-1812868586-line-24)">🧹&#160;LLM&#160;hygiene</text><text class="terminal-1812868586-r3" x="1708" y="605.6" textLength="12.2" clip-path="url(#terminal-1812868586-line-24)">
+</text><text class="terminal-1812868586-r3" x="1708" y="630" textLength="12.2" clip-path="url(#terminal-1812868586-line-25)">
+</text><text class="terminal-1812868586-r5" x="24.4" y="654.4" textLength="292.8" clip-path="url(#terminal-1812868586-line-26)">rule&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r5" x="353.8" y="654.4" textLength="646.6" clip-path="url(#terminal-1812868586-line-26)">where&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r5" x="1037" y="654.4" textLength="646.6" clip-path="url(#terminal-1812868586-line-26)">code&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="654.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-26)">
+</text><text class="terminal-1812868586-r3" x="0" y="678.8" textLength="1708" clip-path="url(#terminal-1812868586-line-27)">&#160;──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────&#160;</text><text class="terminal-1812868586-r3" x="1708" y="678.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-27)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="703.2" textLength="292.8" clip-path="url(#terminal-1812868586-line-28)">client-no-timeout&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r11" x="353.8" y="703.2" textLength="646.6" clip-path="url(#terminal-1812868586-line-28)">agents/agent.py:66&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r17" x="1037" y="703.2" textLength="646.6" clip-path="url(#terminal-1812868586-line-28)">self.client&#160;=&#160;client&#160;or&#160;Anthropic()&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="703.2" textLength="12.2" clip-path="url(#terminal-1812868586-line-28)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="727.6" textLength="292.8" clip-path="url(#terminal-1812868586-line-29)">tool-args-unvalidated&#160;&#160;&#160;</text><text class="terminal-1812868586-r11" x="353.8" y="727.6" textLength="646.6" clip-path="url(#terminal-1812868586-line-29)">agents/utils/tool_util.py:15&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r17" x="1037" y="727.6" textLength="292.8" clip-path="url(#terminal-1812868586-line-29)">result&#160;=&#160;await&#160;tool_dict</text><text class="terminal-1812868586-r17" x="1329.8" y="727.6" textLength="268.4" clip-path="url(#terminal-1812868586-line-29)">.execute(**call.input)</text><text class="terminal-1812868586-r3" x="1708" y="727.6" textLength="12.2" clip-path="url(#terminal-1812868586-line-29)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="752" textLength="292.8" clip-path="url(#terminal-1812868586-line-30)">client-no-timeout&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r11" x="353.8" y="752" textLength="646.6" clip-path="url(#terminal-1812868586-line-30)">browser-toolset/python/run.py:71&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r17" x="1037" y="752" textLength="646.6" clip-path="url(#terminal-1812868586-line-30)">client&#160;=&#160;Anthropic()&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="752" textLength="12.2" clip-path="url(#terminal-1812868586-line-30)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="776.4" textLength="292.8" clip-path="url(#terminal-1812868586-line-31)">client-no-timeout&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r11" x="353.8" y="776.4" textLength="646.6" clip-path="url(#terminal-1812868586-line-31)">browser-use-demo/browser_use_demo/loop.py:107&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r17" x="1037" y="776.4" textLength="646.6" clip-path="url(#terminal-1812868586-line-31)">client&#160;=&#160;Anthropic(api_key=api_key,&#160;max_retries=4)&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="776.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-31)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="800.8" textLength="292.8" clip-path="url(#terminal-1812868586-line-32)">client-no-timeout&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r11" x="353.8" y="800.8" textLength="646.6" clip-path="url(#terminal-1812868586-line-32)">browser-use-demo/browser_use_demo/tools/browser.py:9…</text><text class="terminal-1812868586-r17" x="1037" y="800.8" textLength="646.6" clip-path="url(#terminal-1812868586-line-32)">client&#160;=&#160;AsyncAnthropic(api_key=api_key)&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="800.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-32)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="825.2" textLength="292.8" clip-path="url(#terminal-1812868586-line-33)">client-no-timeout&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r11" x="353.8" y="825.2" textLength="646.6" clip-path="url(#terminal-1812868586-line-33)">computer-toolset/python/run.py:47&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r17" x="1037" y="825.2" textLength="646.6" clip-path="url(#terminal-1812868586-line-33)">client&#160;=&#160;Anthropic()&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="825.2" textLength="12.2" clip-path="url(#terminal-1812868586-line-33)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="849.6" textLength="292.8" clip-path="url(#terminal-1812868586-line-34)">client-no-timeout&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r11" x="353.8" y="849.6" textLength="646.6" clip-path="url(#terminal-1812868586-line-34)">computer-use-best-practices/computer_use/loop.py:230&#160;</text><text class="terminal-1812868586-r17" x="1037" y="849.6" textLength="646.6" clip-path="url(#terminal-1812868586-line-34)">return&#160;anthropic.Anthropic()&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="849.6" textLength="12.2" clip-path="url(#terminal-1812868586-line-34)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="874" textLength="292.8" clip-path="url(#terminal-1812868586-line-35)">client-no-timeout&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r11" x="353.8" y="874" textLength="646.6" clip-path="url(#terminal-1812868586-line-35)">computer-use-best-practices/dev_ui/localization_demo…</text><text class="terminal-1812868586-r17" x="1037" y="874" textLength="646.6" clip-path="url(#terminal-1812868586-line-35)">_client&#160;=&#160;anthropic.Anthropic()&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="874" textLength="12.2" clip-path="url(#terminal-1812868586-line-35)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="898.4" textLength="292.8" clip-path="url(#terminal-1812868586-line-36)">client-no-timeout&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r11" x="353.8" y="898.4" textLength="646.6" clip-path="url(#terminal-1812868586-line-36)">computer-use-demo/computer_use_demo/loop.py:125&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r17" x="1037" y="898.4" textLength="646.6" clip-path="url(#terminal-1812868586-line-36)">client&#160;=&#160;Anthropic(api_key=api_key,&#160;max_retries=4)&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="898.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-36)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="922.8" textLength="292.8" clip-path="url(#terminal-1812868586-line-37)">shell-true-in-llm-module</text><text class="terminal-1812868586-r11" x="353.8" y="922.8" textLength="646.6" clip-path="url(#terminal-1812868586-line-37)">computer-use-demo/computer_use_demo/streamlit.py:378&#160;</text><text class="terminal-1812868586-r17" x="1037" y="922.8" textLength="646.6" clip-path="url(#terminal-1812868586-line-37)">subprocess.run(&quot;pkill&#160;Xvfb;&#160;pkill&#160;tint2&quot;,&#160;shell=True)</text><text class="terminal-1812868586-r3" x="1708" y="922.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-37)">
+</text><text class="terminal-1812868586-r17" x="1037" y="947.2" textLength="646.6" clip-path="url(#terminal-1812868586-line-38)">#&#160;noqa:&#160;ASYNC221&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="947.2" textLength="12.2" clip-path="url(#terminal-1812868586-line-38)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="971.6" textLength="292.8" clip-path="url(#terminal-1812868586-line-39)">shell-true-in-llm-module</text><text class="terminal-1812868586-r11" x="353.8" y="971.6" textLength="646.6" clip-path="url(#terminal-1812868586-line-39)">computer-use-demo/computer_use_demo/streamlit.py:380&#160;</text><text class="terminal-1812868586-r17" x="1037" y="971.6" textLength="646.6" clip-path="url(#terminal-1812868586-line-39)">subprocess.run(&quot;./start_all.sh&quot;,&#160;shell=True)&#160;&#160;#&#160;noqa:</text><text class="terminal-1812868586-r3" x="1708" y="971.6" textLength="12.2" clip-path="url(#terminal-1812868586-line-39)">
+</text><text class="terminal-1812868586-r17" x="1037" y="996" textLength="646.6" clip-path="url(#terminal-1812868586-line-40)">ASYNC221&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="996" textLength="12.2" clip-path="url(#terminal-1812868586-line-40)">
+</text><text class="terminal-1812868586-r14" x="24.4" y="1020.4" textLength="292.8" clip-path="url(#terminal-1812868586-line-41)">client-no-timeout&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r11" x="353.8" y="1020.4" textLength="646.6" clip-path="url(#terminal-1812868586-line-41)">managed-agents/self-hosted-sandboxes/daytona/daytona…</text><text class="terminal-1812868586-r17" x="1037" y="1020.4" textLength="646.6" clip-path="url(#terminal-1812868586-line-41)">return&#160;anthropic.AsyncAnthropic(&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="1020.4" textLength="12.2" clip-path="url(#terminal-1812868586-line-41)">
+</text><text class="terminal-1812868586-r3" x="1708" y="1044.8" textLength="12.2" clip-path="url(#terminal-1812868586-line-42)">
+</text><text class="terminal-1812868586-r12" x="0" y="1069.2" textLength="1708" clip-path="url(#terminal-1812868586-line-43)">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;…&#160;6&#160;more&#160;in&#160;hygiene.json&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1812868586-r3" x="1708" y="1069.2" textLength="12.2" clip-path="url(#terminal-1812868586-line-43)">
+</text>
+    </g>
+    </g>
+</svg>

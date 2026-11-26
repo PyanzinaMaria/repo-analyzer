@@ -6,11 +6,13 @@ enabled_languages:
 # Analysis runners this deployment offers (see app/analysis/registry.py).
 # The frontend picks methods in the form; the worker maps them to these
 # runner keys via frontend/config/analysis.yaml. `dynamic` boots the
-# sandbox and runs DAST (ZAP/preflight). `manual` is not implemented yet.
+# sandbox and runs DAST (ZAP/preflight). `manual` is the UI «Пентест»
+# method: security review → hypothesis verify → active pentest agent.
 methods:
   - static
   - ai
   - dynamic
+  - manual
 
 # SAST tool lists per language family (see config/sast.yaml for timeouts/args).
 # Missing binaries are soft-skipped and recorded in language meta.
@@ -81,6 +83,17 @@ dast:
     - https
   # Allow RFC1918 / localhost targets (needed for sandbox/dev). Keep false in prod.
   allow_private_targets: true
+
+  # Passive ZAP baseline needs the ZAP docker image (~1 GB). Disable locally
+  # when it is not pulled; the active pentest agent does not depend on it.
+  zap_enabled: true
+
+  # Active pentest agent on top of the passive ZAP baseline.
+  pentest:
+    enabled: true
+    llm_enabled: true
+    max_steps: 12
+    max_seconds: 120
 
 # Auto-boot web targets in Docker after SAST so DAST can run on the same intake.
 sandbox:

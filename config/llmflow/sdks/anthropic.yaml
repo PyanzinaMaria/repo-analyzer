@@ -1,0 +1,18 @@
+# Anthropic Python SDK. `client.beta.messages.create` is covered by `$C.messages.create` ($C = client.beta).
+sdk: anthropic
+provider: anthropic
+imports: [anthropic]
+calls:
+  - id: anthropic.messages
+    callee: $C.messages.create
+    channel: chat
+    model_arg: model
+    prompt_args: [messages, system]
+    tools_arg: tools
+    exclude: [$C.threads.messages.create]   # OpenAI Assistants API: adds a message, does not call a model
+  - id: anthropic.messages.stream
+    callee: $C.messages.stream
+    channel: chat
+    model_arg: model
+    prompt_args: [messages, system]
+    tools_arg: tools

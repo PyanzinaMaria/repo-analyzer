@@ -16,8 +16,7 @@ RUNNER_STATIC = "static"
 RUNNER_AI = "ai"
 
 # Runner keys that exist as concepts. `dynamic` runs sandbox + DAST after
-# SAST; `manual` (pentest) is not implemented yet — enabling it in
-# settings.yaml makes scans fail fast rather than silently skipping.
+# SAST; `manual` (UI «Пентест») runs the security pipeline + active agent.
 KNOWN_RUNNERS = (RUNNER_STATIC, RUNNER_AI, "dynamic", "manual")
 
 # Runners used when a scan does not request any (legacy jobs): the static
@@ -44,3 +43,34 @@ def check_runners(requested: list[str] | None) -> None:
             raise ValueError(f"unknown analysis runner: {runner!r}")
         if runner not in enabled:
             raise ValueError(f"analysis runner disabled in this deployment: {runner!r}")
+
+
+def compose_scan_kind(
+    runners: list[str] | None,
+    *,
+    legacy_kind: str | None = None,
+) -> str:
+    """Build summary ``scan_kind`` from runner keys (static/ai/dynamic/manual).
+
+    Form jobs always pass ``runners``; legacy jobs (``None``) keep
+    ``legacy_kind`` (typically ``sast`` or ``sast+dast`` after sandbox).
+    """
+    if runners is None:
+        return legacy_kind or "sast"
+
+    parts: list[str] = []
+    if "static" in runners:
+        parts.append("sast")
+    if "ai" in runners:
+        parts.append("ai")
+    if "dynamic" in runners:
+        parts.append("dast")
+    if "manual" in runners:
+        parts.append("pentest")
+
+    if not parts:
+        return "sast"
+    # Historical label when only the AI runner (optionally with static) ran.
+    if parts == ["ai"] or parts == ["sast", "ai"]:
+        return "sast_ai"
+    return "+".join(parts)

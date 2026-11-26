@@ -1,0 +1,62 @@
+{
+  "q": {
+    "alpha": 0.43090508913552183,
+    "gamma": 0.9609214407818505,
+    "epsilon": 0.3347573949789042,
+    "bonus": 3.5919509051822196,
+    "power": 0.4904167763981928,
+    "use_time": false
+  },
+  "ga": {
+    "population": 24,
+    "mutation": 0.09358901809093516,
+    "immigrants": 0.00220884684944096,
+    "tournament": 5,
+    "scoring": "peak3",
+    "power": 0.4166401865606813
+  },
+  "meta": {
+    "objective": "maximize problems_unique",
+    "target": "live booklet HTTP stand",
+    "optuna_trials": 24,
+    "budget": 100,
+    "horizon": 20,
+    "train_seeds": [
+      0,
+      1,
+      2
+    ],
+    "holdout_seeds": [
+      100,
+      101,
+      102,
+      103,
+      104
+    ],
+    "q_best_train_problems_unique": 13.0,
+    "ga_best_train_problems_unique": 13.0,
+    "holdout": {
+      "q": {
+        "problems_unique": 13,
+        "problems_total": 872.2,
+        "states": 28,
+        "transitions": 56.2,
+        "unique_paths": 27
+      },
+      "ga": {
+        "problems_unique": 12.8,
+        "problems_total": 877.8,
+        "states": 28.2,
+        "transitions": 55.6,
+        "unique_paths": 27.2
+      },
+      "random_context_only": {
+        "problems_unique": 12.6,
+        "problems_total": 875.2,
+        "states": 22.8,
+        "transitions": 45.8,
+        "unique_paths": 21.8
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+# Ollama Python SDK. Module-level functions (`ollama.chat`, `from ollama import chat`) are matched by
+# name; client methods (`ollama.Client(...).chat`, `self.client.chat`) are too generic to match by name
+# alone, so they require `import ollama` / `from ollama import ...` in the file and the keyword
+# arguments that every chat call passes.
+sdk: ollama
+provider: ollama
+imports: [ollama]
+calls:
+  - id: ollama.chat
+    callee: ollama.chat
+    channel: chat
+    model_arg: model
+    model_pos: 0
+    prompt_args: [messages]
+    prompt_pos: [1]
+    tools_arg: tools
+  - id: ollama.generate
+    callee: ollama.generate
+    channel: completion
+    model_arg: model
+    model_pos: 0
+    prompt_args: [prompt, system]
+    prompt_pos: [1]
+  - id: ollama.client.chat
+    callee: $C.chat
+    channel: chat
+    model_arg: model
+    prompt_args: [messages]
+    tools_arg: tools
+    inside_import: [ollama]
+    require_kwargs: [model, messages]
+    exclude: [ollama.chat]
+    receiver_regex: '(?i).*ollama'
+  - id: ollama.client.generate
+    callee: $C.generate
+    channel: completion
+    model_arg: model
+    prompt_args: [prompt, system]
+    inside_import: [ollama]
+    require_kwargs: [model, prompt]
+    exclude: [ollama.generate]
+    receiver_regex: '(?i).*ollama'

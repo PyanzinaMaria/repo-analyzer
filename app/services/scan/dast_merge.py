@@ -21,11 +21,15 @@ def merge_dast_via_sandbox(
     root: Path,
     *,
     registry: LanguageRegistry | None = None,
+    run_zap: bool = True,
+    run_active_pentest: bool = True,
 ) -> ScanResult:
-    """After SAST, boot sandbox (if possible) and merge DAST findings.
+    """After SAST, boot sandbox (if possible) and merge DAST/pentest findings.
 
     Soft-fails: sandbox/DAST problems never raise; they set meta.sandbox /
     meta.dast status to skipped/failed and leave SAST findings intact.
+
+    ``run_zap`` / ``run_active_pentest`` map to UI checkboxes DAST / Пентест.
     """
     findings: list[Finding] = list(sast_result.findings)
     meta: dict[str, Any] = dict(sast_result.meta or {})
@@ -53,6 +57,8 @@ def merge_dast_via_sandbox(
                     zap_target_url=session.network_url,
                     zap_docker_network=session.network,
                     skip_ssrf=True,
+                    run_zap=run_zap,
+                    run_active_pentest=run_active_pentest,
                 )
                 findings.extend(dast_result.findings)
                 meta["dast"] = (dast_result.meta or {}).get("dast") or {
@@ -62,6 +68,28 @@ def merge_dast_via_sandbox(
             except Exception as exc:  # noqa: BLE001
                 logger.exception("DAST after sandbox boot failed")
                 meta["dast"] = {"status": "failed", "reason": str(exc)}
+
+            # Verify code-review hypotheses against the booted application.
+            # host_url works when the analyzer runs on the host; otherwise retry
+            # through the container network URL.
+            try:
+                raw_hypotheses = meta.get("security_hypotheses") or []
+                if raw_hypotheses:
+                    from app.security.config import load_security_config
+                    from app.security.models import VulnHypothesis
+                    from app.security.pipeline import verify_only
+
+                    sec_cfg = load_security_config({"verify_allow_private": True})
+                    hypotheses = [VulnHypothesis(**h) for h in raw_hypotheses]
+                    verified = verify_only(hypotheses, session.host_url, cfg=sec_cfg)
+                    stats = verified.get("meta") or {}
+                    if stats.get("status") != "ok" or not stats.get("ok_responses"):
+                        verified = verify_only(hypotheses, session.network_url, cfg=sec_cfg)
+                    findings.extend(verified.get("findings") or [])
+                    meta["security_verify"] = verified.get("meta") or {}
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("hypothesis verification after sandbox boot failed")
+                meta["security_verify"] = {"status": "failed", "error": str(exc)}
     except SandboxError as exc:
         logger.warning("Sandbox boot skipped: %s", exc)
         meta["sandbox"] = {"status": "skipped", "reason": str(exc)}
@@ -82,8 +110,20 @@ def _with_merged(
     *,
     dast_ran: bool,
 ) -> ScanResult:
+    from app.analysis.registry import compose_scan_kind
+
     severity_counts = Counter(f.severity.value for f in findings)
     summary = dict(sast_result.summary or {})
+    runners = meta.get("runners")
+    if isinstance(runners, list):
+        scan_kind = compose_scan_kind([str(r) for r in runners])
+    else:
+        # Legacy jobs: sandbox attempt used to mean the combined SAST+DAST path.
+        prior = str(summary.get("scan_kind") or "sast")
+        if dast_ran or meta.get("sandbox") is not None:
+            scan_kind = "sast+dast"
+        else:
+            scan_kind = prior
     summary.update(
         {
             "total_findings": len(findings),
@@ -91,17 +131,18 @@ def _with_merged(
             "high_or_above": sum(
                 1 for f in findings if f.severity in {Severity.critical, Severity.high}
             ),
-            "scan_kind": "sast+dast" if dast_ran or meta.get("sandbox") else "sast",
+            "scan_kind": scan_kind,
             "dast_findings": sum(
                 1
                 for f in findings
                 if str(f.source).startswith("dast") or f.source == "zap-baseline"
             ),
+            "review_findings": sum(
+                1 for f in findings if f.source in {"llm-review", "review-agent"}
+            ),
+            "pentest_findings": sum(1 for f in findings if f.source == "pentest"),
         }
     )
-    # Prefer sast+dast label whenever we attempted the combined pipeline
-    if meta.get("sandbox") is not None:
-        summary["scan_kind"] = "sast+dast"
 
     return sast_result.model_copy(
         update={

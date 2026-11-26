@@ -58,9 +58,10 @@ data/reports/{id}/  ◀── manifest.json · summary.json · report.* · doc.*
 | `sast` | `static` | Bandit + Semgrep (+ soft-skip) + pip-audit + context |
 | `llm_agentic` | `ai` | triage / discovery / review (только если `ai` в methods) |
 | `dast` | `dynamic` | sandbox Docker + preflight + ZAP baseline |
-| `pentest` | `manual` | `available: false` — не запускать |
+| `pentest` | `manual` | security review → sandbox verify → активный pentest-агент (`available: true`) |
 
-В `ScanResult.meta.runners` должен быть **ровно** список выбранных runners. Секции HTML-отчёта строятся только по ним (`worker/rendering.py`).
+В `ScanResult.meta.runners` должен быть **ровно** список выбранных runners. Секции HTML-отчёта строятся только по ним (`worker/rendering.py`: `static→sast`, `ai→llm`, `dynamic→dast`, `manual→pentest`).  
+`summary.scan_kind` / подпись «Тип проверки» на странице заявки: из runners (`sast+pentest`, `sast+dast`, …) или напрямую из `options.methods` в UI.
 
 ### 3.2 Форматы → файлы
 
@@ -73,10 +74,11 @@ data/reports/{id}/  ◀── manifest.json · summary.json · report.* · doc.*
 | LLM-протокол ФСТЭК | `fstec.{html,md,pdf}` | только если `ai_documents.enabled` |
 | LLM codedocs | `codedocs.zip` | только если `ai_documents.enabled` |
 
-План файлов: `Pipeline._format_plan(formats)` → `report`/`doc` по выбранным форматам; `fstec`/`codedocs` — если включены AI-документы воркера.  
+План файлов: `Pipeline._format_plan(formats)` → сначала `report`/`doc`, затем `fstec`/`codedocs` если `ai_documents.enabled`.  
+После core-артефактов воркер сразу пишет `manifest` с `report: ok` (UI разблокируется), LLM-доки дописываются и обновляют `manifest.artifacts` по одному документу.  
 В `manifest.artifacts` — только эти имена. **Не** добавлять `dast_report.*`, `audit_report.md`, сырой SARIF.
 
-**Очередь:** один worker = один скан. Долгая генерация AI-доков блокирует следующие заявки (UI будет показывать «Ожидание» на анализе). По умолчанию `worker/config/worker.yaml` → `ai_documents.enabled: false`.
+**Очередь:** один worker = один скан. Основной отчёт больше не ждёт OpenRouter; AI-доки ограничены по промпту (~80k) и таймауту (~120 с), при ошибке — placeholder (включая `codedocs.zip`). Конфиг: `worker/config/worker.yaml` → `ai_documents`.
 
 ### 3.3 Job options (очередь)
 

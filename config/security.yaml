@@ -1,0 +1,60 @@
+# Unified security pipeline: code review -> hypotheses -> dynamic verification.
+# LLM block uses free models only (id must end with ":free").
+security:
+  enabled: true
+
+  # --- code review (hypothesis generation) --------------------------------
+  review_enabled: true
+  review_max_files: 12
+  review_max_chars_per_file: 12000
+  review_max_steps: 12
+  # off  = один запрос: модель получает обзор + фрагменты кода кандидатов;
+  # on   = агентный цикл с function calling (нужен запас по TPM, дороже по токенам).
+  # Для бесплатного Groq (8k TPM) рекомендуется off.
+  review_tool_mode: off
+  review_max_hypotheses: 25
+  # Free-form requirements for the reviewer (like promptfoo "guidance").
+  review_guidance: >-
+    Приоритет: SQL-инъекции, path traversal, SSRF, XXE, инъекции команд,
+    небезопасная десериализация, open redirect, секреты в коде.
+    Учитывай, как параметры HTTP-запроса доходят до опасной операции.
+
+  # --- hypotheses from SAST findings --------------------------------------
+  from_sast: true
+
+  # --- dynamic verification ----------------------------------------------
+  verify_enabled: true
+  verify_max_hypotheses: 20
+  verify_max_requests: 200
+  verify_max_seconds: 120
+  verify_delay: 0.15
+  verify_allow_private: false
+
+  # --- plugins x strategies (promptfoo idea, generalised) -----------------
+  # Пусто = все плагины. Доступны: sqli, xss, path_traversal, open_redirect,
+  # cmd_injection, xxe, ssrf, insecure_deserialization, prompt_injection,
+  # missing_headers, error_disclosure.
+  plugins: []
+  strategies:
+    - raw
+    - urlencode
+    - double_urlencode
+
+  # --- LLM ----------------------------------------------------------------
+  # provider: groq | gigachat | openrouter | gemini | ollama  ("" = автоопределение)
+  # Ключи берутся из env: GROQ_API_KEY / GIGACHAT_CREDENTIALS /
+  # OPENROUTER_API_KEY / GEMINI_API_KEY (для ollama ключ не нужен).
+  llm_enabled: true
+  llm_provider: groq
+  llm_model: openai/gpt-oss-120b
+  # base_url можно не указывать — подставится пресет провайдера.
+  # llm_base_url: https://api.groq.com/openai/v1
+  llm_timeout: 90
+  llm_max_retries: 3
+  llm_json_mode: true
+  # Для GigaChat: сертификаты Минцифры можно не ставить, но тогда TLS не проверяется.
+  llm_verify_ssl: true
+  judge_enabled: true
+
+  min_severity: low
+  cache_path: data/llm_cache/security.sqlite

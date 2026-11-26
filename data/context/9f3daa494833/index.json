@@ -1,0 +1,25 @@
+{
+  "root": "C:\\Users\\m11yrr\\AppData\\Local\\Temp\\pytest-of-m11yrr\\pytest-45\\test_scan_endpoint_accepts_man0\\workspaces\\9d5a2daee91048c6bb71f9f86d605e15\\workspace",
+  "language": "python",
+  "files": {
+    "main.py": {
+      "file": "main.py",
+      "language": "python",
+      "loc": 2,
+      "imports": [],
+      "exports": [],
+      "functions": [
+        {
+          "id": "main.py::add@1",
+          "file": "main.py",
+          "name": "add",
+          "start": 1,
+          "end": 2,
+          "header": "def add(a, b):",
+          "calls": []
+        }
+      ],
+      "module_calls": []
+    }
+  }
+}

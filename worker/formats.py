@@ -27,6 +27,26 @@ def render_document_markdown(doc_id: str, result: Any, target: Path) -> None:
         raise ValueError(f"no markdown renderer for document {doc_id!r}")
 
 
+def markdown_without_attached_files(markdown_text: str) -> str:
+    """Keep the protocol body; drop inlined «Файл:» dumps (JSON etc.).
+
+    Attachments are already written under ``fstec/attachments/``; embedding
+    them into PDF only triggers Courier tofu for Cyrillic inside ``<code>``.
+    """
+    marker = "\n## Файл:"
+    if marker not in markdown_text and not markdown_text.startswith("## Файл:"):
+        return markdown_text
+    body = markdown_text.split(marker, 1)[0]
+    if markdown_text.startswith("## Файл:"):
+        body = ""
+    note = (
+        "\n\n---\n\n"
+        "Электронные приложения сохранены отдельными файлами "
+        "в каталоге `fstec/attachments/` (и рядом с отчётом).\n"
+    )
+    return body.rstrip() + note
+
+
 def markdown_to_html(markdown_text: str) -> str:
     """Convert a Markdown document (LLM answer) to HTML for the viewer and
     as the conversion source for pdf/docx."""
@@ -36,7 +56,23 @@ def markdown_to_html(markdown_text: str) -> str:
         raise RuntimeError(
             "HTML output requires the 'markdown' package (see requirements.txt)"
         ) from exc
-    return md_lib.markdown(markdown_text, extensions=["tables", "fenced_code"])
+    body = md_lib.markdown(markdown_text, extensions=["tables", "fenced_code"])
+    # Full document + Unicode-capable stack so viewers and PDF share one base.
+    return (
+        "<!DOCTYPE html>\n<html lang=\"ru\"><head><meta charset=\"utf-8\"/>"
+        "<style>"
+        "body{font-family:'Segoe UI','DejaVu Sans',Arial,sans-serif;"
+        "font-size:15px;line-height:1.55;color:#111;max-width:960px;"
+        "margin:24px auto;padding:0 20px;}"
+        "pre,code{font-family:'Segoe UI','DejaVu Sans',Arial,sans-serif;"
+        "white-space:pre-wrap;word-break:break-word;}"
+        "pre{background:#f4f4f4;padding:12px 14px;border:1px solid #ddd;}"
+        "h1,h2,h3{line-height:1.25}"
+        "table{border-collapse:collapse;width:100%}"
+        "th,td{border:1px solid #bbb;padding:6px 8px;vertical-align:top}"
+        "</style></head><body>\n"
+        f"{body}\n</body></html>"
+    )
 
 
 def create_zip_artifact(
@@ -79,34 +115,87 @@ def _ensure_pdf_font() -> Path | None:
     return _FONT_CACHE
 
 
+# xhtml2pdf ignores most CSS variables and mishandles overflow/flex from the
+# screen theme — table bodies then vanish while headers and totals remain.
+# Default <code>/<pre> map to Courier (no Cyrillic) → black tofu boxes unless
+# DocFont is forced on those tags too.
+_PDF_BASE_STYLE = """
+<style>
+  body { background:#fff !important; color:#000 !important; font-size:10pt; }
+  .wrap, .card, table, th, td, p, h1, h2, h3, li, .sub, .preview, .foot, .empty,
+  .disclaimer, .chip, .mono, code, pre, tt, kbd, samp {
+    color:#000 !important; background:#fff !important; box-shadow:none !important;
+  }
+  .card { border:none; border-bottom:1px solid #bbb; border-radius:0; margin:0 0 12pt;
+    padding:8pt 0; }
+  table { width:100%; border-collapse:collapse; overflow:visible !important; }
+  th, td { border:1px solid #999; padding:4pt 6pt; vertical-align:top; font-size:9pt; }
+  th { background:#eee !important; }
+  .badge { color:#000 !important; background:#fff !important; border:1px solid #000;
+    border-radius:3pt; padding:1pt 4pt; font-size:8pt; }
+  .chip { border:1px solid #000; border-radius:3pt; padding:2pt 6pt; }
+  .disclaimer { border:1px dashed #555; padding:6pt 8pt; }
+  .chips { margin:6pt 0; }
+  pre { border:1px solid #ccc; padding:6pt; white-space:pre-wrap; }
+  code, pre, tt, kbd, samp, .mono { white-space:pre-wrap; word-wrap:break-word; }
+  svg { display:none !important; }
+</style>
+"""
+
+
+def _prepare_html_for_pdf(html: str) -> str:
+    """Flatten screen-theme HTML into something xhtml2pdf can paginate."""
+    import re
+
+    html = re.sub(r"<svg\b[\s\S]*?</svg>", "", html, flags=re.IGNORECASE)
+    html = html.replace("\u2011", "-").replace("\u2013", "-").replace("\u2014", "-")
+    # Drop overflow clipping that swallows multi-page table bodies.
+    html = re.sub(r"overflow\s*:\s*hidden\s*;?", "overflow:visible;", html, flags=re.IGNORECASE)
+    # Drop inline badge colors — white text on pastel fills vanishes in PDF.
+    html = re.sub(
+        r'(\s)style="background:\s*#[0-9A-Fa-f]{3,8};"',
+        "",
+        html,
+    )
+    # Kill monospace stacks (Courier/Consolas) that lack Cyrillic in PDF fonts.
+    html = re.sub(
+        r"font-family\s*:\s*[^;]+;",
+        "font-family:DocFont,sans-serif;",
+        html,
+        flags=re.IGNORECASE,
+    )
+    return html
+
+
+def _inject_head_style(html: str, style: str) -> str:
+    lower = html.lower()
+    if "<head" in lower:
+        idx = lower.index("<head")
+        gt = html.index(">", idx) + 1
+        return html[:gt] + style + html[gt:]
+    return f"<html><head>{style}</head><body>{html}</body></html>"
+
+
 def _pdf_via_xhtml2pdf(html: str) -> bytes:
     import re
 
     from xhtml2pdf import pisa
 
-    # Large SVG donuts / complex boxes blow up reportlab LayoutError on long audits.
-    html = re.sub(r"<svg\b[\s\S]*?</svg>", "", html, flags=re.IGNORECASE)
-    html = html.replace("\u2011", "-").replace("\u2013", "-").replace("\u2014", "-")
-
+    html = _prepare_html_for_pdf(html)
     font = _ensure_pdf_font()
     path_base = ""
+    style = _PDF_BASE_STYLE
     if font is not None:
         style = (
             "<style>"
             "@font-face{font-family:DocFont;src:url('DocFont.ttf');}"
             "@font-face{font-family:DocFont;src:url('DocFont.ttf');font-weight:bold;}"
-            "*{font-family:DocFont,sans-serif;}"
-            "svg{display:none}"
+            "*,pre,code,tt,kbd,samp,.mono{"
+            "font-family:DocFont,sans-serif !important;}"
             "</style>"
-        )
+        ) + style
         path_base = str(font.parent) + "/"
-        lower = html.lower()
-        if "<head" in lower:
-            idx = lower.index("<head")
-            gt = html.index(">", idx) + 1
-            html = html[:gt] + style + html[gt:]
-        else:
-            html = f"<html><head>{style}</head><body>{html}</body></html>"
+    html = _inject_head_style(html, style)
 
     def _render(src: str) -> bytes:
         buf = io.BytesIO()

@@ -1,0 +1,349 @@
+# TaintP2X ground truth (He et al., "TaintP2X: Detecting Taint-Style Prompt-to-Anything Injection
+# Vulnerabilities in LLM-Integrated Applications", ICSE 2026, Table 2): 35 real P2Xi vulnerabilities
+# collected by the authors from LLMSmith, AgentFuzz, NVD, GitHub Advisory Database and huntr.
+#
+# Per entry:
+#   repo / ref     vulnerable version (tag or commit) — the table's version when a tag exists, otherwise the
+#                  closest tag inside the advisory's vulnerable range (noted in `note`)
+#   path           sub-directory to scan (monorepos); default: repository root
+#   expect.file    regex on a hop's file — where the vulnerable code lives (from the advisory / fix commit)
+#   expect.func    regex on that hop's function (qualified name)
+#   expect.sink    optional regex on the sink hop's function, when the vulnerable call is known
+#   class          code_injection | sql_injection | file_rw | ssrf (mapped to llmflow sink classes in eval)
+#   scope          app (the project calls an LLM SDK itself) | framework (the bug is inside an LLM framework,
+#                  LLM output comes from the framework's own model abstraction)
+#   reported       published results in TaintP2X Table 2: Y / N / '-' (tool cannot analyze it)
+#
+# A finding counts as a hit when one of its hops matches expect.file AND expect.func, its sink matches
+# expect.sink (if given) and its sink class is one of the classes allowed for `class`.
+source: https://doi.org/10.1145/3744916.3773199
+entries:
+  # ------------------------------------------------------------------ code injection
+  - id: P01
+    cve: CVE-2023-29374
+    class: code_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.0.131
+    expect: {file: 'langchain/chains/llm_math/base\.py$', func: 'LLMMathChain'}
+    note: LLMMathChain → PythonREPL.run → exec
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P02
+    cve: CVE-2023-36095
+    class: code_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.0.194
+    expect: {file: 'langchain/chains/pal/base\.py$', func: 'PALChain'}
+    note: PALChain.from_math_prompt(llm).run → exec
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P03
+    cve: CVE-2023-39659
+    class: code_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.0.232
+    expect: {file: 'langchain/tools/python/tool\.py$', func: 'PythonAstREPLTool'}
+    note: PythonAstREPLTool._run → exec/eval
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: N}
+  - id: P04
+    cve: CVE-2023-36258
+    class: code_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.0.235
+    expect: {file: 'langchain/chains/pal/base\.py$', func: 'PALChain'}
+    note: PALChain → exec (table version "<0.0.236")
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P05
+    cve: CVE-2023-36188
+    class: code_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.0.64
+    expect: {file: 'langchain/chains/pal/base\.py$', func: 'PALChain'}
+    note: PALChain → exec
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P06
+    cve: CVE-2023-38896
+    class: code_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.0.194
+    expect: {file: 'langchain/chains/pal/base\.py$', func: 'PALChain'}
+    note: PALChain.from_math_prompt / from_colored_object_prompt → exec
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P07
+    cve: CVE-2023-38860
+    class: code_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.0.231
+    expect: {file: 'langchain/chains/pal/base\.py$', func: 'PALChain'}
+    note: PALChain prompt parameter → exec
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P08
+    cve: CVE-2023-39631
+    class: code_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.0.245
+    path: libs/langchain
+    expect: {file: 'langchain/chains/llm_math/base\.py$', func: 'LLMMathChain'}
+    note: LLMMathChain._evaluate_expression → numexpr.evaluate
+    reported: {llmsmith: N, agentfuzz: '-', taintp2x: Y}
+  - id: P09
+    cve: CVE-2023-44467
+    class: code_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.0.305
+    path: libs/experimental
+    expect: {file: 'langchain_experimental/pal_chain/base\.py$', func: 'PALChain'}
+    note: experimental PALChain → exec via __import__ (table version "<0.0.306")
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P10
+    cve: CVE-2024-27444
+    class: code_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.1.7
+    path: libs/experimental
+    expect: {file: 'langchain_experimental/pal_chain/base\.py$', func: 'PALChain'}
+    note: experimental PALChain → exec via dunder attributes (table version "<0.1.8")
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P11
+    cve: CVE-2024-38459
+    class: code_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: langchain-experimental==0.0.61
+    path: libs/experimental
+    expect: {file: 'langchain_experimental/(agents/agent_toolkits/.*/base|tools/python/tool)\.py$', func: '(create_\w+_agent|PythonAstREPLTool|PythonREPLTool)'}
+    note: Python REPL reachable without opt-in (agent toolkits) → exec
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: N}
+  - id: P12
+    cve: CVE-2024-6825
+    class: code_injection
+    scope: framework
+    repo: BerriAI/litellm
+    ref: v1.40.12
+    expect: {file: 'litellm/(utils|proxy/.*)\.py$', func: '.'}
+    note: post_call_rules config value → importlib (config, not model output)
+    reported: {llmsmith: N, agentfuzz: '-', taintp2x: N}
+  - id: P13
+    cve: CVE-2024-3271
+    class: code_injection
+    scope: framework
+    repo: run-llama/llama_index
+    ref: v0.10.25
+    exclude: [llama-index-integrations, llama-index-legacy, llama-index-packs, llama-index-finetuning, llama-index-cli, llama-datasets, docs, benchmarks]
+    expect: {file: '(exec_utils|query_engine/pandas.*)\.py$', func: '(safe_eval|safe_exec|Pandas)'}
+    note: safe_eval bypass on LLM-generated code (PandasQueryEngine)
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P14
+    cve: CVE-2024-3098
+    class: code_injection
+    scope: framework
+    repo: run-llama/llama_index
+    ref: v0.9.46
+    expect: {file: '(exec_utils|query_engine/pandas.*)\.py$', func: '(safe_eval|safe_exec|Pandas)'}
+    note: safe_eval bypass (fix of CVE-2023-39662 incomplete)
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P15
+    cve: CVE-2023-39662
+    class: code_injection
+    scope: framework
+    repo: run-llama/llama_index
+    ref: v0.7.13
+    expect: {file: 'query_engine/pandas_query_engine\.py$', func: '(Pandas|default_output_processor)'}
+    note: PandasQueryEngine → exec/eval of LLM output
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P16
+    cve: CVE-2024-23750
+    class: code_injection
+    scope: app
+    repo: geekan/MetaGPT
+    ref: v0.6.3
+    expect: {file: 'metagpt/actions/run_code\.py$', func: 'RunCode'}
+    note: QaEngineer → RunCode.run_script → subprocess.Popen
+    reported: {llmsmith: N, agentfuzz: '-', taintp2x: Y}
+  - id: P17
+    cve: CVE-2025-2733
+    class: code_injection
+    scope: app
+    repo: FoundationAgents/OpenManus
+    ref: cba275d40549950ed6a41bfe32c7ef150f5f32bd
+    expect: {file: 'app/tool/python_execute\.py$', func: 'PythonExecute'}
+    note: python_execute tool → exec (version "2025.3.13" = last commit of that day)
+    reported: {llmsmith: N, agentfuzz: N, taintp2x: Y}
+  - id: P18
+    cve: CVE-2023-39660
+    class: code_injection
+    scope: app
+    repo: sinaptik-ai/pandas-ai
+    ref: v0.8.0
+    expect: {file: 'pandasai/__init__\.py$', func: 'PandasAI'}
+    note: PandasAI.run → run_code → exec
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P19
+    cve: CVE-2023-39661
+    class: code_injection
+    scope: app
+    repo: sinaptik-ai/pandas-ai
+    ref: v0.8.1
+    expect: {file: 'pandasai/__init__\.py$', func: 'PandasAI'}
+    note: _is_jailbreak bypass → run_code → exec
+    reported: {llmsmith: Y, agentfuzz: '-', taintp2x: Y}
+  - id: P20
+    cve: CVE-2024-5826
+    class: code_injection
+    scope: app
+    repo: vanna-ai/vanna
+    ref: v0.3.3
+    expect: {file: 'src/vanna/base/base\.py$', func: '(get_plotly_figure|ask)'}
+    note: ask → generate_plotly_code → exec
+    reported: {llmsmith: Y, agentfuzz: Y, taintp2x: Y}
+  - id: P21
+    cve: CVE-2024-5565
+    class: code_injection
+    scope: app
+    repo: vanna-ai/vanna
+    ref: v0.3.1
+    expect: {file: 'src/vanna/base/base\.py$', func: '(get_plotly_figure|ask)'}
+    note: ask(visualize=True) → exec
+    reported: {llmsmith: Y, agentfuzz: Y, taintp2x: Y}
+  - id: P22
+    cve: CVE-2024-1881
+    class: code_injection
+    scope: app
+    repo: Significant-Gravitas/AutoGPT
+    ref: autogpt-v0.5.0
+    path: autogpts/autogpt
+    expect: {file: 'autogpt/commands/execute_code\.py$', func: '(execute_shell|validate_command)'}
+    note: execute_shell allow/deny-list bypass → subprocess
+    reported: {llmsmith: N, agentfuzz: Y, taintp2x: N}
+  # ------------------------------------------------------------------ SQL injection
+  - id: P23
+    cve: CVE-2025-27135
+    class: sql_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.0.245
+    path: libs/langchain
+    expect: {file: 'langchain/(chains/sql_database/base|utilities/sql_database|sql_database)\.py$', func: '(SQLDatabase|run)'}
+    note: SQLDatabaseChain → db.run(LLM SQL) (table version "<0.0.247"; no GHSA record)
+    reported: {llmsmith: '-', agentfuzz: '-', taintp2x: Y}
+  - id: P24
+    cve: CVE-2024-8309
+    class: sql_injection
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: langchain==0.2.5
+    path: libs/community
+    expect: {file: 'chains/graph_qa/cypher\.py$', func: 'GraphCypherQAChain'}
+    note: GraphCypherQAChain → graph.query(LLM Cypher)
+    reported: {llmsmith: '-', agentfuzz: '-', taintp2x: N}
+  - id: P25
+    cve: CVE-2024-12911
+    class: sql_injection
+    scope: framework
+    repo: run-llama/llama_index
+    ref: v0.11.23
+    exclude: [llama-index-integrations, llama-index-legacy, llama-index-packs, llama-index-finetuning, llama-index-cli, llama-datasets, docs, benchmarks, experimental]
+    expect: {file: 'jsonalyze.*\.py$', func: '(default_jsonalyzer|JSONalyze)'}
+    note: JSONalyzeQueryEngine default_jsonalyzer → sqlite query of LLM SQL
+    reported: {llmsmith: '-', agentfuzz: '-', taintp2x: Y}
+  - id: P26
+    cve: CVE-2024-23751
+    class: sql_injection
+    scope: framework
+    repo: run-llama/llama_index
+    ref: v0.9.28.post2
+    expect: {file: 'struct_store/(sql_query|sql_retriever)\.py$', func: '(NLSQL|SQLTableRetriever|PGVectorSQL|SQLRetriever)', sink: 'run_sql'}
+    note: NLSQLTableQueryEngine / NLSQLRetriever → run_sql(LLM SQL)
+    reported: {llmsmith: '-', agentfuzz: '-', taintp2x: N}
+  - id: P27
+    cve: CVE-2024-5753
+    class: sql_injection
+    scope: app
+    repo: vanna-ai/vanna
+    ref: v0.3.4
+    expect: {file: 'src/vanna/base/base\.py$', func: '(run_sql|ask|connect_to_postgres)'}
+    note: Flask API → generate_sql → run_sql (pg_read_file)
+    reported: {llmsmith: '-', agentfuzz: Y, taintp2x: Y}
+  - id: P28
+    cve: CVE-2024-5827
+    class: sql_injection
+    scope: app
+    repo: vanna-ai/vanna
+    ref: v0.3.4
+    expect: {file: 'src/vanna/base/base\.py$', func: '(run_sql|ask|connect_to_duckdb)'}
+    note: DuckDB integration → run_sql (COPY … TO file)
+    reported: {llmsmith: '-', agentfuzz: Y, taintp2x: Y}
+  - id: P29
+    cve: CVE-2024-7764
+    class: sql_injection
+    scope: app
+    repo: vanna-ai/vanna
+    ref: v0.6.2
+    expect: {file: 'src/vanna/base/base\.py$', func: '(run_sql|ask|generate_sql)'}
+    note: generate_sql → extract_sql → run_sql (stacked query)
+    reported: {llmsmith: '-', agentfuzz: Y, taintp2x: N}
+  # ------------------------------------------------------------------ file read / write
+  - id: P30
+    cve: huntr-superagi-0.0.14
+    class: file_rw
+    scope: app
+    repo: TransformerOptimus/SuperAGI
+    ref: v0.0.14
+    expect: {file: 'superagi/(tools/file/.*|helper/resource_helper|resource_manager/.*)\.py$', func: '.'}
+    note: file tools (read/write/append/delete) with model-chosen paths; huntr disclosure, no CVE
+    reported: {llmsmith: '-', agentfuzz: N, taintp2x: Y}
+  - id: P31
+    cve: CVE-2024-5927
+    class: file_rw
+    scope: app
+    repo: stitionai/devika
+    ref: cdfb782b0e634b773b10963c8034dc9207ba1f9f
+    expect: {file: 'src/(project|agents/.*|filesystem/.*)\.py$', func: '.'}
+    note: model-chosen file paths written by the coder agent (CVE later rejected by its CNA)
+    reported: {llmsmith: '-', agentfuzz: N, taintp2x: Y}
+  - id: P32
+    cve: CVE-2024-5821
+    class: file_rw
+    scope: app
+    repo: stitionai/devika
+    ref: cdfb782b0e634b773b10963c8034dc9207ba1f9f
+    expect: {file: 'src/(project|agents/.*|filesystem/.*)\.py$', func: '.'}
+    note: file access through agent actions
+    reported: {llmsmith: '-', agentfuzz: N, taintp2x: Y}
+  - id: P33
+    cve: CVE-2024-6331
+    class: file_rw
+    scope: app
+    repo: stitionai/devika
+    ref: cdfb782b0e634b773b10963c8034dc9207ba1f9f
+    expect: {file: 'src/(project|agents/.*|filesystem/.*)\.py$', func: '.'}
+    note: local file read by prompt injection (Gemini safety settings off)
+    reported: {llmsmith: '-', agentfuzz: N, taintp2x: Y}
+  # ------------------------------------------------------------------ SSRF
+  - id: P34
+    cve: CVE-2024-5885
+    class: ssrf
+    scope: app
+    repo: QuivrHQ/quivr
+    ref: v0.0.236
+    expect: {file: 'backend/.*(crawl|url|scrap).*\.py$', func: '.'}
+    note: website crawl of a requested URL
+    reported: {llmsmith: '-', agentfuzz: Y, taintp2x: Y}
+  - id: P35
+    cve: CVE-2023-32786
+    class: ssrf
+    scope: framework
+    repo: langchain-ai/langchain
+    ref: v0.0.327
+    path: libs/langchain
+    expect: {file: 'langchain/chains/api/base\.py$', func: 'APIChain'}
+    note: APIChain → requests to an LLM-generated URL
+    reported: {llmsmith: '-', agentfuzz: '-', taintp2x: N}

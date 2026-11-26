@@ -1,0 +1,16 @@
+FROM python:3.12-slim
+WORKDIR /workspace
+
+COPY live_test_runner/requirements.txt /workspace/live_test_runner/requirements.txt
+RUN pip install --no-cache-dir -r /workspace/live_test_runner/requirements.txt
+# Optuna is only required for hyperparameter search; runtime uses frozen hyperparams.json.
+
+COPY offline_sequence_benchmarks /workspace/offline_sequence_benchmarks
+COPY live_test_runner /workspace/live_test_runner
+
+ENV PYTHONPATH=/workspace
+ENV TARGET_URL=http://webapp:8080
+ENV RUNNER_PROFILE=smoke
+
+WORKDIR /workspace
+CMD ["python", "-m", "live_test_runner", "--profile", "smoke"]
